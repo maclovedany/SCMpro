@@ -153,9 +153,10 @@ begin
 end $$;
 
 -- 추가 수요 등록 (R-OQ-20~25)
-create or replace function app.fn_add_extra_demand(p_kind text, p_item text, p_need_ym char(7), p_qty numeric, p_order_no text, p_customer text, p_model text, p_reason text) returns uuid
+drop function if exists app.fn_add_extra_demand(text, text, char, numeric, text, text, text, text);
+create or replace function app.fn_add_extra_demand(p_kind text, p_item text, p_need_ym char(7), p_qty numeric, p_order_no text, p_customer text, p_model text, p_reason text) returns jsonb
 language plpgsql security definer set search_path = app, public as $$
-declare v_id uuid; v_role app.role := app.current_role(); v_appr uuid;
+declare v_id uuid; v_role app.role := app.current_role(); v_appr uuid; v_dup jsonb := null;
 begin
   p_order_no := nullif(trim(p_order_no), ''); p_customer := nullif(trim(p_customer), ''); p_model := nullif(trim(p_model), ''); p_reason := nullif(trim(p_reason), '');
   if v_role is null then raise exception 'AUTH_REQUIRED'; end if;
@@ -169,7 +170,12 @@ begin
     v_appr := app.fn_request_approval('bulkdeal', 'app.extra_demand', v_id::text, jsonb_build_object('item_code', p_item, 'qty', p_qty, 'need_ym', p_need_ym, 'customer', p_customer, 'model', p_model), p_reason);
     update app.extra_demand set approval_id = v_appr where id = v_id;
   end if;
-  return v_id;
+  -- R-OQ-26: 수주확정 등록 시 같은 품목·필요월의 승인 Bulkdeal 이 있으면 이중 계상 경고
+  if p_kind = 'confirmed_order' then
+    select jsonb_agg(jsonb_build_object('id', id, 'qty', qty, 'customer', customer, 'model', model_base, 'order_no', order_no)) into v_dup
+    from app.extra_demand where kind = 'bulkdeal' and status = 'approved' and item_code = p_item and need_ym = p_need_ym;
+  end if;
+  return jsonb_build_object('id', v_id, 'bulkdeal_overlap', coalesce(v_dup, '[]'::jsonb));
 end $$;
 
 -- fn_decide_approval: order_plan / bulkdeal 분기 추가

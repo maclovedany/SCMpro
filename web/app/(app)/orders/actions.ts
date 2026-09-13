@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getProfile } from "@/lib/auth/getProfile";
 import { canUpload, canWriteMaster } from "@/lib/auth/roles";
 import { computePlan, parseSettings, type ItemInput } from "@/lib/order/calc";
-type R = { ok: true; id?: string } | { ok: false; error: string };
+type R = { ok: true; id?: string; data?: unknown } | { ok: false; error: string };
 const MSG: Record<string, string> = { FORBIDDEN: "권한이 없습니다", BLOCKED_LINES: "목표 DoS 미설정 품목이 있어 확정할 수 없습니다 (R-OQ-03)", PLAN_NOT_DRAFT: "초안 상태에서만 수정할 수 있습니다", REASON_REQUIRED: "사유를 입력하세요", ORDER_NO_REQUIRED: "수주 확정은 주문번호가 필수입니다", BULKDEAL_FIELDS_REQUIRED: "Bulkdeal 은 고객·기종·사유가 필수입니다", UNKNOWN_ITEM: "품목 코드를 찾을 수 없습니다", ALREADY_PENDING: "이미 승인 대기 중입니다" };
 const msg = (e: { message: string }) => { const k = Object.keys(MSG).find(k => e.message.includes(k)); return k ? MSG[k] : e.message; };
 /** 계획 생성: fn_order_inputs → calc.ts → fn_save_order_plan (R-OQ 산출) */
@@ -52,5 +52,5 @@ export async function addExtraDemand(input: { kind: string; item_code: string; n
   const { data, error } = await sb.schema("app").rpc("fn_add_extra_demand", { p_kind: input.kind, p_item: input.item_code.trim(), p_need_ym: input.need_ym, p_qty: input.qty,
     p_order_no: nz(input.order_no) as never, p_customer: nz(input.customer) as never, p_model: nz(input.model) as never, p_reason: nz(input.reason) as never });
   if (error) return { ok: false, error: msg(error) };
-  revalidatePath("/extra-demand"); return { ok: true, id: data as string };
+  revalidatePath("/extra-demand"); const d = data as { id: string; bulkdeal_overlap: unknown[] }; return { ok: true, id: d.id, data: d };
 }

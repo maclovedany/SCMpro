@@ -160,3 +160,9 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 결정: (1) `/api/ai/chat` 가 OpenAI Chat Completions(`ai_model`=gpt-5-nano) 를 도구 9종(품목·예측·가용재고·발주계획·정확도·승인함·일정·영업주문·검색)과 함께 최대 5라운드 호출. 도구는 사용자 세션 supabase 클라이언트로 실행 → RLS 그대로 (R-AI-05). (2) 응답은 비스트리밍 JSON(안정성 우선; 스트리밍은 후속). (3) 대화 저장 ai_conversation/ai_message(user·assistant·tool 행), 최근 20턴 + 30개 초과 시 LLM 요약(summary). (4) 주제 분류는 별도 짧은 호출(7개 주제). (5) 패널 상태(열림·너비·현재 대화)는 localStorage. (6) 마크다운 렌더(react-markdown+gfm)
 - 검증: E2E — 리사이즈(+150px 유지), 질문→`get_item` 도구→근거 수치 답변(현재고·DoS·Holt), 후속 질문 맥락, 관리자 통계 카드·목록
 - 출처: 구현 검증
+
+## D-026 (2026-09-13) Bulkdeal 주문번호는 선택, 수주확정과의 이중 계상은 경고로 처리
+- 배경: 사용자 질문 "Bulkdeal 은 주문번호가 없는가". stage1 §5 는 수주확정만 주문번호 필수, Bulkdeal 은 고객·기종·수량·사유만 요구
+- 결정: Bulkdeal 주문번호 선택 입력. 수주확정 등록 시 같은 품목·필요월의 승인 Bulkdeal 존재 시 경고(등록은 허용). 회사 규칙이 다르면 필수로 전환(한 줄)
+- 출처: 사용자 질문 + 문서 해석
+- 영향: R-OQ-26, /extra-demand 폼·목록, fn_add_extra_demand 반환값
