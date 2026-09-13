@@ -25,7 +25,7 @@ export function Sidebar({ groups, badges = {} }: { groups: MenuGroup[]; badges?:
         const active = pathname === m.href || (m.href !== "/allocation" && pathname.startsWith(m.href + "/")) || (m.href === "/allocation" && pathname === "/allocation");
         const n = m.badge ? badges[m.badge] : undefined;
         return (
-          <Link key={m.href} href={m.href} prefetch className={cn("flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors hover:bg-muted", active && "bg-primary/10 font-medium text-primary")}>
+          <Link key={m.href} href={m.href} prefetch className={cn("flex items-center gap-2 rounded-md border border-transparent px-3 py-1.5 text-sm transition-colors hover:border-[#7CFF3B] hover:bg-[#f3ffe6]", active && "border-transparent bg-[#fff1cc] font-medium text-[#8a5a00] hover:border-[#7CFF3B]")}>
             <Icon className="h-4 w-4 shrink-0" /><span className="truncate">{m.label}</span>
             {!!n && n > 0 && <span className="ml-auto rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">{n > 99 ? "99+" : n}</span>}
           </Link>
