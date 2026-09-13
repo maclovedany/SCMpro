@@ -43,7 +43,8 @@
 | `20260913000500_app_functions.sql` | 감사 트리거, 승인/업로드/대시보드 RPC |
 | `20260913000600_app_views.sql` | `analytics` 물리화 뷰, `app` 뷰 |
 | `20260913000700_rls.sql` | RLS 정책 |
-| `20260913000900_grants.sql` | 권한. **항상 마지막** |
+| `20260913001000_forecast.sql` | SP2 예측: 기법 레지스트리·정책·런·결과·정확도·분류·AI 제안, 뷰 |
+| `20260913999900_grants.sql` | 권한. **항상 마지막** |
 
 raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `supabase/scripts/load-raw.sh` (\copy). 구 `02-data-*.sql`, `03-verify.sql`, `07-*.sql` 은 `supabase/legacy/` 참고용.
 
