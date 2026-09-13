@@ -122,3 +122,8 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 결정: 기법 레지스트리 `app.forecast_method`(key, 이름, 적용 패턴, enabled, params jsonb). 관리자 화면에서 on/off·파라미터 편집. 챔피언 선택(R-FC-30)은 enabled 기법 중에서만. 변경 이력 audit
 - 출처: 사용자 지시
 - 영향: R-FC-34 (신설), SP2 spec
+
+## D-019 (2026-09-13) 예측 기법 후보 확장 + ABC-XYZ 교차분석
+- 결정: D-008 후보에 **ARIMA(auto), Prophet, LightGBM(전역 회귀: lag·계절·카테고리 피처)** 추가. 품목을 **ABC(출고 금액/수량 기여도) × XYZ(변동계수)** 9개 셀로 분류해 셀별 기본 기법·백테스트 정책·목표 DoS 권고를 다르게 적용 (예: AX = 정교 기법 전부, CZ = 6M 평균·Croston 만). ABC-XYZ 분류 결과는 화면 카드·매트릭스(드릴다운)로 표시
+- 출처: 사용자 지시
+- 영향: R-FC-30 후보 목록, R-FC-35 (ABC-XYZ, 신설), SP2 spec, engine 의존성(statsmodels·pmdarima 대체로 statsforecast, prophet, lightgbm)
