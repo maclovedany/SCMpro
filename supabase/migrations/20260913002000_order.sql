@@ -58,7 +58,8 @@ do $$ declare t text; begin
   end loop; end $$;
 
 -- 계산 입력 (품목별 묶음). 예측 = 최신 프로덕션 챔피언, 없으면 6M 평균 flat.
-create or replace function app.fn_order_inputs(p_plan_ym char(7)) returns jsonb
+drop function if exists app.fn_order_inputs(char);
+create or replace function app.fn_order_inputs(p_plan_ym char(7), p_category text default null) returns jsonb
 language sql stable security definer set search_path = app, analytics, public as $$
 with s as (select key, value from app.system_settings),
 lat as (select id, train_to from analytics.v_forecast_latest_run where run_type = 'production'),
@@ -78,7 +79,7 @@ select jsonb_build_object(
     from analytics.v_item_master m
     left join app.item_setting st on st.item_code = m.key_code left join app.supplier sp on sp.id = st.supplier_id
     left join fc on fc.key_code = m.key_code left join inb on inb.item_code = m.key_code left join ex on ex.item_code = m.key_code left join base on base.item_code = m.key_code
-    where m.category <> 'SW'), '[]'::jsonb)
+    where m.category <> 'SW' and (p_category is null or m.category = p_category)), '[]'::jsonb)
 ) $$;
 
 -- 계획 저장 (draft 생성/교체). 서버(service role)에서 호출하므로 p_user 로 호출자 전달. 라인은 fn_append_plan_lines 로 청크 저장 (authenticated 8s 제한 회피)

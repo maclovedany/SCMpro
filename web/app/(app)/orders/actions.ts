@@ -14,14 +14,20 @@ export async function generatePlan(planYm: string, note?: string): Promise<R> {
   if (!/^\d{4}-\d{2}$/.test(planYm)) return { ok: false, error: "발주월 형식 YYYY-MM" };
   // authenticated 역할은 statement_timeout 8s → 대량 저장은 service role + 청크 (호출자는 p_user 로 전달, 역할 검사는 함수 안에서)
   const admin = createAdminClient();
-  const { data, error } = await admin.schema("app").rpc("fn_order_inputs", { p_plan_ym: planYm });
-  if (error) return { ok: false, error: msg(error) };
-  const inp = data as unknown as { data_last_ym: string | null; settings: Record<string, unknown>; items: ItemInput[] };
+  // PostgREST statement_timeout 8s 안에 끝나도록 카테고리별로 나눠 조회 (D-022)
+  type Inp = { data_last_ym: string | null; settings: Record<string, unknown>; items: ItemInput[] };
+  const parts: Inp[] = [];
+  for (const cat of ["PART", "SUPPLY", "OPTION"]) {
+    const { data, error } = await admin.schema("app").rpc("fn_order_inputs", { p_plan_ym: planYm, p_category: cat });
+    if (error) return { ok: false, error: `입력 조회 실패 (${cat}): ${msg(error)}` };
+    parts.push(data as unknown as Inp);
+  }
+  const inp: Inp = { data_last_ym: parts[0].data_last_ym, settings: parts[0].settings, items: parts.flatMap(p => p.items) };
   if (!inp.data_last_ym) return { ok: false, error: "프로덕션 예측이 없습니다 — engine forecast run 먼저" };
   const lines = computePlan(inp.items, planYm, inp.data_last_ym, parseSettings(inp.settings));
   const { data: id, error: e2 } = await admin.schema("app").rpc("fn_save_order_plan", { p_plan_ym: planYm, p_note: note ?? null as never, p_user: p.user_id });
   if (e2) return { ok: false, error: msg(e2) };
-  const CHUNK = 1000;
+  const CHUNK = 500;
   for (let i = 0; i < lines.length; i += CHUNK) {
     const { error: e3 } = await admin.schema("app").rpc("fn_append_plan_lines", { p_plan_id: id as string, p_lines: lines.slice(i, i + CHUNK) as never });
     if (e3) return { ok: false, error: `라인 저장 실패 (${i}): ${e3.message}` };

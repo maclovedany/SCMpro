@@ -1384,7 +1384,7 @@ export type Database = {
       fn_mark_read: { Args: { p_ids: number[] }; Returns: undefined }
       fn_notification_email_copy: { Args: Record<string, never>; Returns: unknown }
       fn_order_calendar: { Args: { p_from: unknown; p_months: number }; Returns: unknown }
-      fn_order_inputs: { Args: { p_plan_ym: unknown }; Returns: Json }
+      fn_order_inputs: { Args: { p_plan_ym: unknown; p_category: string }; Returns: Json }
       fn_override_line: { Args: { p_line_id: unknown; p_qty: unknown; p_reason: string }; Returns: undefined }
       fn_plan_cat_projection: { Args: { p_plan_id: string }; Returns: Json }
       fn_receive_inbound: { Args: { p_inbound_id: unknown; p_actual: unknown }; Returns: Json }
