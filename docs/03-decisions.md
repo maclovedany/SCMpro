@@ -106,3 +106,19 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 결정: `app.system_settings.fiscal_year_start_month = 4`. 1년 = 4/1 ~ 익년 3/31 (FY25 = 2025-04~2026-03). 연간 집계·전년동월·FY별 정확도·화면 연도 필터 전부 FY 기준. 헬퍼: web `fyOf(ym)`, `fyLabel(ym)`, `fyRange(fy)`; engine `fiscal.py`
 - 출처: 사용자 지시
 - 영향: R-FC-08 (신설), SP2 예측 엔진(계절성 주기·백테스트 구간), 대시보드 연도 필터
+
+## D-016 (2026-09-13) 백테스트 프로토콜 — FY 롤링 학습·평가 + AI 오차 분석으로 정교화
+- 배경: 사용자 지시. 현재 데이터는 FY23~FY25(+FY26 일부)
+- 결정: 초기 검증은 **FY23+FY24 학습 → FY25 예측 vs FY25 실적** 비교. 매년 FY 가 추가되면 학습 구간을 확장해 다음 FY 를 예측·평가(롤링). 각 라운드의 오차 패턴(기종/품목군/월별 Bias·WAPE, 계절성 실패, EOL 전환 오차 등)을 **AI(gpt-5-nano)가 분석**해 기법·파라미터·전처리 조정을 제안하고, 제안은 승인 후 다음 라운드에 적용. 분석 결과·적용 이력 저장
+- 출처: 사용자 지시
+- 영향: R-FC-40~42 (신설), SP2 spec
+
+## D-017 (2026-09-13) AI Agent — OpenAI gpt-5-nano, 전 화면 상단 버튼, 사용자별 대화 저장·맥락 유지, 관리자 질문 통계
+- 결정: (1) LLM 은 OpenAI Chat API, 모델 `gpt-5-nano` (설정값 `ai_model`). (2) 모든 화면 최상단 "AI Agent" 버튼 → ChatGPT 형 채팅 화면. (3) 사용자별 대화(conversation)·메시지 저장, 이전 맥락을 요청에 포함(최근 N 턴 + 요약). (4) 관리자: 질문 로그 조회, 주제 분류·빈도 통계. (5) 에이전트는 시스템 데이터(예측·재고·발주 근거)를 도구로 조회해 답변
+- 출처: 사용자 지시
+- 영향: R-AI-01~06 (신설, 02-domain-rules/ai-agent.md), 서브프로젝트 SP6 추가, 환경변수 OPENAI_API_KEY
+
+## D-018 (2026-09-13) 예측 기법 on/off 관리자 설정
+- 결정: 기법 레지스트리 `app.forecast_method`(key, 이름, 적용 패턴, enabled, params jsonb). 관리자 화면에서 on/off·파라미터 편집. 챔피언 선택(R-FC-30)은 enabled 기법 중에서만. 변경 이력 audit
+- 출처: 사용자 지시
+- 영향: R-FC-34 (신설), SP2 spec
