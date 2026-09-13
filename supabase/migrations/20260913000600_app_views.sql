@@ -13,8 +13,12 @@ with base as (
   from raw.fact_shipment f
   left join (select distinct item_code, is_sw from core.v_option_model_link) l on l.item_code = f.item_code
   where f.item_type in ('SUPPLY','OPTION')
-  union all
-  select item_code, item_type, ym, qty from app.shipment_extra
+  union all   -- 추가 실적(app.shipment_extra): 부품은 HOC 로 귀속(R-XCN-01), 옵션의 SW 는 'SW' (D-030)
+  select case when e.item_type = 'PART' then coalesce(x.hoc_item, e.item_code) else e.item_code end,
+         case when e.item_type = 'OPTION' and coalesce(l.is_sw, false) then 'SW' else e.item_type end, e.ym, e.qty
+  from app.shipment_extra e
+  left join core.v_part_linkage x on x.related_item = e.item_code and e.item_type = 'PART'
+  left join (select distinct item_code, is_sw from core.v_option_model_link) l on l.item_code = e.item_code and e.item_type = 'OPTION'
 ), agg as (
   select key_code, max(category) as category, ym, sum(qty) as qty from base group by key_code, ym
 ), keys as (select key_code, max(category) as category from agg group by key_code),

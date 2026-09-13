@@ -6,6 +6,7 @@ import { parseFile } from "@/lib/upload/parse";
 import { autoMap, normalizeRows, type RowError } from "@/lib/upload/validate";
 import { UPLOAD_TARGETS, TARGET_KEYS, templateCsv, type TargetKey } from "@/lib/upload/templates";
 import { ColumnMapper } from "./ColumnMapper";
+import { detectWide, wideToLong, type WideInfo } from "@/lib/upload/wide";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,22 +24,28 @@ export function UploadWizard({ initialTarget }: { initialTarget?: string }) {
   const [mapping, setMapping] = useState<Record<string, string | undefined>>({});
   const [errorFilter, setErrorFilter] = useState<"all" | "errors">("all");
   const [result, setResult] = useState<ApplyResult | null>(null);
+  const [wide, setWide] = useState<WideInfo | null>(null); const [wideType, setWideType] = useState<"PART" | "SUPPLY" | "OPTION">("PART"); const [wideItemCol, setWideItemCol] = useState("");
   const [pending, start] = useTransition();
   const def = UPLOAD_TARGETS[target];
-  const validated = useMemo(() => (step >= 3 && parsed ? normalizeRows(parsed.rows, mapping, target) : null), [step, parsed, mapping, target]);
+  const validated = useMemo(() => {
+    if (step < 3 || !parsed) return null;
+    if (wide) { const info = { ...wide, itemCol: wideItemCol || wide.itemCol }; const r = wideToLong(parsed.rows, info, wideType); return { rows: r.rows as Record<string, unknown>[], errors: r.errors }; }   // 넓은 형식 → 긴 형식 (D-030)
+    return normalizeRows(parsed.rows, mapping, target);
+  }, [step, parsed, mapping, target, wide, wideType, wideItemCol]);
   const onFile = async (f: File | null) => {
     if (!f) return; setFile(f);
-    try { const p = await parseFile(f); setParsed(p); setMapping(autoMap(p.headers, target)); setStep(2); }
+    try { const p = await parseFile(f); setParsed(p); setMapping(autoMap(p.headers, target));
+      const w = target === "shipment_extra" ? detectWide(p.headers) : null; setWide(w); if (w) setWideItemCol(w.itemCol); setStep(2); }
     catch (e) { toast.error(`파일을 읽을 수 없습니다: ${String(e)}`); }
   };
-  const missingRequired = def.columns.filter(c => c.required && !mapping[c.key]).map(c => c.label);
+  const missingRequired = wide ? [] : def.columns.filter(c => c.required && !mapping[c.key]).map(c => c.label);
   const apply = () => validated && start(async () => {
     const r = await applyUpload(target, validated.rows, file?.name ?? "upload");
     setResult(r); setStep(4);
     if (r.ok) toast.success(`반영 완료: 성공 ${r.ok_count} / 오류 ${r.error_count}`); else toast.error(r.error);
   });
   const errorCsv = (errs: RowError[]) => downloadCsv(`errors-${target}.csv`, "﻿행,오류\n" + errs.map(e => `${e.row},"${e.message.replace(/"/g, '""')}"`).join("\n"));
-  const reset = () => { setStep(1); setFile(null); setParsed(null); setMapping({}); setResult(null); };
+  const reset = () => { setStep(1); setFile(null); setParsed(null); setMapping({}); setResult(null); setWide(null); };
   return (
     <div className="space-y-4">
       <ol className="flex gap-2 text-sm">{["대상·파일", "컬럼 매핑", "검증", "반영"].map((l, i) => <li key={l} className={cn("rounded-full border px-3 py-1", step === i + 1 ? "bg-primary text-primary-foreground" : step > i + 1 ? "bg-muted" : "text-muted-foreground")}>{i + 1}. {l}</li>)}</ol>
@@ -60,7 +67,18 @@ export function UploadWizard({ initialTarget }: { initialTarget?: string }) {
       {step === 2 && parsed && (
         <Card className="space-y-4 p-4">
           <div className="text-sm">{file?.name} · {fmtInt(parsed.rows.length)}행 · 헤더 {parsed.headers.length}개</div>
-          <ColumnMapper target={target} headers={parsed.headers} mapping={mapping} onChange={setMapping} preview={parsed.rows} />
+          {wide ? (
+            <div className="space-y-2 rounded-md border border-blue-200 bg-blue-50/40 p-3 text-sm" data-testid="wide-detected">
+              <div className="font-medium">넓은 형식(월이 열) 감지 — 회사 출고 파일 그대로 올리셨습니다. 월 열 {wide.monthCols.length}개: {wide.monthCols[0].ym} ~ {wide.monthCols[wide.monthCols.length - 1].ym}</div>
+              <div className="flex flex-wrap items-end gap-3">
+                <label>품목코드 열<br /><select name="wide_item_col" className="mt-1 h-9 rounded-md border bg-background px-2" value={wideItemCol} onChange={e => setWideItemCol(e.target.value)}>{[wide.itemCol, ...wide.otherCols].map(h => <option key={h} value={h}>{h}</option>)}</select></label>
+                <label>품목 유형<br /><select name="wide_item_type" className="mt-1 h-9 rounded-md border bg-background px-2" value={wideType} onChange={e => setWideType(e.target.value as "PART" | "SUPPLY" | "OPTION")}><option value="PART">부품 (PART)</option><option value="SUPPLY">소모품 (SUPPLY)</option><option value="OPTION">옵션 (OPTION)</option></select></label>
+              </div>
+              <p className="text-xs text-muted-foreground">각 품목 × 월이 한 행으로 변환됩니다(빈 칸·0 제외). 부품의 옛 코드는 최종 발주 코드(HOC)로 자동 합산되어 학습에 포함됩니다. 이미 있는 달은 덮어씁니다.</p>
+              <div className="overflow-auto rounded-md border bg-background"><table className="w-full text-xs"><thead><tr>{parsed.headers.slice(0, 12).map(h => <th key={h} className="whitespace-nowrap bg-muted/40 px-2 py-1 text-left">{h}</th>)}</tr></thead>
+                <tbody>{parsed.rows.slice(0, 8).map((r, i) => <tr key={i} className="border-t">{parsed.headers.slice(0, 12).map(h => <td key={h} className="whitespace-nowrap px-2 py-0.5">{r[h]}</td>)}</tr>)}</tbody></table></div>
+            </div>
+          ) : <ColumnMapper target={target} headers={parsed.headers} mapping={mapping} onChange={setMapping} preview={parsed.rows} />}
           {missingRequired.length > 0 && <p className="text-sm text-red-600">필수 컬럼 미매핑: {missingRequired.join(", ")}</p>}
           <div className="flex gap-2"><Button variant="outline" onClick={reset}>처음으로</Button><Button onClick={() => setStep(3)} disabled={missingRequired.length > 0}>검증</Button></div>
         </Card>
@@ -83,6 +101,7 @@ export function UploadWizard({ initialTarget }: { initialTarget?: string }) {
             <div className="text-lg font-semibold">반영 완료</div>
             <div className="flex gap-2"><Badge>성공 {fmtInt(result.ok_count)}</Badge>{result.error_count > 0 && <Badge variant="destructive">서버 오류 {fmtInt(result.error_count)}</Badge>}</div>
             {result.errors.length > 0 && <div><ul className="max-h-60 overflow-auto rounded-md border p-2 text-xs">{result.errors.map(e => <li key={e.row}>행 {e.row}: {e.message}</li>)}</ul><Button variant="link" size="sm" onClick={() => errorCsv(result.errors)}>오류 CSV 다운로드</Button></div>}
+            {target === "shipment_extra" && <p className="text-sm text-muted-foreground">출고 통계·품목 차트는 1분 이내에 갱신됩니다(대량 재계산은 백그라운드). 그 다음 예측 화면에서 백테스트·프로덕션 예측을 다시 요청하세요.</p>}
             <a className="text-sm underline" href="/upload?tab=log">업로드 이력 보기</a>
           </>) : <div className="text-red-600">{result.error}</div>}
           <div><Button variant="outline" onClick={reset}>새 업로드</Button></div>

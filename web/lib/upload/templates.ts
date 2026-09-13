@@ -43,7 +43,7 @@ export const UPLOAD_TARGETS: Record<TargetKey, TargetDef> = {
     { key: "date", label: "날짜", required: true, type: "date" },
     { key: "name", label: "이름", required: true, type: "text" },
     { key: "country", label: "국가", required: false, type: "text" } ] },
-  shipment_extra: { label: "출고 실적 추가", description: "raw 이후 월의 출고 (반영 후 물리화 뷰 갱신)", mode: "upsert", columns: [
+  shipment_extra: { label: "출고 실적 추가 (과거 연도·최신 월)", description: "학습에 쓸 출고 실적 추가. 긴 형식(품목·월·수량) 또는 회사 파일 그대로(월이 열로 늘어선 넓은 형식)도 자동 인식. 반영 후 예측 재실행", mode: "upsert", columns: [
     { key: "item_code", label: "품목코드", required: true, type: "text" },
     { key: "ym", label: "월", required: true, type: "ym" },
     { key: "qty", label: "수량", required: true, type: "number" },

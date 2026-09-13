@@ -33,8 +33,14 @@ def _candidates(cfg: Config, pattern: str, abc: str, xyz: str, n_hist: int, leve
     pol = cfg.policy.get(f"{abc}{xyz}")
     return [m for m in cfg.methods if eligible(m, pattern, abc, n_hist, level, pol)]
 
+def trim_leading_zeros(y: np.ndarray) -> np.ndarray:
+    """품목 이력 시작 전 0 구간 제거 (과거 연도 추가 시 달력이 전체로 늘어나므로, D-030)"""
+    nz = np.flatnonzero(np.asarray(y) > 0)
+    return np.asarray(y)[nz[0]:] if len(nz) else np.asarray(y)
+
 def _forecast_one(key: str, y: np.ndarray, h: int, cands: list[MethodSpec], start_ym: str) -> dict[str, tuple[np.ndarray, np.ndarray | None, np.ndarray | None]]:
     out = {}
+    y = trim_leading_zeros(y)
     for m in cands:
         if m.key in GLOBAL_METHODS or m.key in MC_METHODS:
             continue
@@ -79,7 +85,7 @@ def run_items(monthly: pd.DataFrame, prices: pd.Series | None, cfg: Config, *, t
     for k in series:
         r = cls_map.loc[k]
         nz = int((series[k] > 0).sum())
-        cands = _candidates(cfg, r["pattern"], r["abc"], r["xyz"], len(series[k]) if nz else 0, "item")
+        cands = _candidates(cfg, r["pattern"], r["abc"], r["xyz"], len(trim_leading_zeros(series[k])) if nz else 0, "item")
         if cfg.heavy_limit is not None:
             if any(c.key in ("arima", "prophet") for c in cands):
                 heavy_count += 1

@@ -22,7 +22,9 @@ export async function applyUpload(target: TargetKey, rows: Record<string, unknow
     okc += d.ok_count; errc += d.error_count; uploadId = d.upload_id;
     errors.push(...d.errors.map(e => ({ row: e.row + i, message: e.message })));
   }
-  if (target === "shipment_extra") { await createAdminClient().schema("app").rpc("fn_refresh_matviews"); }
+  if (target === "shipment_extra") {   // 물리화 뷰 재계산은 8초 제한을 넘기므로 플래그만 세움 → pg_cron 이 1분 내 DB 안에서 갱신 (D-030)
+    await createAdminClient().schema("app").rpc("fn_request_refresh");
+  }
   revalidatePath("/items"); revalidatePath("/dashboard"); revalidatePath("/upload");
   return { ok: true, upload_id: uploadId, ok_count: okc, error_count: errc, errors };
 }

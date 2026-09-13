@@ -44,3 +44,9 @@ def test_run_models_with_ol():
     assert set(acc.method) >= {"sales_ol", "scm_ol", "ol_bias"}
     ob = res[(res.method == "ol_bias")].value.iloc[0]
     assert 85 < ob < 95      # 130 × (1 − 0.3) = 91
+
+
+def test_trim_leading_zeros():
+    from scm_engine.forecast.backtest import trim_leading_zeros
+    assert list(trim_leading_zeros(np.array([0, 0, 3, 0, 5]))) == [3, 0, 5]
+    assert len(trim_leading_zeros(np.zeros(4))) == 4

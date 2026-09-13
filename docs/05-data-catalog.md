@@ -94,7 +94,7 @@ raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `
 | `app.attach_rate` ★ | 기종×옵션 장착률, 적용월 | R-BOM-04/05 |
 | `app.eol_eos` ★ | 기종 출시/EOL/EOS | R-FC-07 |
 | `app.holiday` ★ | 공휴일 | R-SCH-04 |
-| `app.shipment_extra` | raw 수정 금지 원칙에 따른 추가월 출고 (v_item_monthly UNION) | — |
+| `app.shipment_extra` | 추가 출고 실적(과거 연도·최신 월). 업로드는 긴 형식 또는 회사 파일 넓은 형식 자동 변환. v_item_monthly 가 부품은 HOC 귀속·옵션 SW 분리해 UNION. 반영 후 `fn_request_refresh` → pg_cron `scm-refresh`(매분) 갱신 | D-030 |
 | `app.upload_log` | 업로드 이력·오류 행 | D-007 |
 | `app.audit_log` | 전 테이블 before/after/actor 이력 | 이력 요구 전부 |
 | `app.approval` ★ | 범용 승인함 kind(item_setting/target_dos/allocation_mode/order_plan/priority_alloc/bulkdeal) | R-OQ-40, R-AL-15 |

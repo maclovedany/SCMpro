@@ -114,3 +114,21 @@ do $$ begin
   perform cron.unschedule('scm-tick') where exists (select 1 from cron.job where jobname = 'scm-tick');
   perform cron.schedule('scm-tick', '*/10 * * * *', 'select app.fn_tick()');
 exception when others then raise notice 'pg_cron 미사용: %', sqlerrm; end $$;
+
+-- 물리화 뷰 갱신 요청 (D-030): 업로드 직후 8초 제한 안에 못 끝나므로 플래그를 세우고 pg_cron 이 DB 안에서 갱신
+insert into app.system_settings(key, value, description) values ('matview_refresh_requested', 'false', '출고 실적 변경 후 물리화 뷰 갱신 대기 플래그 (내부용)') on conflict (key) do nothing;
+create or replace function app.fn_request_refresh() returns void
+language sql security definer set search_path = app, public as
+$$ update app.system_settings set value = 'true', updated_at = now() where key = 'matview_refresh_requested' $$;
+create or replace function app.fn_refresh_if_requested() returns boolean
+language plpgsql security definer set search_path = app, analytics, public as $$
+begin
+  if coalesce((select value::text from app.system_settings where key = 'matview_refresh_requested'), 'false') <> 'true' then return false; end if;
+  update app.system_settings set value = 'false', updated_at = now() where key = 'matview_refresh_requested';
+  perform app.fn_refresh_matviews();
+  return true;
+end $$;
+do $$ begin
+  perform cron.unschedule('scm-refresh') where exists (select 1 from cron.job where jobname = 'scm-refresh');
+  perform cron.schedule('scm-refresh', '* * * * *', 'select app.fn_refresh_if_requested()');
+exception when others then raise notice 'pg_cron 미사용: %', sqlerrm; end $$;

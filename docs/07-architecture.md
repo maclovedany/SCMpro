@@ -137,7 +137,7 @@ Topbar 버튼 → 우측 리사이즈 패널 → POST /api/ai/chat {conversation
 | `app.fn_tick()` (배정 만료·예고·승인 반복 알림·미제출 알림) | pg_cron `scm-tick` | 10분 |
 | 이메일 발송 (`notification.channel=email`) | `engine tick` — 현재 이 Mac 의 launchd `com.scmpro.tick`(10분, 로그 /tmp/scmpro/tick.log). SMTP 미설정 시 skipped (Q-019) | 10분 |
 | 예측 백테스트·프로덕션 | `engine forecast backtest/run` 또는 웹 요청 후 `engine forecast pending` | 월 1회 + 수동 |
-| 물리화 뷰 refresh | `fn_refresh_matviews` — 출고 업로드 후 자동, 엔진 실행 후 | 이벤트 |
+| 물리화 뷰 refresh | 출고 업로드 시 `fn_request_refresh` 플래그 → pg_cron `scm-refresh`(매분) 가 `fn_refresh_matviews` 실행 (8초 제한 회피, D-030) | 1분 |
 
 ## 7. 환경·배포
 
