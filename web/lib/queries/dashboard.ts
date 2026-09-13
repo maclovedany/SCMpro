@@ -1,12 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import { drillHref } from "@/lib/drill";
+import { withRetry } from "@/lib/supabase/retry";
 import { fmtInt, fmtPct, fmtDate } from "@/lib/format";
 export type DashboardSummary = { items_by_category: Record<string, number>; dummy_ratio: number | null; pending_approvals: number;
   last_upload: { file_name: string; uploaded_at: string; ok_count: number; error_count: number } | null; snapshot_date: string | null; missing_target_dos: number; order?: { id: string; plan_ym: string; status: string; summary: Record<string, number> | null; amount: number } | null };
 export async function fetchDashboardSummary(sb: SupabaseClient<Database>): Promise<DashboardSummary> {
-  const { data, error } = await sb.schema("app").rpc("fn_dashboard_summary");
-  if (error) throw error;
+  const { data, error } = await withRetry(() => sb.schema("app").rpc("fn_dashboard_summary"));
+  if (error) throw new Error(`대시보드 요약 조회 실패 [${error.code}] ${error.message}`);
   return data as unknown as DashboardSummary;
 }
 export type CardSpec = { label: string; value: string; hint?: string; href: string; tone?: "default" | "warn" | "danger" };

@@ -6,10 +6,11 @@ import type { Profile } from "@/lib/auth/getProfile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { withRetry } from "@/lib/supabase/retry";
 import { AiPanelButton } from "@/components/ai/AiPanelButton";
 export async function Topbar({ profile }: { profile: Profile }) {
   const sb = await createServerSupabase();
-  const { data: unread } = await sb.schema("app").rpc("fn_unread_count");
+  const { data: unread } = await withRetry(() => sb.schema("app").rpc("fn_unread_count"));
   return (
     <header className="flex h-12 items-center justify-between border-b px-6">
       <div className="text-sm text-muted-foreground">복합기 수요예측 · 월간 발주 시스템</div>
