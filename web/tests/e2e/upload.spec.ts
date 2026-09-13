@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { login } from "./helpers";
 test("재고 CSV 업로드 → 검증 → 반영 → 상세 반영 → 이력", async ({ page }) => {
-  await login(page, "manager@scm.test");
+  await login(page, "insightdany@naver.com");
   await page.goto("/upload");
   await page.selectOption("select[name=target]", "inventory_snapshot");
   await page.setInputFiles("input[type=file]", "tests/fixtures/inventory_sample.csv");

@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { login } from "./helpers";
 test("관리자 화면 렌더 + 품목 설정 승인 요청", async ({ page }) => {
-  await login(page, "admin@scm.test");
+  await login(page, "insightdany@naver.com");
   await page.goto("/admin/settings"); await expect(page.getByTestId("setting-flex_ranges")).toContainText("1번째 달 ±20%"); await expect(page.getByText("ol_lead_months")).toHaveCount(0);
   await page.goto("/admin/suppliers"); await expect(page.getByText("SUP-VN")).toBeVisible();
   await page.goto("/admin/holidays?year=2026"); await expect(page.getByText("개천절")).toBeVisible();

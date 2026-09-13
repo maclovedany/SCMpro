@@ -5,7 +5,7 @@ const ITEM = "556K59129";
 test("영업 주문 → 임시배정 → 부족 시 부분/대기 → 입고 자동배정 → 수동 우선배정 승인 → 확정 → 해제 → tick", async ({ page }) => {
   test.setTimeout(240_000);
   // 영업: 가용 조회 + 주문 1 (가용 내)
-  await login(page, "sales@scm.test");
+  await login(page, "insightcha0624@gmail.com");
   await page.goto(`/sales-orders?item=${ITEM}`);
   const availText = await page.getByTestId("avail").innerText();
   const avail = Number(availText.match(/가용 ([\d,]+)/)![1].replace(/,/g, ""));
@@ -29,7 +29,7 @@ test("영업 주문 → 임시배정 → 부족 시 부분/대기 → 입고 자
   const rowA = page.locator("[data-testid=so-row]").filter({ hasText: "E2E-A" }).first();
   await rowA.getByRole("button", { name: "수주 확정" }).click(); await expect(page.getByText("수주 확정 → 확정배정")).toBeVisible();
   // SCM: 큐에서 순번 2(E2E-C) 우선배정 → 승인 필요. 먼저 입고 처리로 가용 확보
-  await page.context().clearCookies(); await login(page, "manager@scm.test");
+  await page.context().clearCookies(); await login(page, "insightdany@naver.com");
   await page.goto("/allocation");
   await expect(page.locator("[data-testid=queue-row]").filter({ hasText: ITEM }).first()).toBeVisible();
   const inb = page.locator("[data-testid=inbound-row]").filter({ hasText: "PO-E2E-ALLOC" }).first();
@@ -41,19 +41,19 @@ test("영업 주문 → 임시배정 → 부족 시 부분/대기 → 입고 자
     await prioBtn.click(); await page.fill("input[name=alloc_qty]", "1"); await page.fill("textarea[name=alloc_reason]", "E2E 긴급 고객");
     await page.getByRole("button", { name: "배정", exact: true }).click(); await expect(page.getByText(/팀장 승인 요청/)).toBeVisible();
     await page.getByRole("button", { name: /tick/ }).click(); await expect(page.getByText(/승인 반복 알림/)).toBeVisible();
-    await page.context().clearCookies(); await login(page, "lead@scm.test");
+    await page.context().clearCookies(); await login(page, "upflash@naver.com");
     await page.goto("/approvals?status=pending");
     const row = page.locator("[data-testid=approval-row]").filter({ hasText: "우선 배정" }).first();
     await expect(row).toBeVisible(); await row.getByRole("button", { name: "승인" }).click(); await page.getByRole("button", { name: "확인" }).click();
     await expect(page.getByText("승인했습니다")).toBeVisible();
   }
   // 사업강화부 우선순위
-  await page.context().clearCookies(); await login(page, "biz@scm.test");
+  await page.context().clearCookies(); await login(page, "pro-worker@daum.net");
   await page.goto("/allocation/priority");
   const prow = page.locator("[data-testid=prio-row]").first();
   if (await prow.count()) { const no = (await prow.locator("td").nth(1).innerText()).trim(); await page.getByLabel(`${no} 우선순위`).fill("1"); await page.getByLabel(`${no} 사유`).fill("E2E 전략 고객"); await prow.getByRole("button", { name: "저장" }).click(); await expect(page.getByText("우선순위 변경")).toBeVisible(); }
   // SCM: 확정배정 해제 → 주문 취소
-  await page.context().clearCookies(); await login(page, "manager@scm.test");
+  await page.context().clearCookies(); await login(page, "insightdany@naver.com");
   await page.goto("/sales-orders?all=1");
   const confirmed = page.locator("[data-testid=so-row]").filter({ hasText: "E2E-A" }).first();
   await confirmed.getByRole("button", { name: "확정배정 해제" }).click(); await page.fill("textarea[name=cancel_reason]", "E2E 해제"); await page.getByRole("button", { name: "확인" }).click();

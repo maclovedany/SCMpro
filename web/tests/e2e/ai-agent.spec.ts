@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { login } from "./helpers";
 test("AI Agent 패널: 열기·리사이즈·질문(도구 호출)·후속 질문·유지·관리자 통계", async ({ page }) => {
   test.setTimeout(240_000);
-  await login(page, "manager@scm.test");
+  await login(page, "insightdany@naver.com");
   await page.getByTestId("ai-agent-btn").click();
   const panel = page.getByTestId("ai-panel"); await expect(panel).toBeVisible();
   const w0 = (await panel.boundingBox())!.width;
@@ -26,7 +26,7 @@ test("AI Agent 패널: 열기·리사이즈·질문(도구 호출)·후속 질�
   await expect(msgs.locator("[data-role=assistant]").last()).not.toContainText("생각 중", { timeout: 120_000 });
   expect(await msgs.locator("[data-role=user]").count()).toBe(2);
   // 관리자 통계
-  await page.context().clearCookies(); await login(page, "admin@scm.test");
+  await page.context().clearCookies(); await login(page, "insightdany@naver.com");
   await page.goto("/admin/ai-stats");
   await expect(page.locator("a[aria-label$='상세 보기']")).toHaveCount(4);
   await expect(page.locator("[data-testid=ai-log-row]").first()).toBeVisible();

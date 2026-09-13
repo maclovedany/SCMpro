@@ -57,8 +57,9 @@ uv --directory engine run engine forecast tune                      # gpt-5-nano
 uv --directory engine run engine forecast pending                   # 웹에서 요청한 런 처리
 uv --directory engine run engine tick                               # pg_cron 대안: 배정 만료·알림·제출 알림·이메일 발송
 uv --directory engine run engine notify                             # 이메일 큐 발송 (SMTP 미설정 시 skipped)
+# 이 Mac 에 launchd 잡 com.scmpro.tick 이 10분마다 `engine tick` 실행 (~/Library/LaunchAgents/com.scmpro.tick.plist, 로그 /tmp/scmpro/tick.log)
 # Web
-cd web && npm run dev            # http://localhost:3000  (테스트 계정: admin@scm.test / lead@ / manager@ / sales@ / biz@ — 비밀번호 Scm!2026test)
+cd web && npm run dev            # http://localhost:3000  (계정: scripts/seed-users.mts — admin insightdany@naver.com, scm_lead upflash@naver.com, sales insightcha0624@gmail.com, biz_enable pro-worker@daum.net, marketing alltest@nate.com, service imagineworld@kakao.com · 초기 비밀번호 Scm!2026test)
 npm test · npm run lint · npx tsc --noEmit
 E2E_BASE_URL=http://localhost:3001 npm run test:e2e   # 이미 떠 있는 dev 서버에 붙여 실행 (Next 16 은 같은 폴더에 dev 서버 2개 불가). 서버가 없으면 E2E_BASE_URL 없이 실행하면 3000 에 자동 기동
 # Engine

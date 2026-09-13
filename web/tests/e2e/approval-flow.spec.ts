@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { login } from "./helpers";
 const CODE = "556K59129";
 test("품목담당자 승인 요청 → 팀장 승인 → 반영·알림", async ({ page }) => {
-  await login(page, "manager@scm.test");
+  await login(page, "insightdany@naver.com");
   await page.goto(`/admin/item-settings?item=${CODE}`);
   const dos = page.locator("input[name=target_dos_days]");
   const before = await dos.inputValue();
@@ -13,7 +13,7 @@ test("품목담당자 승인 요청 → 팀장 승인 → 반영·알림", async
   await expect(page.getByText("승인 대기 중")).toBeVisible();
   // 팀장
   await page.context().clearCookies();
-  await login(page, "lead@scm.test");
+  await login(page, "upflash@naver.com");
   await page.goto("/notifications");
   await expect(page.getByText("승인 요청: item_setting").first()).toBeVisible();
   await page.goto("/approvals?status=pending");
@@ -27,7 +27,7 @@ test("품목담당자 승인 요청 → 팀장 승인 → 반영·알림", async
   await expect(page.getByText(`${next} · 1`)).toBeVisible();
   // 요청자: 설정 화면 반영 + 알림
   await page.context().clearCookies();
-  await login(page, "manager@scm.test");
+  await login(page, "insightdany@naver.com");
   await page.goto(`/admin/item-settings?item=${CODE}`);
   await expect(page.locator("input[name=target_dos_days]")).toHaveValue(next);
   await expect(page.getByText("승인됨")).toBeVisible();

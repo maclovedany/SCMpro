@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { login } from "./helpers";
 test("AI 제안 → 승인 요청 → 팀장 반려 (승인 경로는 sp2-verification 기록)", async ({ page }) => {
-  await login(page, "manager@scm.test");
+  await login(page, "insightdany@naver.com");
   await page.goto("/forecast/runs");
   await page.locator("tbody tr").filter({ hasText: "backtest" }).first().locator("a").click();
   const box = page.getByTestId("proposals");
@@ -12,7 +12,7 @@ test("AI 제안 → 승인 요청 → 팀장 반려 (승인 경로는 sp2-verifi
   await pendingBtn.click();
   await expect(page.getByText("승인 요청 완료")).toBeVisible();
   await page.context().clearCookies();
-  await login(page, "lead@scm.test");
+  await login(page, "upflash@naver.com");
   await page.goto("/approvals?status=pending");
   const row = page.locator("[data-testid=approval-row]").filter({ hasText: "AI 예측 조정" }).first();
   await expect(row).toBeVisible();

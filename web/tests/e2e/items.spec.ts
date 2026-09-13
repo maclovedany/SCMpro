@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { login } from "./helpers";
 test("품목 목록 필터·상세", async ({ page }) => {
-  await login(page, "manager@scm.test");
+  await login(page, "insightdany@naver.com");
   await page.goto("/items?category=PART");
   await expect(page.getByText(/개 · 부품은 HOC/)).toBeVisible();
   await expect(page.locator("tbody tr").first()).toBeVisible();

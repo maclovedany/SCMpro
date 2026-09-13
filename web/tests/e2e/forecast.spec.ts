@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { login } from "./helpers";
 test("예측 대시보드 · 기종 비교 · 런 상세 · 기법 토글", async ({ page }) => {
-  await login(page, "admin@scm.test");
+  await login(page, "insightdany@naver.com");
   await page.goto("/forecast");
   await expect(page.getByRole("heading", { name: "예측" })).toBeVisible();
   const cards = page.locator("a[aria-label$='상세 보기']"); await expect(cards).toHaveCount(4);

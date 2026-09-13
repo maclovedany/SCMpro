@@ -3,7 +3,7 @@ import { login } from "./helpers";
 test.describe.configure({ mode: "serial" });
 test("추가수요 등록(수주확정·Bulkdeal) → 계획 생성 → 오버라이드 → 확정 → 승인 → 제출 OL → 보고", async ({ page }) => {
   test.setTimeout(180_000);
-  await login(page, "manager@scm.test");
+  await login(page, "insightdany@naver.com");
   // 추가 수요
   await page.goto("/extra-demand");
   await page.selectOption("select[name=kind]", "confirmed_order");
@@ -35,7 +35,7 @@ test("추가수요 등록(수주확정·Bulkdeal) → 계획 생성 → 오버�
   await expect(page.getByText("확정(승인 대기)").first()).toBeVisible();
   const planUrl = page.url().split("?")[0];
   // 팀장 승인 (계획 + bulkdeal)
-  await page.context().clearCookies(); await login(page, "lead@scm.test");
+  await page.context().clearCookies(); await login(page, "upflash@naver.com");
   await page.goto("/approvals?status=pending");
   for (const text of ["발주 계획 승인", "Bulkdeal 추가 발주"]) {
     const row = page.locator("[data-testid=approval-row]").filter({ hasText: text }).first();
