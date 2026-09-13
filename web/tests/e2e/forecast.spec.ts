@@ -32,7 +32,7 @@ test("예측 대시보드 · 기종 비교 · 런 상세 · 기법 토글", asyn
   await page.reload(); await expect(page.getByLabel("prophet 사용")).toBeChecked({ checked: before });
   // 품목 상세 예측
   await page.goto("/items/556K59129");
-  await expect(page.getByText("Holt", { exact: true })).toBeVisible();   // 챔피언 기법 카드
+  await expect(page.getByText("Holt", { exact: true }).first()).toBeVisible();   // 챔피언 기법 카드
   await expect(page.getByText("챔피언 기법")).toBeVisible();
   await page.screenshot({ path: "test-results/item-forecast.png", fullPage: true });
 });
