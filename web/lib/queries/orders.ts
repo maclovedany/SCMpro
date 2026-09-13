@@ -53,3 +53,49 @@ export function buildTreeRows(catAgg: CatAgg, lines: Pick<LineRow, "key_code" | 
           { id: `it-${l.key_code}-st`, label: "기초", level: 2, values: iv(p => p.start) }, { id: `it-${l.key_code}-end`, label: "기말", level: 2, values: iv(p => p.end) },
           { id: `it-${l.key_code}-ord`, label: "확정 발주", level: 2, editable: true, values: Object.fromEntries(months.map(m => [m, m === l.need_ym ? Number(l.override_qty ?? l.final_qty ?? 0) : null])) } ] }; }) ] }; });
 }
+
+/** 발주 계획 개요 (D-035): RPC fn_plan_overview 한 번 — 카테고리·공급처·필요월·상위 품목·리스크 */
+export type PlanOverview = {
+  by_category: { category: string; n: number; qty: number; amount: number; stockout: number; blocked: number; flex_hit: number; ol_base_amount: number; required_amount: number }[];
+  by_supplier: { supplier: string; n: number; amount: number }[];
+  by_need_ym: { need_ym: string; category: string; n: number; amount: number }[];
+  top_items: { key_code: string; category: string | null; qty: number; amount: number | null; stockout_risk: boolean; overridden: boolean }[];
+  risk_by_cat_abc: { category: string; abc: string; n: number }[];
+};
+export async function fetchPlanOverview(sb: SB, planId: string): Promise<PlanOverview> {
+  const { data, error } = await sb.schema("app").rpc("fn_plan_overview", { p_plan_id: planId });
+  if (error) throw error;
+  const d = (data ?? {}) as Partial<PlanOverview>;
+  return { by_category: d.by_category ?? [], by_supplier: d.by_supplier ?? [], by_need_ym: d.by_need_ym ?? [], top_items: d.top_items ?? [], risk_by_cat_abc: d.risk_by_cat_abc ?? [] };
+}
+const won = (n: number) => (Math.abs(n) >= 1e8 ? `${(n / 1e8).toFixed(n >= 1e9 ? 0 : 1)}억` : `${Math.round(n / 1e4).toLocaleString("ko-KR")}만`);
+/** 계획 개요 → 차트 데이터 (순수 함수) */
+export function planCharts(o: PlanOverview) {
+  const cats = o.by_category.map(c => c.category);
+  const total = o.by_category.reduce((a, c) => a + Number(c.amount), 0);
+  const topCat = [...o.by_category].sort((a, b) => Number(b.amount) - Number(a.amount))[0];
+  const months = Array.from(new Set(o.by_need_ym.map(x => x.need_ym))).sort();
+  const firstShare = months[0] ? o.by_need_ym.filter(x => x.need_ym === months[0]).reduce((a, x) => a + Number(x.amount), 0) / Math.max(1, total) : 0;
+  const topSup = o.by_supplier[0];
+  const riskTotal = o.risk_by_cat_abc.reduce((a, r) => a + r.n, 0), riskA = o.risk_by_cat_abc.filter(r => r.abc === "A").reduce((a, r) => a + r.n, 0);
+  const olDelta = o.by_category.reduce((a, c) => a + Number(c.required_amount) - Number(c.ol_base_amount), 0), olBase = o.by_category.reduce((a, c) => a + Number(c.ol_base_amount), 0);
+  return {
+    category: { data: o.by_category.map(c => ({ name: c.category, value: Math.round(Number(c.amount)) })), insight: topCat ? `${topCat.category} 이 ${won(Number(topCat.amount))} (${Math.round(100 * Number(topCat.amount) / Math.max(1, total))}%) 으로 최대 · 제출 OL 대비 필요량 ${olBase ? `${olDelta >= 0 ? "+" : ""}${Math.round(1000 * olDelta / olBase) / 10}%` : "-"}` : "라인 없음" },
+    supplier: { labels: o.by_supplier.map(s => s.supplier), values: o.by_supplier.map(s => Math.round(Number(s.amount))), insight: topSup ? `${topSup.supplier} ${won(Number(topSup.amount))} · ${topSup.n.toLocaleString("ko-KR")} 품목 — 출항 일정 확인 우선` : "-" },
+    needYm: { categories: months, series: cats.map(c => ({ name: c, data: months.map(m => Math.round(Number(o.by_need_ym.find(x => x.need_ym === m && x.category === c)?.amount ?? 0))) })), insight: months[0] ? `${months[0]} 필요분이 금액의 ${Math.round(firstShare * 100)}% — 리드타임상 이번 달 발주 필수` : "-" },
+    topItems: { labels: o.top_items.map(t => t.key_code), values: o.top_items.map(t => Math.round(Number(t.amount ?? 0))), flags: o.top_items.map(t => t.stockout_risk), insight: o.top_items[0] ? `${o.top_items[0].key_code} 한 품목이 ${won(Number(o.top_items[0].amount ?? 0))} · 상위 10 품목 = ${Math.round(100 * o.top_items.reduce((a, t) => a + Number(t.amount ?? 0), 0) / Math.max(1, total))}%` : "-" },
+    risk: { categories: cats, series: ["A", "B", "C"].map(abc => ({ name: `${abc} 등급`, data: cats.map(c => o.risk_by_cat_abc.find(r => r.category === c && r.abc === abc)?.n ?? 0) })), insight: riskTotal ? `품절 위험 ${riskTotal.toLocaleString("ko-KR")}개 중 A 등급 ${riskA}개 — 오버라이드·긴급 발주 검토` : "품절 위험 없음" },
+    total,
+  };
+}
+export type PlanCharts = ReturnType<typeof planCharts>;
+/** 계획 이력 차트: 발주월별 대표 계획(승인 > 최신) 금액·품절 */
+export function planHistory(plans: PlanRow[]) {
+  const by = new Map<string, PlanRow>();
+  for (const p of [...plans].sort((a, b) => (a.plan_ym! > b.plan_ym! ? 1 : -1))) { const cur = by.get(p.plan_ym!); if (!cur || (p.status === "approved" && cur.status !== "approved")) by.set(p.plan_ym!, p); }
+  const rows = [...by.values()].sort((a, b) => (a.plan_ym! > b.plan_ym! ? 1 : -1));
+  const last = rows[rows.length - 1], prev = rows[rows.length - 2];
+  const d = last && prev && Number(prev.amount) ? (Number(last.amount) - Number(prev.amount)) / Number(prev.amount) : null;
+  return { x: rows.map(r => r.plan_ym!), amount: rows.map(r => Number(r.amount)), status: rows.map(r => r.status ?? ""), stockout: rows.map(r => Number(((r.summary ?? {}) as Record<string, number>).stockout ?? 0)),
+    insight: d == null ? (last ? `${last.plan_ym} 계획 ${won(Number(last.amount))} — 비교할 전월 계획 없음` : "계획 없음") : `${last.plan_ym} 는 ${prev.plan_ym} 대비 ${d >= 0 ? "+" : ""}${Math.round(d * 1000) / 10}% (${won(Number(last.amount))})` };
+}

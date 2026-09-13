@@ -6,20 +6,20 @@ language sql stable security definer set search_path = app, analytics, public as
            coalesce(m.on_hand, 0) * coalesce(s.unit_price, 0) as stock_value
     from analytics.v_item_master m left join app.item_setting s on s.item_code = m.key_code
     where m.category <> 'SW'
-  ), lastm as (select max(ym) as ym from analytics.v_item_monthly where qty > 0)
+  ), lastm as (select max(ym) as ym from analytics.v_item_monthly where qty > 0),
+  bounds as (select ym as to_ym, to_char(to_date(ym, 'YYYY-MM') - interval '12 months', 'YYYY-MM')::character(7) as from_ym from lastm)   -- ym 과 같은 타입이어야 인덱스 조건
   select jsonb_build_object(
-    'matrix', (select coalesce(jsonb_agg(jsonb_build_object('abc', abc, 'xyz', xyz, 'n_items', n_items, 'value_share', value_share,
-                 'stock_value', (select sum(stock_value) from im where im.abc = x.abc and im.xyz = x.xyz),
-                 'avg_dos', (select round(avg(dos_days)) from im where im.abc = x.abc and im.xyz = x.xyz and dos_days is not null)) order by abc, xyz), '[]'::jsonb)
-               from analytics.v_abc_xyz_matrix x),
+    'matrix', (select coalesce(jsonb_agg(jsonb_build_object('abc', x.abc, 'xyz', x.xyz, 'n_items', x.n_items, 'value_share', x.value_share, 'stock_value', c.sv, 'avg_dos', c.dos) order by x.abc, x.xyz), '[]'::jsonb)
+               from analytics.v_abc_xyz_matrix x
+               left join (select abc, xyz, sum(stock_value) sv, round(avg(dos_days)) dos from im group by 1, 2) c on c.abc = x.abc and c.xyz = x.xyz),
     'grade', (select coalesce(jsonb_agg(jsonb_build_object('abc', abc, 'n_items', n, 'stock_value', sv, 'avg_dos', dos, 'target_dos', tdos, 'excess', ex, 'stockout', so) order by abc), '[]'::jsonb) from (
                 select abc, count(*) n, sum(stock_value) sv, round(avg(dos_days)) dos, round(avg(target_dos_days)) tdos,
                        count(*) filter (where target_dos_days is not null and dos_days >= 2 * target_dos_days) ex,
                        count(*) filter (where coalesce(on_hand, 0) <= 0) so
                 from im where abc is not null group by abc) g),
     'trend', (select coalesce(jsonb_agg(jsonb_build_object('ym', ym, 'category', category, 'qty', qty) order by ym, category), '[]'::jsonb) from (
-                select v.ym, v.category, sum(v.qty) qty from analytics.v_item_monthly v, lastm
-                where v.category in ('PART','SUPPLY','OPTION') and v.ym > to_char(to_date(lastm.ym, 'YYYY-MM') - interval '12 months', 'YYYY-MM') and v.ym <= lastm.ym
+                select v.ym, v.category, sum(v.qty) qty from analytics.v_item_monthly v
+                where v.category in ('PART','SUPPLY','OPTION') and v.ym > (select from_ym from bounds) and v.ym <= (select to_ym from bounds)   -- 스칼라 → 인덱스 조건
                 group by 1, 2) t),
     'champion', (select coalesce(jsonb_agg(jsonb_build_object('method', method, 'n', n) order by n desc), '[]'::jsonb) from (
                 select coalesce(champion_method, '(없음)') method, count(*) n from app.item_class group by 1) c),

@@ -36,6 +36,7 @@ join cal c on c.cat_key = case when k.category = 'SW' then 'OPTION' else k.categ
 left join agg a on a.key_code = k.key_code and a.ym = c.ym;
 create unique index on analytics.v_item_monthly(key_code, ym);
 create index on analytics.v_item_monthly(category);
+create index on analytics.v_item_monthly(ym);   -- 월 범위 조회(예측 개요 추이, D-034 성능)
 comment on materialized view analytics.v_item_monthly is '품목(HOC)×월 출고. 0 채움. SP2 예측 입력';
 
 -- 출고 통계 (물리화). 설정·재고는 아래 v_item_master(일반 뷰)에서 실시간 조인 → 승인·업로드 즉시 반영

@@ -10,7 +10,7 @@ test("메뉴 전환 < 1000ms", async ({ page }) => {
   const results: { route: string; ms: number }[] = [];
   for (const [href, label] of ROUTES) {
     const t0 = Date.now();
-    await page.locator("nav[aria-label='주 메뉴']").getByRole("link", { name: label, exact: true }).click();
+    await page.locator("nav[aria-label='주 메뉴']").getByRole("link", { name: new RegExp(`^${label}( \\d+)?$`) }).click();   // 배지 숫자(알림 4 등) 허용
     await page.waitForURL(`**${href}`);
     await page.locator("main h1").first().waitFor();   // 본문 렌더 완료 = 체감 전환
     results.push({ route: href, ms: Date.now() - t0 });

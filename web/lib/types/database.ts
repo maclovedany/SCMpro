@@ -1389,6 +1389,7 @@ export type Database = {
       fn_order_inputs: { Args: { p_plan_ym: unknown; p_category: string }; Returns: Json }
       fn_override_line: { Args: { p_line_id: unknown; p_qty: unknown; p_reason: string }; Returns: undefined }
       fn_plan_cat_projection: { Args: { p_plan_id: string }; Returns: Json }
+      fn_plan_overview: { Args: { p_plan_id: string }; Returns: Json }
       fn_receive_inbound: { Args: { p_inbound_id: unknown; p_actual: unknown }; Returns: Json }
       fn_refresh_if_requested: { Args: Record<string, never>; Returns: unknown }
       fn_refresh_matviews: { Args: Record<string, never>; Returns: undefined }
