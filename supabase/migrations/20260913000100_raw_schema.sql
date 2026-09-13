@@ -2,7 +2,7 @@
 -- 01. raw 스키마 — 실데이터 원본 적재용 테이블
 --
 --   실행 위치 : Supabase → SQL Editor → 파일 전체를 붙여넣고 실행
---   선행 조건 : 5회차 STEP 2 (sql/03-auth.sql · 04-rls.sql) 적용 완료
+--   재실행 안전: 테이블은 if not exists (데이터 보존), 뷰는 drop 후 재생성
 --
 --   원칙 ①  raw 는 CSV 원본 그대로입니다. 적재 후 수정하지 않습니다.
 --   원칙 ②  화면과 Tool 은 raw 를 직접 조회하지 않습니다. analytics 뷰만 읽습니다.
@@ -29,8 +29,6 @@ drop view  if exists analytics.v_ol_accuracy         cascade;
 drop view  if exists analytics.v_item_demand_kpi     cascade;
 drop view  if exists analytics.v_item_demand_profile cascade;
 drop view  if exists analytics.v_shipment_trend      cascade;
--- ★ 5회차 뷰(v_sku_demand_profile · v_demand_profile_kpi · v_stockout_risk 등)는
---   여기서 지우지 않습니다. 기존 화면이 아직 읽고 있습니다.
 drop view  if exists core.v_shipment_by_hoc         cascade;
 drop view  if exists core.v_option_commonality      cascade;
 drop view  if exists core.v_part_linkage            cascade;
@@ -38,23 +36,13 @@ drop view  if exists core.v_model                   cascade;
 drop view  if exists core.v_item                    cascade;
 drop view  if exists core.v_ym_calendar             cascade;
 
-drop table if exists raw.fact_shipment        cascade;
-drop table if exists raw.fact_mc_plan_actual  cascade;
-drop table if exists raw.bridge_bom           cascade;
-drop table if exists raw.bridge_scc_config    cascade;
-drop table if exists raw.bridge_mc_cap        cascade;
-drop table if exists raw.bridge_cap_option    cascade;
-drop table if exists raw.bridge_option_model  cascade;
-drop table if exists raw.bridge_xcn           cascade;
-drop table if exists raw.dim_item             cascade;
-drop table if exists raw.dim_model            cascade;
 
 -- ------------------------------------------------------------
 -- 마스터 (dim)
 -- ------------------------------------------------------------
 
 -- 품목·부품·옵션 통합 마스터 · 93,868행
-create table raw.dim_item (
+create table if not exists raw.dim_item (
     item_code     text primary key,   -- 품목 코드 (익명화)
     hoc_code      text,               -- 최종 발주 코드 (XCN 대표코드)
     description   text,
@@ -65,7 +53,7 @@ create table raw.dim_item (
 comment on table raw.dim_item is '품목 통합 마스터. 실데이터 원본. 수정 금지';
 
 -- 기종 통합 마스터 · 145행
-create table raw.dim_model (
+create table if not exists raw.dim_model (
     model_key     text primary key,   -- 파일 표기 그대로 'MDL193-3(2697-3697)'
     model_base    text,               -- 'MDL193' — 파일 간 조인은 반드시 이걸로
     biz           text,               -- DT / GC / PRT
@@ -81,7 +69,7 @@ comment on column raw.dim_model.model_base is
 
 -- 부품·소모품·옵션 월별 출고 실적 · 103,795행 (와이드 → 롱 변환 결과)
 -- ★ 수량 0인 달은 저장하지 않습니다(희소 저장). 0이 필요하면 달력과 LEFT JOIN.
-create table raw.fact_shipment (
+create table if not exists raw.fact_shipment (
     item_code   text          not null,
     ym          char(7)       not null,   -- 'YYYY-MM'
     qty         numeric(18,4) not null,
@@ -92,7 +80,7 @@ comment on table raw.fact_shipment is
   '월별 출고 실적. 수량 0인 달은 미저장. PART 2023-04~2026-07 / OPTION 2020-01~2026-07';
 
 -- 기계 월별 OL(계획) 대비 실적 · 2,765행
-create table raw.fact_mc_plan_actual (
+create table if not exists raw.fact_mc_plan_actual (
     fy_sheet   text,                      -- FY23 / FY24 / FY25 / FY26-to202606
     model_key  text          not null,
     model_base text,
@@ -111,7 +99,7 @@ comment on table raw.fact_mc_plan_actual is
 -- ------------------------------------------------------------
 
 -- 기종 → 구성 품목 · 7,157행 (TOTAL_BOM 15시트 + GC-BOM 13시트 통합)
-create table raw.bridge_bom (
+create table if not exists raw.bridge_bom (
     model_key   text,
     model_base  text,
     bom_group   text,                     -- STANDARD / FAX KIT / 단품Option / 소모품 KIT …
@@ -125,7 +113,7 @@ create table raw.bridge_bom (
 
 -- Neutral 품목 → SCC 교체 구성품 · 88행
 -- ★ GC-BOM 'SCC' 시트만 컬럼 구조가 달라(6열) 별도 테이블로 분리한 것입니다.
-create table raw.bridge_scc_config (
+create table if not exists raw.bridge_scc_config (
     model_key         text,
     model_base        text,
     neutral_item_code text,               -- 기준이 되는 중립 사양 본체
@@ -136,7 +124,7 @@ create table raw.bridge_scc_config (
 );
 
 -- 기종 → CAP 부번(판매 구성 단위) · 106행
-create table raw.bridge_mc_cap (
+create table if not exists raw.bridge_mc_cap (
     model_key         text,
     model_base        text,
     predecessor_model text,               -- 전임기
@@ -147,7 +135,7 @@ create table raw.bridge_mc_cap (
 );
 
 -- CAP 부번 → 필수 투입 옵션 / SCC·Label · 646행
-create table raw.bridge_cap_option (
+create table if not exists raw.bridge_cap_option (
     model_key        text,
     cap_item_code    text,
     option_item_code text,
@@ -156,7 +144,7 @@ create table raw.bridge_cap_option (
 );
 
 -- 옵션 → 장착 가능 기종 · 972행
-create table raw.bridge_option_model (
+create table if not exists raw.bridge_option_model (
     item_code  text,
     model_key  text,
     model_base text,
@@ -168,7 +156,7 @@ create table raw.bridge_option_model (
 
 -- 부품 XCN 연계 · 20,760행 (설계변경으로 코드가 바뀐 부품들의 연결)
 -- ★ 출고 Trend 는 hoc_item 으로 합산해서 봐야 하고, 발주는 hoc_item 으로 합니다.
-create table raw.bridge_xcn (
+create table if not exists raw.bridge_xcn (
     family       text,
     related_item text,                    -- 구/연계 코드 (출고 이력이 흩어져 있음)
     related_desc text,
@@ -179,22 +167,22 @@ create table raw.bridge_xcn (
 -- ------------------------------------------------------------
 -- 인덱스
 -- ------------------------------------------------------------
-create index ix_ship_item      on raw.fact_shipment (item_code);
-create index ix_ship_ym        on raw.fact_shipment (ym);
-create index ix_ship_type_ym   on raw.fact_shipment (item_type, ym);
-create index ix_mc_model       on raw.fact_mc_plan_actual (model_base, ym);
-create index ix_mc_fy          on raw.fact_mc_plan_actual (fy_sheet);
-create index ix_bom_model      on raw.bridge_bom (model_base);
-create index ix_bom_item       on raw.bridge_bom (item_code);
-create index ix_scc_neutral    on raw.bridge_scc_config (neutral_item_code);
-create index ix_scc_model      on raw.bridge_scc_config (model_base);
-create index ix_cap_model      on raw.bridge_mc_cap (model_base);
-create index ix_capopt_cap     on raw.bridge_cap_option (cap_item_code);
-create index ix_optmodel       on raw.bridge_option_model (item_code, model_base);
-create index ix_xcn_rel        on raw.bridge_xcn (related_item);
-create index ix_xcn_hoc        on raw.bridge_xcn (hoc_item);
-create index ix_item_type      on raw.dim_item (item_type);
-create index ix_item_hoc       on raw.dim_item (hoc_code);
+create index if not exists ix_ship_item      on raw.fact_shipment (item_code);
+create index if not exists ix_ship_ym        on raw.fact_shipment (ym);
+create index if not exists ix_ship_type_ym   on raw.fact_shipment (item_type, ym);
+create index if not exists ix_mc_model       on raw.fact_mc_plan_actual (model_base, ym);
+create index if not exists ix_mc_fy          on raw.fact_mc_plan_actual (fy_sheet);
+create index if not exists ix_bom_model      on raw.bridge_bom (model_base);
+create index if not exists ix_bom_item       on raw.bridge_bom (item_code);
+create index if not exists ix_scc_neutral    on raw.bridge_scc_config (neutral_item_code);
+create index if not exists ix_scc_model      on raw.bridge_scc_config (model_base);
+create index if not exists ix_cap_model      on raw.bridge_mc_cap (model_base);
+create index if not exists ix_capopt_cap     on raw.bridge_cap_option (cap_item_code);
+create index if not exists ix_optmodel       on raw.bridge_option_model (item_code, model_base);
+create index if not exists ix_xcn_rel        on raw.bridge_xcn (related_item);
+create index if not exists ix_xcn_hoc        on raw.bridge_xcn (hoc_item);
+create index if not exists ix_item_type      on raw.dim_item (item_type);
+create index if not exists ix_item_hoc       on raw.dim_item (hoc_code);
 
 -- ------------------------------------------------------------
 -- RLS — raw 는 앱에서 직접 못 읽습니다 (fail-closed)

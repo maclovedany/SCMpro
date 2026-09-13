@@ -13,6 +13,7 @@
 --   create or replace 는 컬럼 구성이 바뀌면 실패합니다
 --   (ERROR: cannot drop columns from view).
 -- ------------------------------------------------------------
+drop view if exists core.v_option_model_link  cascade;
 drop view if exists core.v_option_commonality cascade;
 drop view if exists core.v_shipment_by_hoc    cascade;
 drop view if exists core.v_part_linkage       cascade;
@@ -69,14 +70,25 @@ where model_base is not null
 --
 --   설계변경으로 부품 코드가 계속 바뀝니다.
 --   출고 Trend 는 연계 코드의 "합계"로 봐야 하고, 발주는 hoc_item 으로 합니다.
+--   R-XCN-08 (D-010): 구코드가 여러 HOC 에 걸리면(454건) 최근 24개월 출고 최다 HOC
+--   하나로 귀속, 동률은 코드 정렬 최댓값. related_item 당 정확히 1행.
 -- ------------------------------------------------------------
 create or replace view core.v_part_linkage as
-select distinct
-       related_item,
-       hoc_item
-from raw.bridge_xcn
-where related_item is not null
-  and hoc_item     is not null;
+with cand as (
+  select x.related_item, x.hoc_item,
+         coalesce((select sum(f.qty) from raw.fact_shipment f
+                   where f.item_code = x.hoc_item
+                     and f.ym >= to_char(now() - interval '24 months', 'YYYY-MM')), 0) as vol
+  from raw.bridge_xcn x
+  where x.related_item is not null and x.hoc_item is not null
+), ranked as (
+  select related_item, hoc_item,
+         row_number() over (partition by related_item order by vol desc, hoc_item desc) as rn
+  from cand
+)
+select related_item, hoc_item from ranked where rn = 1;
+
+comment on view core.v_part_linkage is 'R-XCN-08 적용. related_item 당 1행';
 
 
 -- ------------------------------------------------------------
@@ -118,6 +130,35 @@ select item_code,
        max(common)                                                       as common_flag
 from raw.bridge_option_model
 group by item_code;
+
+
+-- ------------------------------------------------------------
+-- v_option_model_link — 옵션 ↔ 기종 연결 (R-BOM-11, D-009)
+--
+--   bridge_option_model 은 출고 옵션의 6.8% 물량만 커버합니다.
+--   없으면 dim_item.family('MDL156 4 LOW') 앞 토큰을 파싱해 연결(link_source='parsed').
+--   SW 라이선스(family LICENSE%, '1DAY CODE')는 is_sw=true → 예측·발주 제외.
+-- ------------------------------------------------------------
+create or replace view core.v_option_model_link as
+with shipped as (
+  select distinct item_code from raw.fact_shipment where item_type = 'OPTION'
+), bridged as (
+  select b.item_code, b.model_base, 'bridge'::text as link_source
+  from raw.bridge_option_model b
+  where b.model_base is not null and b.model_base <> ''
+), rest as (   -- bridge 에 없는 출고 옵션: family 파싱, 실패하면 model_base null
+  select d.item_code,
+         substring(d.family from '^(MDL[0-9]+)') as model_base,
+         case when d.family ~ '^MDL[0-9]+' then 'parsed' else 'none' end as link_source
+  from raw.dim_item d join shipped s on s.item_code = d.item_code
+  where not exists (select 1 from bridged b where b.item_code = d.item_code)
+)
+select l.item_code, l.model_base, l.link_source,
+       (coalesce(d.family, '') ilike 'LICENSE%' or coalesce(d.description, '') ilike '%1DAY CODE%') as is_sw
+from (select * from bridged union all select * from rest) l
+join raw.dim_item d on d.item_code = l.item_code;
+
+comment on view core.v_option_model_link is 'R-BOM-11. 옵션↔기종, SW 플래그';
 
 
 -- ------------------------------------------------------------

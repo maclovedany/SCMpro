@@ -28,7 +28,7 @@
 7. 마스터·설정 데이터(재고, 입고예정, 단가, MOQ, 공급처, 장착률 …)는 **파일 업로드 + 관리자 화면 입력** 둘 다 지원. 실데이터 없는 것은 더미 시드하되 `is_dummy` 로 구분 (D-007).
 
 ## 문서 갱신 규칙 (구현 중 계속 유지)
-- 규칙 ID 형식: `R-FC-nn`(forecast) `R-OQ-nn`(order-quantity) `R-INV-nn`(inventory) `R-AL-nn`(allocation) `R-BOM-nn`(bom-option) `R-XCN-nn`(parts-xcn) `R-SCH-nn`(schedule) `R-UI-nn`(ui). 번호는 재사용하지 않는다. 폐기는 `~~취소선~~ (D-nnn 로 폐기)`.
+- 규칙 ID 형식: `R-FC-nn`(forecast) `R-OQ-nn`(order-quantity) `R-INV-nn`(inventory) `R-AL-nn`(allocation) `R-BOM-nn`(bom-option) `R-XCN-nn`(parts-xcn) `R-SCH-nn`(schedule) `R-UI-nn`(ui) `R-AI-nn`(ai-agent). 번호는 재사용하지 않는다. 폐기는 `~~취소선~~ (D-nnn 로 폐기)`.
 - 결정 ID `D-nnn`, 질문 ID `Q-nnn` 도 재사용 금지.
 - 각 규칙 파일 상단의 `최종 갱신` 날짜를 수정 시 갱신한다.
 
@@ -36,3 +36,22 @@
 - `raw` 스키마는 원본 그대로, 수정 금지. 앱/화면은 `analytics` 뷰만 읽는다.
 - 부품 출고는 반드시 `core.v_shipment_by_hoc`(XCN 합산) 기준. `raw.fact_shipment` 직접 조회 금지.
 - `fact_shipment` 는 0인 달을 저장하지 않는다(희소). 평균 계산 시 `core.v_ym_calendar` 와 LEFT JOIN.
+
+## 실행 (SP1 기준)
+```bash
+# DB (Supabase) — engine/.env 의 SUPABASE_DB_URL 사용
+supabase/scripts/migrate.sh                 # migrations 순서 적용 (재실행 안전)
+uv --directory engine run engine export-raw # scm.db → data/export/*.csv
+supabase/scripts/load-raw.sh                # raw 적재 (+ bridge_scc_config 시드)
+uv --directory engine run engine seed-app && supabase/scripts/seed-app.sh   # 더미 시드 (D-007) + 물리화 뷰 refresh
+uv --directory engine run engine verify --target postgres                  # 행수 대조·XCN 리포트 → docs/reports/
+uv --directory engine run engine gen-types  # web/lib/types/database.ts 생성 (스키마 변경 시)
+# Web
+cd web && npm run dev            # http://localhost:3000  (테스트 계정: admin@scm.test / lead@ / manager@ / sales@ / biz@ — 비밀번호 Scm!2026test)
+npm test · npm run test:e2e · npm run lint · npx tsc --noEmit
+# Engine
+cd engine && uv run pytest
+```
+- Supabase 대시보드: Data API → Exposed schemas 에 `app, analytics, core` 필요.
+- 상태: **SP1 완료** (docs/reports/sp1-verification.md). 다음: SP2 예측 엔진 (spec 작성부터). 서브프로젝트 목록: docs/01-business-process.md §7.
+- LLM: OpenAI `gpt-5-nano` (D-017, R-AI). `OPENAI_API_KEY` 는 engine/.env, web/.env.local 에.

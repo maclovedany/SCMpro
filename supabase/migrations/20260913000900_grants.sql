@@ -53,14 +53,29 @@ alter default privileges in schema analytics revoke all on tables from anon, pub
 -- ------------------------------------------------------------
 -- Supabase 대시보드 설정 (SQL 로 안 되는 부분 — 손으로 해야 합니다)
 --
---   Project Settings → API → Data API → Exposed schemas
---       public, core, analytics
+--   Project Settings → Data API → Exposed schemas
+--       public, core, analytics, app
 --
 --   ★ 이 설정이 없으면 조회가 "에러 없이 빈 배열"로 돌아옵니다.
 --     Tool 은 "데이터가 없습니다"라고 보고하는데 실제로는 권한 문제입니다.
 --     오늘 실습에서 빈 결과가 나오면 여기부터 확인하세요.
 -- ------------------------------------------------------------
 
+
+
+-- ------------------------------------------------------------
+-- app / analytics 물리화 뷰 권한 (SP1)
+-- ------------------------------------------------------------
+grant usage on schema app to authenticated;
+grant select, insert, update, delete on all tables in schema app to authenticated;   -- 실제 제어는 RLS
+grant usage, select on all sequences in schema app to authenticated;
+grant select on all tables in schema analytics to authenticated;                     -- 물리화 뷰 포함
+grant execute on all functions in schema app to authenticated;
+revoke usage on schema app from anon;
+revoke all on all tables in schema app from anon, public;
+alter default privileges in schema app grant select, insert, update, delete on tables to authenticated;
+alter default privileges in schema app grant execute on functions to authenticated;
+alter default privileges in schema analytics grant select on tables to authenticated;
 
 -- ============================================================
 -- 확인 ① — authenticated 가 analytics 를 읽을 수 있는가
