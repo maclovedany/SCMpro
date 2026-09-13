@@ -1378,6 +1378,7 @@ export type Database = {
       fn_confirm_sales_order: { Args: { p_id: string }; Returns: undefined }
       fn_create_sales_order: { Args: { p_item: string; p_qty: unknown; p_customer: string; p_mode: string; p_prev: string }; Returns: Json }
       fn_dashboard_summary: { Args: Record<string, never>; Returns: Json }
+      fn_dashboard_v2: { Args: Record<string, never>; Returns: Json }
       fn_decide_approval: { Args: { p_id: string; p_decision: string; p_comment: string }; Returns: undefined }
       fn_finalize_order_plan: { Args: { p_plan_id: string }; Returns: Json }
       fn_manual_allocate: { Args: { p_order: string; p_qty: unknown; p_reason: string }; Returns: Json }
