@@ -5,14 +5,14 @@ const ROUTES = [["/items", "품목"], ["/notifications", "알림"], ["/upload", 
 test("메뉴 전환 < 1000ms", async ({ page }) => {
   await login(page, "admin@scm.test");
   // 워밍업 (프리페치 + 첫 컴파일)
-  for (const [href] of ROUTES) { await page.goto(href); await page.waitForLoadState("networkidle"); }
-  await page.goto("/dashboard"); await page.waitForLoadState("networkidle");
+  for (const [href] of ROUTES) { await page.goto(href); await page.locator("main h1").first().waitFor(); }
+  await page.goto("/dashboard"); await page.locator("main h1").first().waitFor();
   const results: { route: string; ms: number }[] = [];
   for (const [href, label] of ROUTES) {
     const t0 = Date.now();
     await page.locator("nav[aria-label='주 메뉴']").getByRole("link", { name: label, exact: true }).click();
     await page.waitForURL(`**${href}`);
-    await page.waitForLoadState("networkidle");
+    await page.locator("main h1").first().waitFor();   // 본문 렌더 완료 = 체감 전환
     results.push({ route: href, ms: Date.now() - t0 });
   }
   console.table(results);

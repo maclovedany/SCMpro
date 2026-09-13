@@ -28,6 +28,7 @@ const ADMIN: MenuItem[] = [
   { href: "/admin/suppliers", label: "공급처", icon: "Truck" },
   { href: "/admin/holidays", label: "공휴일", icon: "Calendar" },
   { href: "/admin/eol", label: "EOL/EOS", icon: "Clock" },
+  { href: "/admin/ai-stats", label: "AI 질문 통계", icon: "BarChart3" },
 ];
 export function menuForRole(role: Role): MenuItem[] {
   if (role === "admin") return [...COMMON, ...SCM, ...ADMIN];

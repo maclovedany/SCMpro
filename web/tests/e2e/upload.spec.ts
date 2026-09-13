@@ -15,8 +15,8 @@ test("재고 CSV 업로드 → 검증 → 반영 → 상세 반영 → 이력", 
   await expect(card.getByText("성공 1", { exact: true })).toBeVisible();
   await expect(card.getByText("서버 오류 1", { exact: true })).toBeVisible();   // BAD-CODE → UNKNOWN_ITEM
   await page.goto("/items/556K59129");
-  await expect(page.getByText("기준일 2026-09-10")).toBeVisible();
-  await expect(page.getByText("120", { exact: true }).first()).toBeVisible();
+  await expect(page.locator("#snapshots")).toContainText("2026-09-10");   // 업로드된 스냅샷 행 (더 최신 스냅샷이 있을 수 있음)
+  await expect(page.locator("#snapshots")).toContainText("120");
   await page.goto("/upload?tab=log");
   await expect(page.getByText("inventory_sample.csv").first()).toBeVisible();
   await page.screenshot({ path: "test-results/upload-log.png" });

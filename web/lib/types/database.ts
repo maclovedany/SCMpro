@@ -4,6 +4,81 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   app: {
     Tables: {
+      ai_conversation: {
+        Row: {
+          id: string
+          user_id: string
+          title: string | null
+          summary: string | null
+          page_context: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          title?: string | null
+          summary?: string | null
+          page_context?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string | null
+          summary?: string | null
+          page_context?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      ai_message: {
+        Row: {
+          id: number
+          conversation_id: string
+          role: string
+          content: string | null
+          tool_name: string | null
+          tool_args: Json | null
+          topic: string | null
+          tokens_in: number | null
+          tokens_out: number | null
+          latency_ms: number | null
+          error: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          conversation_id?: string
+          role?: string
+          content?: string | null
+          tool_name?: string | null
+          tool_args?: Json | null
+          topic?: string | null
+          tokens_in?: number | null
+          tokens_out?: number | null
+          latency_ms?: number | null
+          error?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          conversation_id?: string
+          role?: string
+          content?: string | null
+          tool_name?: string | null
+          tool_args?: Json | null
+          topic?: string | null
+          tokens_in?: number | null
+          tokens_out?: number | null
+          latency_ms?: number | null
+          error?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
       allocation: {
         Row: {
           id: number
@@ -1289,6 +1364,7 @@ export type Database = {
     Functions: {
       current_role: { Args: Record<string, never>; Returns: unknown }
       fn_add_extra_demand: { Args: { p_kind: string; p_item: string; p_need_ym: unknown; p_qty: unknown; p_order_no: string; p_customer: string; p_model: string; p_reason: string }; Returns: string }
+      fn_ai_stats: { Args: { p_days: number }; Returns: Json }
       fn_allocation_tick: { Args: Record<string, never>; Returns: Json }
       fn_append_plan_lines: { Args: { p_plan_id: string; p_lines: Json }; Returns: number }
       fn_apply_tuning: { Args: { p_approval: unknown; p_decision: string }; Returns: undefined }
@@ -1389,6 +1465,33 @@ export type Database = {
           n: number | null
           sum_actual: number | null
           extra: Json | null
+        }
+        Relationships: []
+      }
+      v_ai_message_log: {
+        Row: {
+          id: number | null
+          conversation_id: string | null
+          user_id: string | null
+          user_name: string | null
+          user_role: Database["app"]["Enums"]["role"] | null
+          role: string | null
+          content: string | null
+          topic: string | null
+          tokens_in: number | null
+          tokens_out: number | null
+          latency_ms: number | null
+          error: string | null
+          created_at: string | null
+          page_context: string | null
+        }
+        Relationships: []
+      }
+      v_ai_stats_daily: {
+        Row: {
+          day: string | null
+          topic: string | null
+          n: number | null
         }
         Relationships: []
       }
