@@ -46,6 +46,11 @@ supabase/scripts/load-raw.sh                # raw 적재 (+ bridge_scc_config �
 uv --directory engine run engine seed-app && supabase/scripts/seed-app.sh   # 더미 시드 (D-007) + 물리화 뷰 refresh
 uv --directory engine run engine verify --target postgres                  # 행수 대조·XCN 리포트 → docs/reports/
 uv --directory engine run engine gen-types  # web/lib/types/database.ts 생성 (스키마 변경 시)
+# 예측 (SP2)
+uv --directory engine run engine forecast backtest --eval-fy 2025   # FY 롤링 백테스트 (~3분)
+uv --directory engine run engine forecast run --horizon 6           # 프로덕션 예측
+uv --directory engine run engine forecast tune                      # gpt-5-nano 오차 분석 → 제안 (승인은 /approvals)
+uv --directory engine run engine forecast pending                   # 웹에서 요청한 런 처리
 # Web
 cd web && npm run dev            # http://localhost:3000  (테스트 계정: admin@scm.test / lead@ / manager@ / sales@ / biz@ — 비밀번호 Scm!2026test)
 npm test · npm run test:e2e · npm run lint · npx tsc --noEmit
@@ -53,5 +58,5 @@ npm test · npm run test:e2e · npm run lint · npx tsc --noEmit
 cd engine && uv run pytest
 ```
 - Supabase 대시보드: Data API → Exposed schemas 에 `app, analytics, core` 필요.
-- 상태: **SP1 완료** (docs/reports/sp1-verification.md). 다음: SP2 예측 엔진 (spec 작성부터). 서브프로젝트 목록: docs/01-business-process.md §7.
+- 상태: **SP1·SP2 완료** (docs/reports/sp1-verification.md, sp2-verification.md). 다음: SP3 발주량 산출 (spec 부터). 서브프로젝트 목록: docs/01-business-process.md §7.
 - LLM: OpenAI `gpt-5-nano` (D-017, R-AI). `OPENAI_API_KEY` 는 engine/.env, web/.env.local 에.

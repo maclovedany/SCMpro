@@ -1,6 +1,6 @@
 # 규칙: 수요 예측 (R-FC)
 
-최종 갱신: 2026-09-13 · 출처: stage1.md §4, 데이터 설명.docx, 회의록, D-002
+최종 갱신: 2026-09-13 · 출처: stage1.md §4, 데이터 설명.docx, 회의록, D-002, D-016~020 · 구현: engine/scm_engine/forecast/, migrations/20260913001000_forecast.sql
 
 ## 예측 대상과 기법 방향
 
@@ -44,7 +44,7 @@
 | ID | 규칙 |
 |---|---|
 | R-FC-40 | 평가 단위는 **회계연도(R-FC-08)**. 라운드 r: 학습 = 시작 FY ~ FY(r−1), 평가 = FY(r). 초기 라운드: 학습 FY23+FY24, 평가 FY25. FY 가 추가될 때마다 라운드 추가(롤링). |
-| R-FC-41 | 라운드마다 기법별·품목별 Bias/WAPE/MAPE 와 오차 패턴(월별·카테고리·기종·수요패턴·EOL 단계별)을 `forecast_accuracy` 에 저장하고 화면에서 비교(Sales OL / SCM OL / 기준예측). |
+| R-FC-41 | 라운드마다 기법별·품목별 Bias/WAPE/MAPE 와 오차 패턴(월별·카테고리·기종·수요패턴·EOL 단계별)을 `forecast_accuracy` 에 저장하고 화면에서 비교(Sales OL / SCM OL / 기준예측). 챔피언은 평가 구간에서 선택되므로 라운드 WAPE 는 상한 추정으로 표기; 프로덕션은 최신 백테스트 챔피언을 적용(out-of-sample) (D-020). 구현: `engine forecast backtest/run`, `analytics.v_accuracy_summary`, `/forecast`. |
 | R-FC-42 | AI 정교화: 라운드 결과를 gpt-5-nano 에 요약 전달해 (a) 오차 원인 진단, (b) 기법/파라미터/전처리 조정 제안을 구조화(JSON)로 받는다. 제안은 `forecast_tuning_proposal` 에 저장, SCM 품목담당자 검토·팀장 승인 후 다음 라운드에 적용. 자동 적용 금지. 프롬프트·응답·적용 여부 이력 보관. |
 
 ## 미정
