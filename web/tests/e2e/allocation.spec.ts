@@ -4,6 +4,16 @@ test.describe.configure({ mode: "serial" });
 const ITEM = "556K59129";
 test("영업 주문 → 임시배정 → 부족 시 부분/대기 → 입고 자동배정 → 수동 우선배정 승인 → 확정 → 해제 → tick", async ({ page }) => {
   test.setTimeout(240_000);
+  // 정리: 이전 실행이 남긴 E2E 주문을 취소해 가용재고를 복원 (누적되면 입고 자동배정 후 가용 0 → 우선 배정 버튼 비활성)
+  await login(page, "insightdany@naver.com");
+  await page.goto("/sales-orders?all=1");
+  for (let i = 0; i < 20; i++) {
+    const row = page.locator("[data-testid=so-row]").filter({ hasText: "E2E-" }).filter({ has: page.getByRole("button", { name: /^(취소|확정배정 해제)$/ }) }).first();
+    if (!(await row.count())) break;
+    await row.getByRole("button", { name: /^(취소|확정배정 해제)$/ }).click(); await page.fill("textarea[name=cancel_reason]", "E2E 정리"); await page.getByRole("button", { name: "확인" }).click();
+    await expect(page.getByText("취소 · 배정 해제")).toBeVisible(); await page.waitForTimeout(400); await page.reload();
+  }
+  await page.context().clearCookies();
   // 영업: 가용 조회 + 주문 1 (가용 내)
   await login(page, "insightcha0624@gmail.com");
   await page.goto(`/sales-orders?item=${ITEM}`);

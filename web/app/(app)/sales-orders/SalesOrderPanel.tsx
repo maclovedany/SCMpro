@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createSalesOrder, confirmSalesOrder, cancelSalesOrder } from "./actions";
 import { SO_STATUS, type SalesOrderRow } from "@/lib/queries/allocation";
-import { DrillCard } from "@/components/cards/DrillCard";
+import { KpiTile } from "@/components/cards/KpiTile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,11 +25,11 @@ export function SalesOrderPanel({ orders, avail, item, isScm, me, now }: { order
   const mine = orders.filter(o => o.sales_rep === me);
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <DrillCard label="내 진행 주문" value={fmtInt(mine.filter(o => ["review_requested", "partial", "waiting"].includes(o.status!)).length)} hint="임시배정·대기" href="/sales-orders" />
-        <DrillCard label="7일 내 만료" value={fmtInt(mine.filter(o => o.expires_at && Date.parse(o.expires_at) - now < 7 * 86400e3 && ["review_requested", "partial"].includes(o.status!)).length)} hint="만료 시 자동 해제 (R-AL-02)" href="/sales-orders" tone="warn" />
-        <DrillCard label="부족 수량 대기" value={fmtInt(mine.filter(o => o.status === "partial" || o.status === "waiting").length)} hint="입고 시 순번대로 자동 배정" href="/sales-orders" />
-        <DrillCard label="확정" value={fmtInt(mine.filter(o => o.status === "confirmed").length)} href="/sales-orders" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" data-testid="so-kpi">
+        <KpiTile label="내 진행 주문" value={fmtInt(mine.filter(o => ["review_requested", "partial", "waiting"].includes(o.status!)).length)} sub="임시배정·대기" href="/sales-orders" accent="ops" icon="ShoppingCart" />
+        <KpiTile label="7일 내 만료" value={fmtInt(mine.filter(o => o.expires_at && Date.parse(o.expires_at) - now < 7 * 86400e3 && ["review_requested", "partial"].includes(o.status!)).length)} sub="만료 시 자동 해제 (R-AL-02)" href="/sales-orders" accent="risk" icon="TimerOff" tone="warn" />
+        <KpiTile label="부족 수량 대기" value={fmtInt(mine.filter(o => o.status === "partial" || o.status === "waiting").length)} sub="입고 시 순번대로 자동 배정" href="/sales-orders" accent="stock" icon="Hourglass" />
+        <KpiTile label="확정" value={fmtInt(mine.filter(o => o.status === "confirmed").length)} sub="수주 확정 → 확정배정" href="/sales-orders" accent="forecast" icon="BadgeCheck" />
       </div>
       <section className="space-y-3 rounded-md border p-3">
         <div className="flex flex-wrap items-end gap-2 text-sm">

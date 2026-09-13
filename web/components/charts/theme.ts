@@ -14,3 +14,5 @@ export const barSpec = { type: "bar" as const, barMaxWidth: 24, barGap: "10%", i
 export const hbarSpec = { type: "bar" as const, barMaxWidth: 20, itemStyle: { borderRadius: [0, 4, 4, 0] } };
 export const lineSpec = { type: "line" as const, lineStyle: { width: 2 }, symbol: "circle", symbolSize: 8, itemStyle: { borderColor: "#fff", borderWidth: 2 } };
 export const compact = (n: number) => (Math.abs(n) >= 1e8 ? `${(n / 1e8).toFixed(n >= 1e9 ? 0 : 1)}억` : Math.abs(n) >= 1e4 ? `${Math.round(n / 1e4).toLocaleString("ko-KR")}만` : n.toLocaleString("ko-KR"));
+/** 범례 줄 수에 맞춘 grid.top (시리즈 4개/줄 가정) — 범례가 플롯 위로 겹치지 않게 */
+export const gridFor = (nSeries: number, extra: Record<string, number | boolean> = {}) => ({ left: 8, right: 8, bottom: 8, containLabel: true, top: nSeries > 1 ? 12 + 18 * Math.ceil(nSeries / 4) : 12, ...extra });

@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { receiveInbound, manualAllocate, runTick } from "@/app/(app)/sales-orders/actions";
 import { SO_STATUS } from "@/lib/queries/allocation";
-import { DrillCard } from "@/components/cards/DrillCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,15 +19,8 @@ export function AllocationPanel({ queue, inbound, pending }: { queue: Q[]; inbou
   const doAlloc = () => alloc && start(async () => { const r = await manualAllocate(alloc.id!, Number(qty), reason); if (r.ok) { const d = r.data as { result: string }; toast.success(d.result === "firm" ? "확정배정 완료" : "승인대기 확보 — 팀장 승인 요청"); setAlloc(null); setQty(""); setReason(""); router.refresh(); } else toast.error(r.error); });
   const receive = (i: I) => start(async () => { const r = await receiveInbound(i.id, new Date().toISOString().slice(0, 10)); if (r.ok) { const d = r.data as { mode: string; auto_allocated_orders: number }; toast.success(`입고 완료 · ${d.mode === "auto" ? `자동배정 ${d.auto_allocated_orders}건` : "수동 배정 대기"}`); router.refresh(); } else toast.error(r.error); });
   const tick = () => start(async () => { const r = await runTick(); if (r.ok) { const d = r.data as { expired: number; reminders: number; approval_repeats: number }; toast.success(`만료 ${d.expired} · 예고 알림 ${d.reminders} · 승인 반복 알림 ${d.approval_repeats}`); router.refresh(); } else toast.error(r.error); });
-  const items = new Set(queue.map(q => q.item_code));
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <DrillCard label="대기 주문" value={fmtInt(queue.length)} hint={`${items.size} 품목`} href="#queue" tone={queue.length ? "warn" : "default"} />
-        <DrillCard label="배정 가능 (가용 > 0)" value={fmtInt(queue.filter(q => (q.available ?? 0) > 0).length)} hint="수동 배정 또는 자동배정 대기" href="#queue" />
-        <DrillCard label="입고 대기" value={fmtInt(inbound.length)} hint="ordered/shipped → 창고 입고 완료" href="#inbound" />
-        <DrillCard label="우선배정 승인 대기" value={fmtInt(pending.length)} hint="10분마다 팀장 반복 알림 (R-AL-17)" href="/approvals?status=pending" tone={pending.length ? "danger" : "default"} />
-      </div>
       <div className="flex items-center gap-2"><Button size="sm" variant="outline" onClick={tick} disabled={pendingT}>만료·알림 처리 실행 (tick)</Button><span className="text-xs text-muted-foreground">운영에서는 pg_cron 10분 주기 (SP5)</span></div>
       <section id="queue" className="rounded-md border p-3"><h2 className="mb-2 text-sm font-medium">대기 주문 큐 (R-AL-11 순서)</h2>
         <table className="w-full text-sm"><thead><tr className="text-left text-muted-foreground"><th className="py-1">품목</th><th>순번</th><th>주문번호</th><th>담당</th><th className="text-right">요청</th><th className="text-right">부족</th><th className="text-right">가용</th><th>우선순위</th><th>상태</th><th>배정방식</th><th></th></tr></thead>

@@ -1365,6 +1365,7 @@ export type Database = {
       current_role: { Args: Record<string, never>; Returns: unknown }
       fn_add_extra_demand: { Args: { p_kind: string; p_item: string; p_need_ym: unknown; p_qty: unknown; p_order_no: string; p_customer: string; p_model: string; p_reason: string }; Returns: Json }
       fn_ai_stats: { Args: { p_days: number }; Returns: Json }
+      fn_allocation_overview: { Args: Record<string, never>; Returns: Json }
       fn_allocation_tick: { Args: Record<string, never>; Returns: Json }
       fn_append_plan_lines: { Args: { p_plan_id: string; p_lines: Json }; Returns: number }
       fn_apply_tuning: { Args: { p_approval: unknown; p_decision: string }; Returns: undefined }
