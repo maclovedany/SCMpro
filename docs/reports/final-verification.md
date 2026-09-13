@@ -54,3 +54,13 @@ ai messages|26
 | Supabase 일시 오류 재시도 + 오류 경계 화면 | 수동 |
 | 실사용 계정 6개(1q2w3e), launchd 10분 tick | seed 로그, tick 로그 |
 E2E 는 `E2E_BASE_URL=http://localhost:3001` 로 기존 dev 서버에 붙여 실행 (Next 16 dev 서버 1개 제한). 전체 13 spec 통과 확인은 2026-09-13 21:40 기준.
+
+## 디자인 언어 적용 (2026-09-14, 사용자 순서 ①~⑤) — D-032~D-039
+| 변경 | 검증 |
+|---|---|
+| 디자인 토큰·차트 테마·MiniCharts(히트맵 포함), 카드 3종(KpiTile·DrillCard·ChartCard), `.scm-card` 표면(테두리 없음·우하단 그림자·호버 glow·그라데이션), KPI 아이콘 우측 상단, 사이드바 선택 노랑/호버 형광 테두리 | dataviz 팔레트 검증 스크립트 통과, 스크린샷(/tmp/scmpro/dash-v6*, sidebar.png), dashboard/perf e2e |
+| 대시보드 KPI 스트립 + 묶음별 차트 (`fn_dashboard_v2.charts`) | dashboard e2e, vitest dashboard |
+| 예측 화면: KPI·WAPE 3차트·ABC-XYZ 히트맵·관리 지침·등급별 재고·12개월 추이 (`fn_forecast_overview`, `v_item_master.is_excess`, 품목 필터 stock/excess) | vitest forecastOverview 6건, forecast/items e2e, RPC 900ms→200ms(ym 인덱스·char(7) 캐스팅), perf e2e < 1s |
+| 발주 계획 목록·상세: KPI·구성 차트 4·이력 (`fn_plan_overview`) | vitest planCharts 5건, orders e2e(전체 워크플로), 스크린샷 |
+| 재고 배정·일정·영업 주문: KPI·차트 (`fn_allocation_overview`, `scheduleCharts`) | vitest allocScheduleCharts 8건, allocation/schedule e2e |
+| e2e 픽스처 리셋(global-setup), perf 스펙 배지 허용 | 전체 14 spec 직렬 통과 (2026-09-14 08:10, 2.8분) · vitest 60/60 · tsc/lint 0 error |

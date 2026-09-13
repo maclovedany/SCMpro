@@ -1,6 +1,6 @@
 # 규칙: 수요 예측 (R-FC)
 
-최종 갱신: 2026-09-13 · 출처: stage1.md §4, 데이터 설명.docx, 회의록, D-002, D-016~020 · 구현: engine/scm_engine/forecast/, migrations/20260913001000_forecast.sql
+최종 갱신: 2026-09-14 · 출처: stage1.md §4, 데이터 설명.docx, 회의록, D-002, D-016~020, D-034(셀별 운영 지침) · 구현: engine/scm_engine/forecast/, migrations/20260913001000_forecast.sql
 
 ## 예측 대상과 기법 방향
 

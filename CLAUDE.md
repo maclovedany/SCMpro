@@ -27,7 +27,7 @@
 4. 답이 나온 질문은 `04-open-questions.md` 에서 지우고 `03-decisions.md` 로 옮긴다.
 5. 새 데이터 파일이 들어오면 `05-data-catalog.md` 에 먼저 등록한다.
 6. 하드코딩 금지 대상: 리드타임, OL 제출 선행 개월, 목표 DoS, MOQ, Flex 범위, 출항일 → 전부 관리자 설정값.
-7. 화면 작업 시 `docs/02-domain-rules/ui.md` R-UI-07~09 준수: 카드는 DrillCard 로 동일 높이, 표는 숫자 우측·여백 통일, 한글 단어 잘림 금지(전역 keep-all). 반응형(창 축소)에서 확인 후 완료.
+7. 화면 작업 시 `docs/02-domain-rules/ui.md` R-UI-07~09·R-UI-13 준수: 카드는 KpiTile/DrillCard/ChartCard 만 사용(동일 높이, `.scm-card` 표면 — 테두리·액센트 띠 금지), 차트는 `MiniCharts` + `lib/design/palette.ts` 토큰(순환 색·이중축 금지), 표는 숫자 우측·여백 통일, 한글 단어 잘림 금지(전역 keep-all). 화면 구조 = KPI 스트립 → 차트(한 줄 해석) → 근거 표, 전부 드릴다운. 반응형(창 축소)에서 확인 후 완료.
 8. 엔진 런(backtest/run)이 도는 동안 `migrate.sh` 를 실행하지 않는다 — 물리화 뷰 재생성으로 런이 실패한다.
 9. Supabase PostgREST 는 statement_timeout 8s. 파라미터 있는 집계 RPC 는 `plan_cache_mode = force_custom_plan` 을 붙이고 호출당 8초 내로 분할한다 (D-027).
 10. 마스터·설정 데이터(재고, 입고예정, 단가, MOQ, 공급처, 장착률 …)는 **파일 업로드 + 관리자 화면 입력** 둘 다 지원. 실데이터 없는 것은 더미 시드하되 `is_dummy` 로 구분 (D-007).
@@ -71,6 +71,7 @@ cd engine && uv run pytest
 - LLM: OpenAI `gpt-5-nano` (D-017, R-AI). `OPENAI_API_KEY` 는 engine/.env, web/.env.local 에.
 
 ## E2E 반복 실행 전 정리 (DB 상태를 바꾸는 테스트)
+`tests/e2e/global-setup.ts` 가 매 실행 전 E2E 주문·배정 취소 + 더미 입고(556K59129 seed) 재개방을 자동 수행한다(engine/.env DB URL + psql 필요, D-036). 배지 숫자 때문에 스펙은 직렬(`--workers=1`)로 돌리는 것이 안전. 전체 초기화가 필요하면 아래 SQL:
 ```sql
 delete from app.order_plan where status='draft'; delete from app.allocation; delete from app.sales_order;
 update app.inbound set status='ordered', actual_date=null where po_no='PO-E2E-ALLOC'; delete from app.demand_submission;

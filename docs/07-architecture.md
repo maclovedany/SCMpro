@@ -154,9 +154,12 @@ web/app/(app)/*            라우트(서버 컴포넌트) + *Panel/*Form(클라�
 web/lib/queries/*          화면별 읽기 쿼리(supabase-js)     web/lib/order/calc.ts  발주량 계산(R-OQ)
 web/lib/ai/{tools,chat}.ts AI 도구·대화 루프                 web/lib/settings/registry.ts 설정 스펙(R-UI-10)
 web/lib/auth/roles.ts      역할·사이드바 6그룹 정의(MENU_GROUPS, R-UI-11) — 새 화면은 여기 배속
-web/components/{cards,charts,tables,ai,upload,layout}  공통 위젯(DrillCard·TimeSeriesChart·DataGrid·TreeGrid·AiPanel)
+web/components/{cards,charts,tables,ai,upload,layout}  공통 위젯(KpiTile·DrillCard·ChartCard·MiniCharts(묶음/스택/가로 막대·도넛·라인·히트맵)·TimeSeriesChart·DataGrid·TreeGrid·AiPanel)
+web/lib/design/palette.ts  디자인 토큰(시리즈·상태·액센트·카테고리·ABC 색, R-UI-13) · web/components/charts/theme.ts ECharts 마크 스펙 · globals.css `.scm-card` 카드 표면(D-037)
+web/lib/queries/{dashboard,forecast,orders,allocation,schedule}.ts  화면 개요 RPC 호출 + 차트 데이터 순수 함수(*Charts, vitest 대상)
+web/tests/e2e/global-setup.ts  e2e 실행 전 픽스처 리셋(E2E 주문·더미 입고, D-036)
 engine/scm_engine/forecast/{classify,metrics,backtest,runner,store,ai_tuning}.py + methods/*  예측
 engine/scm_engine/{export_raw,verify,seed_app,gen_types,notify,cli}.py                      적재·검증·시드·타입·알림
-supabase/migrations/0001~0007 기반 · 0010 예측 · 0020 발주 · 0030 배정 · 0040 일정 · 0050 AI · 9999 권한
+supabase/migrations/0001~0007 기반 · 0010 예측 · 0020 발주 · 0030 배정 · 0040 일정 · 0050 AI · 0060 대시보드 RPC · 0070/0071/0072 예측·발주·배정 화면 개요 RPC · 9999 권한
 docs/                      00 용어 · 01 업무절차 · 02 규칙(R-*) · 03 결정(D-*) · 04 미확인 · 05 데이터 카탈로그 · 06 데이터 검증 · 07 아키텍처 · specs · plans · reports
 ```
