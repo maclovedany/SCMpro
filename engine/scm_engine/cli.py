@@ -56,3 +56,11 @@ def seed_app_cmd(snap_date: str = "2026-08-31", target: str = "postgres",
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(seed_app.build_seed_sql(db, snap_date), encoding="utf-8")
     typer.echo(f"생성: {out}")
+
+@app.command("gen-types")
+def gen_types_cmd(out: Path = ROOT / "web" / "lib" / "types" / "database.ts"):
+    """web/lib/types/database.ts 생성 (app, analytics, core)."""
+    from . import gen_types
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("// 자동 생성: engine gen-types — 수정 금지\n" + gen_types.generate(_pg()), encoding="utf-8")
+    typer.echo(f"생성: {out}")
