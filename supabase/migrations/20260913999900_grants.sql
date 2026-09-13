@@ -77,6 +77,17 @@ alter default privileges in schema app grant select, insert, update, delete on t
 alter default privileges in schema app grant execute on functions to authenticated;
 alter default privileges in schema analytics grant select on tables to authenticated;
 
+
+-- service_role (서버 전용 admin 클라이언트: 대량 계획 저장, 물리화 뷰 refresh 등)
+grant usage on schema app, analytics, core, raw to service_role;
+grant all on all tables in schema app to service_role;
+grant select on all tables in schema analytics, core, raw to service_role;
+grant usage, select on all sequences in schema app to service_role;
+grant execute on all functions in schema app to service_role;
+alter default privileges in schema app grant all on tables to service_role;
+alter default privileges in schema app grant execute on functions to service_role;
+alter default privileges in schema analytics grant select on tables to service_role;
+
 -- ============================================================
 -- 확인 ① — authenticated 가 analytics 를 읽을 수 있는가
 -- ============================================================

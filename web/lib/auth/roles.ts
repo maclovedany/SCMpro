@@ -8,6 +8,8 @@ const COMMON: MenuItem[] = [
   { href: "/dashboard", label: "대시보드", icon: "LayoutDashboard" },
   { href: "/items", label: "품목", icon: "Package" },
   { href: "/forecast", label: "예측", icon: "TrendingUp" },
+  { href: "/orders", label: "발주 계획", icon: "ClipboardList" },
+  { href: "/extra-demand", label: "추가 수요", icon: "PlusSquare" },
   { href: "/notifications", label: "알림", icon: "Bell" },
 ];
 const SCM: MenuItem[] = [

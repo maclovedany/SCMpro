@@ -138,3 +138,9 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 결정: (1) `fn_apply_tuning` 은 최신 백테스트에서 챔피언인 기법의 off 제안을 무시. (2) 프롬프트에 동일 규칙 명시. (3) 백테스트 summary 에 직전 라운드 대비 WAPE delta 와 `regressed` 플래그 기록 → 화면·리포트에 표시. (4) 회귀 시 담당자가 params 를 되돌린다(관리자 화면)
 - 출처: 구현 검증
 - 영향: R-FC-42, engine/ai_tuning.py, migrations/001000
+
+## D-022 (2026-09-13) SP3 구현 결과 — 계산은 TS 단일 구현, 대량 저장은 service role + 청크
+- 결정: (1) 발주량 산출 로직은 `web/lib/order/calc.ts` 하나(서버 액션·what-if 공용, 단위 테스트 7). SQL 에 중복 구현하지 않음. (2) Supabase `authenticated` 역할 statement_timeout 8s → 9,672 라인 저장은 서버 액션이 service role 로 `fn_save_order_plan(p_user)` + `fn_append_plan_lines` 1,000행 청크 + `fn_finalize_order_plan`. 역할 검사는 함수 안에서 p_user 로. (3) service_role 스키마 권한을 grants 에 추가. (4) 라인 표는 서버 필터·500행 페이지, 트리 상위 합계는 `fn_plan_cat_projection` SQL 집계
+- 검증: 2026-09 계획 9,672 라인 생성 ~15초, 품절위험 3,979(더미 재고 기준), 승인 → 제출 OL 4,294건, 재생성 시 Flex 클램프 2,306 라인
+- 출처: 구현 검증
+- 영향: R-OQ 규칙에 구현 위치 주석, spec SP3 §3

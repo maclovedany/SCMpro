@@ -1,6 +1,6 @@
 # 규칙: 발주량 산출 (R-OQ)
 
-최종 갱신: 2026-09-13 · 출처: stage1.md §4 §5 §6 §7 §9, 데이터 설명.docx, 회의록, D-007
+최종 갱신: 2026-09-13 · 출처: stage1.md §4 §5 §6 §7 §9, 데이터 설명.docx, 회의록, D-007, D-022 · 구현: web/lib/order/calc.ts (R-OQ-01/03/04/10~13/20/30/31), migrations/20260913002000_order.sql (R-OQ-20~25 extra_demand, R-OQ-40/41 order_plan·승인·ol_submission), 화면 /orders, /extra-demand
 
 ## DoS
 
