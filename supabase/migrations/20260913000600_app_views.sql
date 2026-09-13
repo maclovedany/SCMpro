@@ -2,8 +2,8 @@
 -- 20260913000600_app_views.sql — analytics 물리화 뷰(화면 소스) + app 뷰
 --   물리화 뷰는 app.fn_refresh_matviews() 로 갱신 (업로드·시드·엔진 실행 후)
 -- ============================================================
-drop materialized view if exists analytics.v_item_master;
-drop materialized view if exists analytics.v_item_monthly;
+drop materialized view if exists analytics.v_item_master cascade;   -- app.v_available_stock 등 의존 뷰는 아래에서 재생성
+drop materialized view if exists analytics.v_item_monthly cascade;
 
 -- 월별 시계열 (HOC 기준, 0 채움, SW 옵션은 category='SW', shipment_extra UNION). R-XCN-01, R-BOM-11
 create materialized view analytics.v_item_monthly as
