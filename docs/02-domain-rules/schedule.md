@@ -1,6 +1,6 @@
 # 규칙: 발주 시점 · 일정 · 알림 (R-SCH)
 
-최종 갱신: 2026-09-13 · 출처: stage1.md §3 §8, D-007
+최종 갱신: 2026-09-13 · 출처: stage1.md §3 §8, D-007, D-024 · 구현: migrations/20260913004000_schedule.sql (fn_business_day·fn_order_calendar·fn_submission_*·fn_tick·pg_cron), engine tick/notify, 화면 /schedule, /admin/suppliers
 
 ## 발주일
 

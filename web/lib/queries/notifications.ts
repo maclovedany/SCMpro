@@ -14,5 +14,6 @@ export function notificationHref(n: { kind: string; payload: unknown }): string 
   if (n.kind === "approval_reminder") return "/approvals?status=pending";
   if (n.kind.startsWith("alloc") || n.kind.startsWith("order_") || n.kind.includes("allocated") || n.kind === "priority_alloc_decided") return "/sales-orders?all=1";
   if (n.kind === "inbound_manual") return "/allocation";
+  if (n.kind === "submission_reminder") return "/schedule";
   return "/dashboard";
 }

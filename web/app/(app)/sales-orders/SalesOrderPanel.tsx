@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { fmtInt, fmtDateTime, fmtDate } from "@/lib/format";
 type Avail = { item_code: string | null; description: string | null; on_hand: number | null; temp_allocated: number | null; firm_allocated: number | null; hold_qty: number | null; available: number | null } | null;
-export function SalesOrderPanel({ orders, avail, item, isScm, me }: { orders: SalesOrderRow[]; avail: Avail; item: string; isScm: boolean; me: string }) {
+export function SalesOrderPanel({ orders, avail, item, isScm, me, now }: { orders: SalesOrderRow[]; avail: Avail; item: string; isScm: boolean; me: string; now: number }) {
   const router = useRouter();
   const [code, setCode] = useState(item); const [qty, setQty] = useState(""); const [customer, setCustomer] = useState(""); const [mode, setMode] = useState<"partial" | "wait">("partial");
   const [cancel, setCancel] = useState<SalesOrderRow | null>(null); const [reason, setReason] = useState("");
@@ -27,7 +27,7 @@ export function SalesOrderPanel({ orders, avail, item, isScm, me }: { orders: Sa
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <DrillCard label="내 진행 주문" value={fmtInt(mine.filter(o => ["review_requested", "partial", "waiting"].includes(o.status!)).length)} hint="임시배정·대기" href="/sales-orders" />
-        <DrillCard label="7일 내 만료" value={fmtInt(mine.filter(o => o.expires_at && Date.parse(o.expires_at) - Date.now() < 7 * 86400e3 && ["review_requested", "partial"].includes(o.status!)).length)} hint="만료 시 자동 해제 (R-AL-02)" href="/sales-orders" tone="warn" />
+        <DrillCard label="7일 내 만료" value={fmtInt(mine.filter(o => o.expires_at && Date.parse(o.expires_at) - now < 7 * 86400e3 && ["review_requested", "partial"].includes(o.status!)).length)} hint="만료 시 자동 해제 (R-AL-02)" href="/sales-orders" tone="warn" />
         <DrillCard label="부족 수량 대기" value={fmtInt(mine.filter(o => o.status === "partial" || o.status === "waiting").length)} hint="입고 시 순번대로 자동 배정" href="/sales-orders" />
         <DrillCard label="확정" value={fmtInt(mine.filter(o => o.status === "confirmed").length)} href="/sales-orders" />
       </div>
@@ -63,7 +63,7 @@ export function SalesOrderPanel({ orders, avail, item, isScm, me }: { orders: Sa
           <Textarea name="cancel_reason" placeholder="사유 (필수)" value={reason} onChange={e => setReason(e.target.value)} rows={2} />
           <DialogFooter><Button variant="outline" onClick={() => setCancel(null)}>닫기</Button><Button variant="destructive" onClick={doCancel} disabled={pending}>확인</Button></DialogFooter></DialogContent>
       </Dialog>
-      <p className="text-xs text-muted-foreground">{fmtDateTime(new Date().toISOString())} 기준</p>
+      <p className="text-xs text-muted-foreground">{fmtDateTime(new Date(now).toISOString())} 기준</p>
     </div>
   );
 }

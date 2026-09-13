@@ -160,6 +160,33 @@ export type Database = {
         }
         Relationships: []
       }
+      demand_submission: {
+        Row: {
+          id: number
+          dept: Database["app"]["Enums"]["role"]
+          ym: string
+          submitted_by: string | null
+          submitted_at: string | null
+          note: string | null
+        }
+        Insert: {
+          id?: number
+          dept?: Database["app"]["Enums"]["role"]
+          ym?: string
+          submitted_by?: string | null
+          submitted_at?: string | null
+          note?: string | null
+        }
+        Update: {
+          id?: number
+          dept?: Database["app"]["Enums"]["role"]
+          ym?: string
+          submitted_by?: string | null
+          submitted_at?: string | null
+          note?: string | null
+        }
+        Relationships: []
+      }
       eol_eos: {
         Row: {
           model_base: string
@@ -1269,6 +1296,7 @@ export type Database = {
       fn_audit: { Args: Record<string, never>; Returns: unknown }
       fn_auto_allocate: { Args: { p_item: string }; Returns: number }
       fn_available_stock: { Args: { p_item: string }; Returns: unknown }
+      fn_business_day: { Args: { d: unknown }; Returns: unknown }
       fn_cancel_sales_order: { Args: { p_id: string; p_reason: string }; Returns: undefined }
       fn_confirm_order_plan: { Args: { p_plan_id: string; p_reason: string }; Returns: string }
       fn_confirm_sales_order: { Args: { p_id: string }; Returns: undefined }
@@ -1278,6 +1306,8 @@ export type Database = {
       fn_finalize_order_plan: { Args: { p_plan_id: string }; Returns: Json }
       fn_manual_allocate: { Args: { p_order: string; p_qty: unknown; p_reason: string }; Returns: Json }
       fn_mark_read: { Args: { p_ids: number[] }; Returns: undefined }
+      fn_notification_email_copy: { Args: Record<string, never>; Returns: unknown }
+      fn_order_calendar: { Args: { p_from: unknown; p_months: number }; Returns: unknown }
       fn_order_inputs: { Args: { p_plan_ym: unknown }; Returns: Json }
       fn_override_line: { Args: { p_line_id: unknown; p_qty: unknown; p_reason: string }; Returns: undefined }
       fn_plan_cat_projection: { Args: { p_plan_id: string }; Returns: Json }
@@ -1286,8 +1316,14 @@ export type Database = {
       fn_request_approval: { Args: { p_kind: string; p_target_table: string; p_target_pk: string; p_payload: Json; p_reason: string }; Returns: string }
       fn_request_forecast_run: { Args: { p_run_type: string; p_eval_fy: number; p_horizon: number }; Returns: string }
       fn_request_tuning_approval: { Args: { p_proposal_id: string; p_reason: string }; Returns: string }
+      fn_sailing_dates: { Args: { p_rule: Json; p_ym: unknown }; Returns: unknown }
       fn_save_order_plan: { Args: { p_plan_ym: unknown; p_note: string; p_user: string }; Returns: string }
       fn_set_priority: { Args: { p_order: string; p_priority: number; p_reason: string }; Returns: undefined }
+      fn_submission_deadline: { Args: { p_ym: unknown }; Returns: unknown }
+      fn_submission_reminder_tick: { Args: Record<string, never>; Returns: number }
+      fn_submission_status: { Args: { p_ym: unknown }; Returns: Json }
+      fn_submit_demand: { Args: { p_ym: unknown; p_dept: string; p_note: string }; Returns: undefined }
+      fn_tick: { Args: Record<string, never>; Returns: Json }
       fn_unread_count: { Args: Record<string, never>; Returns: number }
       handle_new_user: { Args: Record<string, never>; Returns: unknown }
       notify_order: { Args: { p_order: string; p_kind: string; p_title: string; p_body: string; p_payload: Json }; Returns: undefined }
@@ -1406,6 +1442,35 @@ export type Database = {
           horizon: number | null
           summary: Json | null
           finished_at: string | null
+        }
+        Relationships: []
+      }
+      v_inbound_gap: {
+        Row: {
+          id: number | null
+          item_code: string | null
+          supplier_id: number | null
+          supplier_code: string | null
+          supplier_name: string | null
+          po_no: string | null
+          qty: number | null
+          planned_date: string | null
+          actual_date: string | null
+          diff_days: number | null
+          ym: string | null
+          item_type: string | null
+        }
+        Relationships: []
+      }
+      v_inbound_gap_summary: {
+        Row: {
+          supplier_code: string | null
+          ym: string | null
+          n: number | null
+          avg_diff: number | null
+          min_diff: number | null
+          max_diff: number | null
+          sd_diff: number | null
         }
         Relationships: []
       }
