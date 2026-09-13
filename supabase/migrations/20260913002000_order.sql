@@ -157,6 +157,7 @@ create or replace function app.fn_add_extra_demand(p_kind text, p_item text, p_n
 language plpgsql security definer set search_path = app, public as $$
 declare v_id uuid; v_role app.role := app.current_role(); v_appr uuid;
 begin
+  p_order_no := nullif(trim(p_order_no), ''); p_customer := nullif(trim(p_customer), ''); p_model := nullif(trim(p_model), ''); p_reason := nullif(trim(p_reason), '');
   if v_role is null then raise exception 'AUTH_REQUIRED'; end if;
   if not exists (select 1 from raw.dim_item where item_code = p_item) then raise exception 'UNKNOWN_ITEM %', p_item; end if;
   if p_kind = 'confirmed_order' and (p_order_no is null or length(trim(p_order_no)) = 0) then raise exception 'ORDER_NO_REQUIRED'; end if;

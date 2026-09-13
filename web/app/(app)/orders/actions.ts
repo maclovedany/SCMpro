@@ -47,9 +47,10 @@ export async function addExtraDemand(input: { kind: string; item_code: string; n
   const p = await getProfile(); if (!p) return { ok: false, error: "로그인 필요" };
   if (!(input.qty > 0)) return { ok: false, error: "수량은 0 보다 커야 합니다" };
   if (!/^\d{4}-\d{2}$/.test(input.need_ym)) return { ok: false, error: "필요월 형식 YYYY-MM" };
+  const nz = (v?: string) => (v && v.trim() ? v.trim() : null);   // 빈 문자열은 NULL 로 (표시·필수 검사 정합)
   const sb = await createServerSupabase();
   const { data, error } = await sb.schema("app").rpc("fn_add_extra_demand", { p_kind: input.kind, p_item: input.item_code.trim(), p_need_ym: input.need_ym, p_qty: input.qty,
-    p_order_no: input.order_no ?? null as never, p_customer: input.customer ?? null as never, p_model: input.model ?? null as never, p_reason: input.reason ?? null as never });
+    p_order_no: nz(input.order_no) as never, p_customer: nz(input.customer) as never, p_model: nz(input.model) as never, p_reason: nz(input.reason) as never });
   if (error) return { ok: false, error: msg(error) };
   revalidatePath("/extra-demand"); return { ok: true, id: data as string };
 }
