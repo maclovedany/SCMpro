@@ -43,7 +43,8 @@
 | `20260913000500_app_functions.sql` | 감사 트리거, 승인/업로드/대시보드 RPC |
 | `20260913000600_app_views.sql` | `analytics` 물리화 뷰, `app` 뷰 |
 | `20260913000700_rls.sql` | RLS 정책 |
-| `20260913000900_grants.sql` | 권한. **항상 마지막** |
+| `20260913001000_forecast.sql` | SP2 예측: 기법 레지스트리·정책·런·결과·정확도·분류·AI 제안, 뷰 |
+| `20260913999900_grants.sql` | 권한. **항상 마지막** |
 
 raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `supabase/scripts/load-raw.sh` (\copy). 구 `02-data-*.sql`, `03-verify.sql`, `07-*.sql` 은 `supabase/legacy/` 참고용.
 
@@ -118,10 +119,25 @@ raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `
 ### Supabase 대시보드 수동 설정
 Project Settings → Data API → **Exposed schemas**: `public, graphql_public, app, analytics, core`. 없으면 supabase-js `.schema('app')` 조회가 빈 배열/오류.
 
-### 아직 없는 테이블 (SP2~SP5)
+### 예측 (SP2, migration 001000)
+| 객체 | 내용 |
+|---|---|
+| `app.forecast_method` ★ | 기법 레지스트리 13종: enabled·params·patterns·abc_scope·level·min_history (D-018) |
+| `app.forecast_policy` ★ | ABC-XYZ 9셀별 후보 기법 (R-FC-35) |
+| `app.forecast_run` | 런: backtest(eval_fy) / production(horizon), status requested→running→done/failed, summary |
+| `app.forecast_result` | 런×레벨(item/model)×품목×월×기법 예측값·밴드·is_champion·actual |
+| `app.forecast_accuracy` | 레벨(item/model/total/category/biz/abcxyz/pattern)×기법 Bias/WAPE/MAPE |
+| `app.item_class` | 품목 분류: pattern(SBC)·ABC·XYZ·CV·챔피언 기법 (v_item_master 조인) |
+| `app.forecast_tuning_proposal` ★ | gpt-5-nano 진단·제안(JSON), status pending→requested→applied/rejected |
+| `analytics.v_forecast_latest_run` / `v_forecast_latest` | 최신 완료 런 / 프로덕션 챔피언 예측 |
+| `analytics.v_mc_compare` | 기종×월: sales_ol·scm_ol·act·system_fc·밴드·fy (기종 변형 합산) |
+| `analytics.v_accuracy_summary`, `v_abc_xyz_matrix` | 화면 요약 |
+| RPC | `fn_request_forecast_run`, `fn_request_tuning_approval`, `fn_apply_tuning` (fn_decide_approval 분기) |
+엔진 CLI: `engine forecast backtest --eval-fy 2025` · `run --horizon 6` · `pending` · `tune --run-id X`
+
+### 아직 없는 테이블 (SP3~SP6)
 | 영역 | 후보 테이블 | 규칙 |
 |---|---|---|
-| 예측 | forecast_run(version), forecast_result(item, ym, method, value), forecast_accuracy | R-FC-11/21 |
 | 발주 | order_plan, order_plan_line(근거 컬럼 포함) | R-OQ-40/41 |
 | 추가수요 | confirmed_order, meeting_approval, bulkdeal | R-OQ-20~25 |
 | 배정 | sales_order, allocation, allocation_priority | R-AL |

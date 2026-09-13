@@ -22,6 +22,9 @@ export function ItemsTable({ rows }: { rows: ItemMasterRow[] }) {
     { accessorKey: "moq", header: "MOQ", cell: c => <span className="tabular-nums">{fmtInt(c.getValue() as number)}</span> },
     { accessorKey: "setting_status", header: "설정", cell: c => <span>{String(c.getValue() ?? "-")}{c.row.original.setting_is_dummy && <Badge variant="secondary" className="ml-1 text-[10px]">더미</Badge>}</span> },
     { accessorKey: "last_ship_ym", header: "최근 출고월" },
+    { accessorKey: "pattern", header: "패턴" },
+    { id: "abcxyz", header: "ABC-XYZ", accessorFn: r => `${r.abc ?? "-"}${r.xyz ?? "-"}` },
+    { accessorKey: "champion_method", header: "챔피언 기법" },
   ], []);
   return <DataGrid columns={columns} rows={rows} rowKey={r => r.key_code!} onRowClick={r => router.push(`/items/${encodeURIComponent(r.key_code!)}`)} csvName="items" />;
 }

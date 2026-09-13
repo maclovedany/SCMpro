@@ -1,8 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 const LABEL: Record<string, string> = { target_dos_days: "목표 DoS", moq: "MOQ", unit_price: "단가", allocation_mode: "배정방식" };
-const KIND_LABEL: Record<string, string> = { item_setting: "품목 설정", target_dos: "목표 DoS", allocation_mode: "배정방식", order_plan: "발주 계획", priority_alloc: "우선 배정", bulkdeal: "Bulkdeal 추가 발주" };
+const KIND_LABEL: Record<string, string> = { item_setting: "품목 설정", target_dos: "목표 DoS", allocation_mode: "배정방식", order_plan: "발주 계획", priority_alloc: "우선 배정", bulkdeal: "Bulkdeal 추가 발주", forecast_tuning: "AI 예측 조정" };
 export function describeApproval(a: { kind: string; target_pk: string; payload: Record<string, unknown> | null }, current?: Record<string, unknown> | null): string {
+  if (a.kind === "forecast_tuning") {
+    const props = (a.payload?.proposals ?? []) as { method_key: string; param_patch?: Record<string, unknown>; enabled?: boolean | null }[];
+    return `AI 예측 조정: ` + props.map(p => `${p.method_key}${p.enabled != null ? `(${p.enabled ? "on" : "off"})` : ""} ${p.param_patch && Object.keys(p.param_patch).length ? JSON.stringify(p.param_patch) : ""}`.trim()).join(", ");
+  }
   const parts = Object.entries(a.payload ?? {}).map(([k, v]) => `${LABEL[k] ?? k} ${current?.[k] ?? "-"} → ${v}`);
   const subject = a.kind === "item_setting" ? `품목 ${a.target_pk}` : `${KIND_LABEL[a.kind] ?? a.kind} ${a.target_pk}`;
   return `${subject}: ${parts.join(", ")}`;

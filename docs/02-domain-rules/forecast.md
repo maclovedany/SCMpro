@@ -1,6 +1,6 @@
 # 규칙: 수요 예측 (R-FC)
 
-최종 갱신: 2026-09-13 · 출처: stage1.md §4, 데이터 설명.docx, 회의록, D-002
+최종 갱신: 2026-09-13 · 출처: stage1.md §4, 데이터 설명.docx, 회의록, D-002, D-016~020 · 구현: engine/scm_engine/forecast/, migrations/20260913001000_forecast.sql
 
 ## 예측 대상과 기법 방향
 
@@ -36,6 +36,7 @@
 | R-FC-30 | 품목별 수요 패턴(smooth/erratic/intermittent/lumpy, Syntetos-Boylan ADI·CV²)을 먼저 분류하고 유형별 후보 기법을 백테스트해 챔피언을 자동 선택. 근거(패턴, 후보별 WAPE·Bias) 저장. |
 | R-FC-31 | 기준선 = 최근 6개월 단순평균. 챔피언은 기준선보다 나빠서는 안 된다. |
 | R-FC-32 | 계절 기법(Holt-Winters)은 24개월 이상 이력이 있을 때만 후보. |
+| R-FC-35 | 품목을 ABC(최근 12개월 출고 금액 기여도 누적 80/95/100%) × XYZ(월 수요 변동계수 CV ≤0.5 / ≤1.0 / >1.0) 9셀로 분류. 셀별 기본 기법 세트·백테스트 정책을 `forecast_policy` 로 관리(관리자 편집). 단가 없는 품목은 수량 기준 ABC (D-019). |
 | R-FC-34 | 기법 레지스트리 `app.forecast_method` 의 `enabled=true` 인 기법만 후보. 관리자가 on/off·파라미터 변경, 이력 audit (D-018). |
 | R-FC-33 | 예측 입력은 음수를 0 으로 클리핑. 월 평균의 5배 초과 이상치는 Bulkdeal/재수출 후보로 플래그하고 기본적으로 중앙값으로 대체 (원본 보존). |
 
@@ -43,8 +44,8 @@
 | ID | 규칙 |
 |---|---|
 | R-FC-40 | 평가 단위는 **회계연도(R-FC-08)**. 라운드 r: 학습 = 시작 FY ~ FY(r−1), 평가 = FY(r). 초기 라운드: 학습 FY23+FY24, 평가 FY25. FY 가 추가될 때마다 라운드 추가(롤링). |
-| R-FC-41 | 라운드마다 기법별·품목별 Bias/WAPE/MAPE 와 오차 패턴(월별·카테고리·기종·수요패턴·EOL 단계별)을 `forecast_accuracy` 에 저장하고 화면에서 비교(Sales OL / SCM OL / 기준예측). |
-| R-FC-42 | AI 정교화: 라운드 결과를 gpt-5-nano 에 요약 전달해 (a) 오차 원인 진단, (b) 기법/파라미터/전처리 조정 제안을 구조화(JSON)로 받는다. 제안은 `forecast_tuning_proposal` 에 저장, SCM 품목담당자 검토·팀장 승인 후 다음 라운드에 적용. 자동 적용 금지. 프롬프트·응답·적용 여부 이력 보관. |
+| R-FC-41 | 라운드마다 기법별·품목별 Bias/WAPE/MAPE 와 오차 패턴(월별·카테고리·기종·수요패턴·EOL 단계별)을 `forecast_accuracy` 에 저장하고 화면에서 비교(Sales OL / SCM OL / 기준예측). 챔피언은 평가 구간에서 선택되므로 라운드 WAPE 는 상한 추정으로 표기; 프로덕션은 최신 백테스트 챔피언을 적용(out-of-sample) (D-020). 구현: `engine forecast backtest/run`, `analytics.v_accuracy_summary`, `/forecast`. |
+| R-FC-42 | AI 정교화: 라운드 결과를 gpt-5-nano 에 요약 전달해 (a) 오차 원인 진단, (b) 기법/파라미터/전처리 조정 제안을 구조화(JSON)로 받는다. 제안은 `forecast_tuning_proposal` 에 저장, SCM 품목담당자 검토·팀장 승인 후 다음 라운드에 적용. 자동 적용 금지. 프롬프트·응답·적용 여부 이력 보관. 가드레일: 최신 백테스트 챔피언 기법의 off 제안은 무시, 라운드 간 WAPE 회귀 감지 (D-021). |
 
 ## 미정
 - 장착률 기반 옵션 예측의 구체 식 (Q-001 수령 후)

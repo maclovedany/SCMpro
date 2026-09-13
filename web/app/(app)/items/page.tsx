@@ -18,6 +18,10 @@ export default async function ItemsPage({ searchParams }: { searchParams: Promis
   if (f.dummy) active.push({ k: "dummy", label: "더미 설정만" });
   if (f.target_dos) active.push({ k: "target_dos", label: "목표 DoS 미설정" });
   if (f.q) active.push({ k: "q", label: `검색: ${f.q}` });
+  if (f.abc) active.push({ k: "abc", label: `ABC ${f.abc}` });
+  if (f.xyz) active.push({ k: "xyz", label: `XYZ ${f.xyz}` });
+  if (f.pattern) active.push({ k: "pattern", label: `패턴 ${f.pattern}` });
+  if (f.champion) active.push({ k: "champion", label: `챔피언 ${f.champion}` });
   const without = (k: string) => drillHref("/items", { ...sp, [k]: undefined, page: undefined });
   return (
     <div className="space-y-4">

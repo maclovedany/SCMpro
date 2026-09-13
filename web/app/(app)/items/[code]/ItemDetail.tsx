@@ -8,12 +8,30 @@ import { Badge } from "@/components/ui/badge";
 import { fmtInt, fmtNum, fmtDate } from "@/lib/format";
 import { drillHref } from "@/lib/drill";
 import type { ItemDetail as D } from "@/lib/queries/items";
-export function ItemDetail({ d }: { d: D }) {
+import { METHOD_LABEL, PATTERN_LABEL } from "@/lib/queries/forecast";
+import type { TsSeries } from "@/components/charts/chartOption";
+type Fc = { ym: string | null; method: string | null; value: number | null; lower: number | null; upper: number | null }[];
+type Cls = { pattern: string | null; abc: string | null; xyz: string | null; champion_method: string | null; cv: number | null; adi: number | null } | null;
+export function ItemDetail({ d, forecast = [], cls = null }: { d: D; forecast?: Fc; cls?: Cls }) {
   const m = d.master!;
-  const months = useMemo(() => d.monthly.map(r => r.ym!), [d.monthly]);
-  const qty = useMemo(() => d.monthly.map(r => Number(r.qty)), [d.monthly]);
-  const last12 = months.slice(-12);
-  const treeRows = useMemo(() => [{ id: "ship", label: "실제 출고", level: 0, values: Object.fromEntries(d.monthly.map(r => [r.ym!, Number(r.qty)])) }], [d.monthly]);
+  const histMonths = useMemo(() => d.monthly.map(r => r.ym!), [d.monthly]);
+  const fcMonths = useMemo(() => forecast.map(r => r.ym!), [forecast]);
+  const months = useMemo(() => [...histMonths, ...fcMonths.filter(x => !histMonths.includes(x))], [histMonths, fcMonths]);
+  const series = useMemo<TsSeries[]>(() => {
+    const hist = new Map(d.monthly.map(r => [r.ym!, Number(r.qty)]));
+    const fc = new Map(forecast.map(r => [r.ym!, r]));
+    const out: TsSeries[] = [{ name: "실제 출고", role: "actual", data: months.map(x => hist.has(x) ? hist.get(x)! : null) }];
+    if (forecast.length) out.push({ name: `기준예측 (${METHOD_LABEL[forecast[0].method ?? ""] ?? forecast[0].method})`, role: "forecast",
+      data: months.map(x => fc.has(x) ? Number(fc.get(x)!.value) : null),
+      band: { lower: months.map(x => fc.has(x) ? Number(fc.get(x)!.lower ?? fc.get(x)!.value) : 0), upper: months.map(x => fc.has(x) ? Number(fc.get(x)!.upper ?? fc.get(x)!.value) : 0) } });
+    return out;
+  }, [d.monthly, forecast, months]);
+  const gridMonths = useMemo(() => [...histMonths.slice(-12), ...fcMonths.filter(x => !histMonths.includes(x))], [histMonths, fcMonths]);
+  const treeRows = useMemo(() => {
+    const rows = [{ id: "ship", label: "실제 출고", level: 0, values: Object.fromEntries(d.monthly.map(r => [r.ym!, Number(r.qty)])) }];
+    if (forecast.length) rows.push({ id: "fc", label: "기준예측", level: 0, values: Object.fromEntries(forecast.map(r => [r.ym!, Number(r.value)])) });
+    return rows;
+  }, [d.monthly, forecast]);
   return (
     <div className="space-y-5">
       <div>
@@ -26,13 +44,19 @@ export function ItemDetail({ d }: { d: D }) {
         <DrillCard label="DoS (일)" value={fmtInt(m.dos_days)} hint={`6M 평균 ${fmtNum(m.avg_6m)} / 월`} href="#chart" tone={m.target_dos_days != null && m.dos_days != null && m.dos_days < m.target_dos_days ? "danger" : "default"} />
         <DrillCard label="목표 DoS · MOQ" value={`${fmtInt(m.target_dos_days)} · ${fmtInt(m.moq)}`} hint={m.setting_is_dummy ? "더미 설정 — 승인 필요" : `상태 ${m.setting_status ?? "-"}`} href={drillHref("/admin/item-settings", { item: m.key_code! })} tone={m.target_dos_days == null ? "danger" : m.setting_is_dummy ? "warn" : "default"} />
       </div>
+      {cls && <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <DrillCard label="수요 패턴" value={PATTERN_LABEL[cls.pattern ?? ""] ?? cls.pattern ?? "-"} hint={`ADI ${cls.adi?.toFixed(2) ?? "-"} · CV ${cls.cv?.toFixed(2) ?? "-"}`} href={drillHref("/items", { pattern: cls.pattern ?? undefined })} />
+        <DrillCard label="ABC-XYZ" value={`${cls.abc ?? "-"}${cls.xyz ?? "-"}`} hint="금액 기여도 × 변동성 (R-FC-35)" href={drillHref("/items", { abc: cls.abc ?? undefined, xyz: cls.xyz ?? undefined })} />
+        <DrillCard label="챔피언 기법" value={METHOD_LABEL[cls.champion_method ?? ""] ?? cls.champion_method ?? "-"} hint="최신 백테스트 WAPE 최소 (R-FC-31)" href="/forecast" />
+        <DrillCard label="예측 지평선" value={forecast.length ? `${forecast.length}개월` : "-"} hint={forecast.length ? `${fcMonths[0]} ~ ${fcMonths[fcMonths.length - 1]}` : "프로덕션 런 필요"} href="/forecast/runs" tone={forecast.length ? "default" : "warn"} />
+      </div>}
       <section id="chart" className="rounded-md border p-3">
-        <h2 className="mb-2 text-sm font-medium">월별 출고 (HOC 합산)</h2>
-        <TimeSeriesChart months={months} series={[{ name: "실제 출고", role: "actual", data: qty }]} height={300} />
+        <h2 className="mb-2 text-sm font-medium">월별 출고 (HOC 합산) + 기준예측 (80% 구간)</h2>
+        <TimeSeriesChart months={months} series={series} forecastFrom={fcMonths[0]} height={300} />
       </section>
       <section className="rounded-md border p-3">
-        <h2 className="mb-2 text-sm font-medium">재고전개 (SP3 에서 예측·발주 행 추가)</h2>
-        <TreeGrid months={last12} rows={treeRows} pastUntil={last12[last12.length - 1] ?? ""} />
+        <h2 className="mb-2 text-sm font-medium">재고전개 (SP3 에서 재고·발주 행 추가)</h2>
+        <TreeGrid months={gridMonths} rows={treeRows} pastUntil={histMonths[histMonths.length - 1] ?? ""} />
       </section>
       <div className="grid gap-4 lg:grid-cols-2">
         {m.category === "PART" && (

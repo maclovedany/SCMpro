@@ -25,7 +25,8 @@
 4. 답이 나온 질문은 `04-open-questions.md` 에서 지우고 `03-decisions.md` 로 옮긴다.
 5. 새 데이터 파일이 들어오면 `05-data-catalog.md` 에 먼저 등록한다.
 6. 하드코딩 금지 대상: 리드타임, OL 제출 선행 개월, 목표 DoS, MOQ, Flex 범위, 출항일 → 전부 관리자 설정값.
-7. 마스터·설정 데이터(재고, 입고예정, 단가, MOQ, 공급처, 장착률 …)는 **파일 업로드 + 관리자 화면 입력** 둘 다 지원. 실데이터 없는 것은 더미 시드하되 `is_dummy` 로 구분 (D-007).
+7. 엔진 런(backtest/run)이 도는 동안 `migrate.sh` 를 실행하지 않는다 — 물리화 뷰 재생성으로 런이 실패한다.
+8. 마스터·설정 데이터(재고, 입고예정, 단가, MOQ, 공급처, 장착률 …)는 **파일 업로드 + 관리자 화면 입력** 둘 다 지원. 실데이터 없는 것은 더미 시드하되 `is_dummy` 로 구분 (D-007).
 
 ## 문서 갱신 규칙 (구현 중 계속 유지)
 - 규칙 ID 형식: `R-FC-nn`(forecast) `R-OQ-nn`(order-quantity) `R-INV-nn`(inventory) `R-AL-nn`(allocation) `R-BOM-nn`(bom-option) `R-XCN-nn`(parts-xcn) `R-SCH-nn`(schedule) `R-UI-nn`(ui) `R-AI-nn`(ai-agent). 번호는 재사용하지 않는다. 폐기는 `~~취소선~~ (D-nnn 로 폐기)`.
@@ -46,6 +47,11 @@ supabase/scripts/load-raw.sh                # raw 적재 (+ bridge_scc_config �
 uv --directory engine run engine seed-app && supabase/scripts/seed-app.sh   # 더미 시드 (D-007) + 물리화 뷰 refresh
 uv --directory engine run engine verify --target postgres                  # 행수 대조·XCN 리포트 → docs/reports/
 uv --directory engine run engine gen-types  # web/lib/types/database.ts 생성 (스키마 변경 시)
+# 예측 (SP2)
+uv --directory engine run engine forecast backtest --eval-fy 2025   # FY 롤링 백테스트 (~3분)
+uv --directory engine run engine forecast run --horizon 6           # 프로덕션 예측
+uv --directory engine run engine forecast tune                      # gpt-5-nano 오차 분석 → 제안 (승인은 /approvals)
+uv --directory engine run engine forecast pending                   # 웹에서 요청한 런 처리
 # Web
 cd web && npm run dev            # http://localhost:3000  (테스트 계정: admin@scm.test / lead@ / manager@ / sales@ / biz@ — 비밀번호 Scm!2026test)
 npm test · npm run test:e2e · npm run lint · npx tsc --noEmit
@@ -53,5 +59,5 @@ npm test · npm run test:e2e · npm run lint · npx tsc --noEmit
 cd engine && uv run pytest
 ```
 - Supabase 대시보드: Data API → Exposed schemas 에 `app, analytics, core` 필요.
-- 상태: **SP1 완료** (docs/reports/sp1-verification.md). 다음: SP2 예측 엔진 (spec 작성부터). 서브프로젝트 목록: docs/01-business-process.md §7.
+- 상태: **SP1·SP2 완료** (docs/reports/sp1-verification.md, sp2-verification.md). 다음: SP3 발주량 산출 (spec 부터). 서브프로젝트 목록: docs/01-business-process.md §7.
 - LLM: OpenAI `gpt-5-nano` (D-017, R-AI). `OPENAI_API_KEY` 는 engine/.env, web/.env.local 에.

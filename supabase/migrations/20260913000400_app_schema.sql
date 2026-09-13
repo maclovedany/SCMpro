@@ -100,6 +100,14 @@ create table if not exists app.shipment_extra (
 );
 comment on table app.shipment_extra is 'raw 수정 금지 원칙에 따른 추가월 출고. v_item_monthly 가 UNION';
 
+-- 품목 분류 (SP2, R-FC-30/35). v_item_master 가 조인하므로 여기서 생성
+create table if not exists app.item_class (
+  key_code text primary key, category text, pattern text, abc text, xyz text,
+  adi numeric, cv2 numeric, cv numeric, value_12m numeric, share numeric, champion_method text,
+  run_id uuid, computed_at timestamptz default now()
+);
+create index if not exists ix_item_class_cell on app.item_class(abc, xyz);
+
 create table if not exists app.upload_log (
   id uuid primary key default gen_random_uuid(), file_name text, target text not null,
   row_count int not null default 0, ok_count int not null default 0, error_count int not null default 0,
@@ -140,5 +148,6 @@ insert into app.system_settings(key, value, description) values
  ('reminder_interval_min', '10', '반복 알림 간격 (R-SCH-21, R-AL-17)'),
  ('projection_past_months', '12', '재고전개 과거 열 수 (R-UI-04)'),
  ('projection_future_months', '6', '재고전개 미래 열 수 (R-UI-04)'),
- ('fiscal_year_start_month', '4', '회계연도 시작월. FY25 = 2025-04 ~ 2026-03 (D-015, R-FC-08)')
+ ('fiscal_year_start_month', '4', '회계연도 시작월. FY25 = 2025-04 ~ 2026-03 (D-015, R-FC-08)'),
+ ('ai_model', '"gpt-5-nano"', 'AI 모델 (D-017, R-AI-01)')
 on conflict (key) do nothing;
