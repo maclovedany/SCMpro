@@ -71,6 +71,13 @@ def backtest(db: PostgresDB, eval_fy: int, *, n_jobs: int = 6, heavy_limit: int 
             ev = mc[(mc.ym > prev_to) & (mc.ym <= ev_to_eff)].dropna(subset=["act"])
             for k in ("sales_ol", "scm_ol"):
                 mm = all_metrics(ev[k].fillna(0).to_numpy(), ev["act"].to_numpy()); summary[f"{k}_wape"] = mm["wape"]; summary[f"{k}_bias"] = mm["bias"]
+        prev = db.read_df("select id, summary from app.forecast_run where run_type='backtest' and status='done' and eval_fy=%s and id<>%s order by finished_at desc limit 1", (eval_fy, rid))
+        if not prev.empty and isinstance(prev.iloc[0]["summary"], dict):
+            ps = prev.iloc[0]["summary"]
+            summary["vs_prev"] = {"prev_run_id": str(prev.iloc[0]["id"]),
+                                  "item_wape_delta": (summary["item_wape"] - ps["item_wape"]) if summary.get("item_wape") is not None and ps.get("item_wape") is not None else None,
+                                  "model_wape_delta": (summary["model_wape"] - ps["model_wape"]) if summary.get("model_wape") is not None and ps.get("model_wape") is not None else None}
+            summary["regressed"] = bool((summary["vs_prev"]["item_wape_delta"] or 0) > 0.01 or (summary["vs_prev"]["model_wape_delta"] or 0) > 0.01)
         store.finish_run(db, rid, summary)
         log.info("backtest done %s", summary)
     except Exception as e:

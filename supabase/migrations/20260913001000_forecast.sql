@@ -128,7 +128,11 @@ declare pr jsonb; pid uuid := (p_approval.payload->>'proposal_id')::uuid;
 begin
   if p_decision = 'approved' then
     for pr in select * from jsonb_array_elements(coalesce(p_approval.payload->'proposals', '[]'::jsonb)) loop
-      if pr->>'method_key' is not null and exists (select 1 from app.forecast_method where key = pr->>'method_key') then
+      if pr->>'method_key' is not null and exists (select 1 from app.forecast_method where key = pr->>'method_key')
+         -- 가드: 최신 백테스트에서 챔피언(레벨 total)인 기법은 off 불가 (D-021)
+         and not ((pr->>'enabled')::boolean is false and exists (
+              select 1 from app.forecast_result r join analytics.v_forecast_latest_run l on l.id = r.run_id and l.run_type = 'backtest'
+              where r.is_champion and r.method = pr->>'method_key' limit 1)) then
         update app.forecast_method set
           params = params || coalesce(pr->'param_patch', '{}'::jsonb),
           enabled = coalesce((pr->>'enabled')::boolean, enabled),

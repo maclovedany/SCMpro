@@ -1,6 +1,6 @@
 # SP2 예측 엔진 구현 계획
 
-> 상태: 진행 중 (2026-09-13). 실행자 = 동일 세션(inline). spec: docs/specs/2026-09-13-sp2-forecast-design.md
+> 상태: **완료** 2026-09-13 (docs/reports/sp2-verification.md). 실행자 = 동일 세션(inline). spec: docs/specs/2026-09-13-sp2-forecast-design.md
 
 **Goal:** FY 롤링 백테스트로 기법을 평가·선택하는 예측 엔진 + 관리자 기법 토글 + OL 3종 비교 화면 + AI 오차 분석 제안.
 

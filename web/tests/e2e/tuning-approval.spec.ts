@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { login } from "./helpers";
-test("AI 제안 → 승인 요청 → 팀장 승인 → params 반영", async ({ page }) => {
+test("AI 제안 → 승인 요청 → 팀장 반려 (승인 경로는 sp2-verification 기록)", async ({ page }) => {
   await login(page, "manager@scm.test");
   await page.goto("/forecast/runs");
   await page.locator("tbody tr").filter({ hasText: "backtest" }).first().locator("a").click();
@@ -17,7 +17,10 @@ test("AI 제안 → 승인 요청 → 팀장 승인 → params 반영", async ({
   await page.goto("/approvals?status=pending");
   const row = page.locator("[data-testid=approval-row]").filter({ hasText: "AI 예측 조정" }).first();
   await expect(row).toBeVisible();
-  await row.getByRole("button", { name: "승인" }).click();
+  await row.getByRole("button", { name: "반려" }).click();
+  await page.fill("textarea[name=comment]", "E2E: 검토 후 반려");
   await page.getByRole("button", { name: "확인" }).click();
-  await expect(page.getByText("승인했습니다")).toBeVisible();
+  await expect(page.getByText("반려했습니다")).toBeVisible();
+  await page.goto("/approvals?status=rejected");
+  await expect(page.locator("[data-testid=approval-row]").filter({ hasText: "AI 예측 조정" }).first()).toBeVisible();
 });

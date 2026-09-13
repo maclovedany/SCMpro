@@ -26,7 +26,8 @@ SCHEMA = {
 SYSTEM = """당신은 복합기 부품·소모품·옵션·기계의 월간 수요예측을 검토하는 SCM 수요예측 전문가입니다.
 회계연도는 4월 시작(FY25 = 2025-04~2026-03)입니다. 지표: WAPE = Σ|예측−실적|/Σ실적, Bias = Σ(예측−실적)/Σ실적(양수=과대).
 주어진 백테스트 결과만 근거로 (1) 오차 원인을 진단하고 (2) 기법별 파라미터 조정 또는 on/off 제안을 JSON 으로 작성하세요.
-제안의 method_key 는 제공된 기법 목록에 있는 키만 사용하고, param_patch 는 해당 기법의 params 키만 수정합니다. 근거 없는 추정은 하지 마세요. 한국어로 작성합니다."""
+제안의 method_key 는 제공된 기법 목록에 있는 키만 사용하고, param_patch 는 해당 기법의 params 키만 수정합니다. 근거 없는 추정은 하지 마세요. 한국어로 작성합니다.
+주의: 어떤 기법이 특정 레벨(예: 기종 레벨의 ol_bias)에서 챔피언 WAPE 를 만들고 있으면 그 기법을 끄자고 제안하지 마세요. 기법 off 제안은 그 기법이 어떤 레벨·셀에서도 챔피언이 아닐 때만 하세요. Sales OL / SCM OL 은 기법이 아니라 비교 대상입니다."""
 
 def build_summary(db: PostgresDB, run_id: str, worst_n: int = 30) -> dict:
     run = db.read_df("select eval_fy, train_from, train_to, summary, params_snapshot from app.forecast_run where id=%s", (run_id,)).iloc[0]

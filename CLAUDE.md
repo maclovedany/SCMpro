@@ -25,7 +25,8 @@
 4. 답이 나온 질문은 `04-open-questions.md` 에서 지우고 `03-decisions.md` 로 옮긴다.
 5. 새 데이터 파일이 들어오면 `05-data-catalog.md` 에 먼저 등록한다.
 6. 하드코딩 금지 대상: 리드타임, OL 제출 선행 개월, 목표 DoS, MOQ, Flex 범위, 출항일 → 전부 관리자 설정값.
-7. 마스터·설정 데이터(재고, 입고예정, 단가, MOQ, 공급처, 장착률 …)는 **파일 업로드 + 관리자 화면 입력** 둘 다 지원. 실데이터 없는 것은 더미 시드하되 `is_dummy` 로 구분 (D-007).
+7. 엔진 런(backtest/run)이 도는 동안 `migrate.sh` 를 실행하지 않는다 — 물리화 뷰 재생성으로 런이 실패한다.
+8. 마스터·설정 데이터(재고, 입고예정, 단가, MOQ, 공급처, 장착률 …)는 **파일 업로드 + 관리자 화면 입력** 둘 다 지원. 실데이터 없는 것은 더미 시드하되 `is_dummy` 로 구분 (D-007).
 
 ## 문서 갱신 규칙 (구현 중 계속 유지)
 - 규칙 ID 형식: `R-FC-nn`(forecast) `R-OQ-nn`(order-quantity) `R-INV-nn`(inventory) `R-AL-nn`(allocation) `R-BOM-nn`(bom-option) `R-XCN-nn`(parts-xcn) `R-SCH-nn`(schedule) `R-UI-nn`(ui) `R-AI-nn`(ai-agent). 번호는 재사용하지 않는다. 폐기는 `~~취소선~~ (D-nnn 로 폐기)`.

@@ -132,3 +132,9 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 결정: (1) 백테스트 라운드의 챔피언 선택은 평가 구간 in-sample 이므로 품목 WAPE 는 상한 추정으로 표기(R-FC-41 주석). 프로덕션은 최신 백테스트 챔피언 사용(out-of-sample). FY 가 쌓이면 롤링 선택으로 전환. (2) EOL 진행 기종(예: MDL156 FY26 실적 0)은 EOL 마스터(Q-008) 수령 전까지 예측이 수렴하지 않음 — R-FC-07 은 SP2 후속. (3) `fact_mc_plan_actual` 의 기종 변형(model_key) 은 기종·월 합산. (4) 무거운 기법(ARIMA/Prophet)은 A/B 등급 한정으로 전체 백테스트 157초
 - 출처: 구현 검증 (docs/reports/sp2-backtest-fy25.md)
 - 영향: R-FC-41, 06-data-profile §2 보완, Q-008 우선순위 상향
+
+## D-021 (2026-09-13) AI 조정안 가드레일 — 챔피언 기법 off 금지, 라운드 간 회귀 감지
+- 배경: 라운드 1 AI 제안에 `ol_bias` off 가 포함돼 승인·적용되자 기종 WAPE 31.4% → 48.9% 로 악화 (ol_bias 가 기종 챔피언이었음)
+- 결정: (1) `fn_apply_tuning` 은 최신 백테스트에서 챔피언인 기법의 off 제안을 무시. (2) 프롬프트에 동일 규칙 명시. (3) 백테스트 summary 에 직전 라운드 대비 WAPE delta 와 `regressed` 플래그 기록 → 화면·리포트에 표시. (4) 회귀 시 담당자가 params 를 되돌린다(관리자 화면)
+- 출처: 구현 검증
+- 영향: R-FC-42, engine/ai_tuning.py, migrations/001000
