@@ -14,6 +14,7 @@ def load_monthly(db: DB, item_type: str, *, by_hoc: bool = True,
                  fill_zero: bool = True, clip_negative: bool = True) -> pd.DataFrame:
     key = "PART_HOC" if (item_type == "PART" and by_hoc) else item_type
     df = db.read_df(MONTHLY_SQL[key])
+    df["qty"] = df["qty"].astype(float)          # postgres numeric(Decimal) → float
     df = df.groupby(["key_code", "ym"], as_index=False)["qty"].sum()
     if clip_negative:
         df["qty"] = df["qty"].clip(lower=0)

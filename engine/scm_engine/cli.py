@@ -46,3 +46,13 @@ def verify_cmd(target: str = "postgres", report_dir: Path = ROOT / "docs" / "rep
 
 if __name__ == "__main__":
     app()
+
+@app.command("seed-app")
+def seed_app_cmd(snap_date: str = "2026-08-31", target: str = "postgres",
+                 out: Path = ROOT / "supabase" / "seed" / "app_seed.sql"):
+    """더미 시드 SQL 생성 (D-007). 키 집합은 Postgres(core 뷰 최신 규칙) 기준이 정본."""
+    from . import seed_app
+    db = _pg() if target == "postgres" else _sqlite()
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(seed_app.build_seed_sql(db, snap_date), encoding="utf-8")
+    typer.echo(f"생성: {out}")
