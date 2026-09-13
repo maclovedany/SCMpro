@@ -8,8 +8,8 @@ export function KpiTile({ label, value, sub, delta, progress, href, accent, icon
   const a = ACCENT[accent]; const Icon = (Icons as unknown as Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>>)[icon] ?? Icons.Circle;
   const deltaColor = delta ? (delta.dir === "flat" ? "text-muted-foreground" : delta.good ? "text-[#0ca30c]" : "text-[#d03b3b]") : "";
   return (
-    <Link href={href} prefetch aria-label={`${label} 상세 보기`} className="scm-card group flex h-full min-h-[6.5rem] items-stretch gap-3 rounded-xl p-3" data-tone={tone} style={tone === "default" ? ({ "--acc": a.hex, "--acc-soft": a.soft } as React.CSSProperties) : undefined}>
-      <div className="flex w-12 shrink-0 items-center justify-center rounded-lg" style={{ background: a.soft }}><Icon className="h-6 w-6" style={{ color: a.hex }} /></div>
+    <Link href={href} prefetch aria-label={`${label} 상세 보기`} className="scm-card group relative flex h-full min-h-[6.5rem] flex-col rounded-xl p-3 pr-12" data-tone={tone} style={tone === "default" ? ({ "--acc": a.hex, "--acc-soft": a.soft } as React.CSSProperties) : undefined}>
+      <div className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-md" style={{ background: a.soft }}><Icon className="h-4 w-4" style={{ color: a.hex }} /></div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-xs text-muted-foreground">{label}</div>
         <div className="truncate text-2xl font-semibold tabular-nums" title={value}>{value}</div>
