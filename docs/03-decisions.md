@@ -150,3 +150,8 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 검증: E2E 전체 흐름 + SQL 로 만료(자동 해제 알림)·3일 전 예고 확인. 자동배정은 입고 RPC 직접 호출로 확인(auto_allocated_orders=1)
 - 출처: 구현 검증
 - 영향: R-AL 규칙에 구현 위치, spec SP4
+
+## D-024 (2026-09-13) SP5 구현 결과 — pg_cron 10분 tick, 출항 규칙 jsonb, 이메일은 큐잉 후 engine 발송
+- 결정: (1) 공급처 출항 규칙 `sailing_rule={"weekday":1~7,"weeks":[1..5]}` (관리자 화면 편집), 발주일 = 출항일 − prep_days, 입고예정 = 출항일 + ship_lead_days, 둘 다 `fn_business_day` 로 이전 영업일 보정. (2) 수요자료 제출 `demand_submission`, 마감 = 대상월 −1개월 말일 −1, 미제출 부서 10분 반복 알림. (3) `app.fn_tick()` 을 pg_cron `scm-tick` */10 분 등록(확장 사용 가능 확인). 대안 `engine tick`. (4) 이메일: system 알림 insert 트리거로 email 행 복제 → `engine notify` 가 SMTP 설정 시 발송, 없으면 `skipped:no_smtp` (Q-019 유지). (5) 입고 차이는 `analytics.v_inbound_gap(_summary)` 차이값 하나로
+- 검증: 영업일 보정(개천절·추석 연휴), 캘린더 3개월, 제출/알림 E2E, pg_cron 잡 등록, engine tick 실행
+- 출처: 구현 검증

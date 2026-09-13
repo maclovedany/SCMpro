@@ -2,6 +2,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { upsertSupplier, deleteSupplier } from "../actions";
+import { updateSailingRule } from "@/app/(app)/schedule/actions";
 import type { SupplierRow } from "@/lib/queries/admin";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,11 +21,12 @@ export function SupplierTable({ rows }: { rows: SupplierRow[] }) {
     <div className="space-y-3">
       <Button size="sm" onClick={() => edit()}>공급처 추가</Button>
       <table className="w-full text-sm">
-        <thead><tr className="text-left text-muted-foreground"><th className="py-2">코드</th><th>이름</th><th>국가</th><th className="text-right">출항 준비일</th><th className="text-right">리드타임(일)</th><th>출처</th><th></th></tr></thead>
+        <thead><tr className="text-left text-muted-foreground"><th className="py-2">코드</th><th>이름</th><th>국가</th><th className="text-right">출항 준비일</th><th className="text-right">리드타임(일)</th><th>출항 규칙</th><th>출처</th><th></th></tr></thead>
         <tbody>{rows.map(r => (
           <tr key={r.id} className="border-t">
             <td className="py-2 font-mono">{r.code}</td><td>{r.name}</td><td>{r.country}</td>
             <td className="text-right tabular-nums">{r.prep_days}</td><td className="text-right tabular-nums">{r.lead_time_days}</td>
+            <td><SailingRule id={r.id} rule={r.sailing_rule as { weekday?: number; weeks?: number[] } | null} /></td>
             <td>{r.is_dummy ? <Badge variant="secondary">더미</Badge> : <Badge variant="outline">{r.source}</Badge>}</td>
             <td className="space-x-1 text-right"><Button variant="outline" size="sm" onClick={() => edit(r)}>편집</Button><Button variant="ghost" size="sm" onClick={() => del(r.id)}>삭제</Button></td>
           </tr>))}</tbody>
@@ -43,5 +45,18 @@ export function SupplierTable({ rows }: { rows: SupplierRow[] }) {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+const WD = ["", "월", "화", "수", "목", "금", "토", "일"];
+function SailingRule({ id, rule }: { id: number; rule: { weekday?: number; weeks?: number[] } | null }) {
+  const [wd, setWd] = useState(rule?.weekday ?? 3); const [weeks, setWeeks] = useState<number[]>(rule?.weeks ?? [1, 3]);
+  const [pending, start] = useTransition();
+  return (
+    <span className="inline-flex items-center gap-1 text-xs">
+      <select aria-label="출항 요일" className="h-7 rounded border bg-background" value={wd} onChange={e => setWd(Number(e.target.value))}>{[1, 2, 3, 4, 5].map(d => <option key={d} value={d}>{WD[d]}</option>)}</select>
+      {[1, 2, 3, 4].map(w => <label key={w} className="inline-flex items-center gap-0.5"><input type="checkbox" checked={weeks.includes(w)} onChange={e => setWeeks(e.target.checked ? [...weeks, w].sort() : weeks.filter(x => x !== w))} />{w}주</label>)}
+      <Button size="sm" variant="outline" disabled={pending} onClick={() => start(async () => { const r = await updateSailingRule(id, wd, weeks); if (r.ok) toast.success("출항 규칙 저장"); else toast.error(r.error); })}>저장</Button>
+    </span>
   );
 }

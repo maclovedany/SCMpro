@@ -102,3 +102,20 @@ def fc_tune(run_id: str = None, model: str = None):
         run_id = db.read_df("select id from app.forecast_run where run_type='backtest' and status='done' order by finished_at desc limit 1").iloc[0, 0]
     pid = ai_tuning.tune(db, str(run_id), model)
     typer.echo(f"proposal_id={pid} (run {run_id})")
+
+@app.command("tick")
+def tick_cmd():
+    """주기 작업 (pg_cron 대안): 배정 만료·예고·반복 알림 + 제출 마감 알림 + 이메일 발송."""
+    from dotenv import load_dotenv; load_dotenv(ENGINE_DIR / ".env")
+    from . import notify
+    db = _pg()
+    res = db.read_df("select app.fn_tick() as r").iloc[0, 0]
+    mail = notify.send_pending(db)
+    typer.echo(f"tick={res} email={mail}")
+
+@app.command("notify")
+def notify_cmd(dry_run: bool = False):
+    """이메일 채널 미발송 알림 발송 (SMTP 미설정 시 skipped)."""
+    from dotenv import load_dotenv; load_dotenv(ENGINE_DIR / ".env")
+    from . import notify
+    typer.echo(str(notify.send_pending(_pg(), dry_run=dry_run)))

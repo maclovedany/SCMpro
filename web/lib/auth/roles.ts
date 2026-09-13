@@ -11,6 +11,7 @@ const COMMON: MenuItem[] = [
   { href: "/orders", label: "발주 계획", icon: "ClipboardList" },
   { href: "/extra-demand", label: "추가 수요", icon: "PlusSquare" },
   { href: "/sales-orders", label: "영업 주문", icon: "ShoppingCart" },
+  { href: "/schedule", label: "일정·제출", icon: "CalendarClock" },
   { href: "/notifications", label: "알림", icon: "Bell" },
 ];
 const BIZ: MenuItem[] = [{ href: "/allocation/priority", label: "배정 우선순위", icon: "ListOrdered" }];

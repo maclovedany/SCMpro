@@ -50,7 +50,7 @@ export function computeLine(it: ItemInput, planYm: string, dataLastYm: string, s
   const endAfter = pNeed.start + final - pNeed.forecast - pNeed.extras;
   const dosAfter = avg > 0 ? Math.round(endAfter / avg * 30) : null;
   pNeed.order = final;
-  let carry = final; for (const p of projection) { if (p.ym >= needYm) { p.start = r1(p.start + carry); p.end = r1(p.end + carry); } }
+  const carry = final; for (const p of projection) { if (p.ym >= needYm) { p.start = r1(p.start + carry); p.end = r1(p.end + carry); } }
   return { key_code: it.key_code, category: it.category, supplier_id: it.supplier_id, need_ym: needYm, lead_months: lead, forecast_need: pNeed.forecast, extras_need: pNeed.extras,
     on_hand: Number(it.on_hand ?? 0), inbound_until_need: inbUntil, start_need: r1(pNeed.start - final), target_stock: r1(targetStock), avg_6m: avg, target_dos_days: it.target_dos_days,
     required_qty: r1(required), flex_base: baseQ, flex_pct: baseQ != null ? pct : null, flex_min: flexMin, flex_max: flexMax, flex_hit: flexHit, chosen_qty: r1(chosen), moq, final_qty: final,
