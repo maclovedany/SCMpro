@@ -19,9 +19,18 @@ with base as (
 ), agg as (
   select key_code, max(category) as category, ym, sum(qty) as qty from base group by key_code, ym
 ), keys as (select key_code, max(category) as category from agg group by key_code),
-cal as (select distinct ym from agg)
+-- 달력은 카테고리별 시작월 ~ 전체 최종월 (PART/SUPPLY 2023-04~, OPTION 2020-01~). 품목별 0 채움.
+cat_range as (
+  select case when category = 'SW' then 'OPTION' else category end as cat_key, min(ym) as min_ym from agg a
+  group by 1
+), cal as (
+  select r.cat_key, m.ym from cat_range r
+  join (select distinct ym from agg) m on m.ym >= r.min_ym
+)
 select k.key_code, k.category, c.ym, coalesce(a.qty, 0)::numeric as qty
-from keys k cross join cal c left join agg a on a.key_code = k.key_code and a.ym = c.ym;
+from keys k
+join cal c on c.cat_key = case when k.category = 'SW' then 'OPTION' else k.category end
+left join agg a on a.key_code = k.key_code and a.ym = c.ym;
 create unique index on analytics.v_item_monthly(key_code, ym);
 create index on analytics.v_item_monthly(category);
 comment on materialized view analytics.v_item_monthly is '품목(HOC)×월 출고. 0 채움. SP2 예측 입력';

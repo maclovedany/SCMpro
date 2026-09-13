@@ -32,7 +32,7 @@ export function buildTimeSeriesOption(p: { months: string[]; series: TsSeries[];
     grid: { left: 56, right: 24, top: 40, bottom: 60 },
     xAxis: { type: "category", data: x, boundaryGap: !!p.bars?.length },
     yAxis: { type: "value", name: p.yName },
-    dataZoom: [{ type: "inside" }, { type: "slider", height: 18, bottom: 8 }],
+    dataZoom: [{ type: "inside", startValue: Math.max(0, x.length - 36) }, { type: "slider", height: 18, bottom: 8, startValue: Math.max(0, x.length - 36) }],   // 기본 최근 36개월
     series: series as EChartsOption["series"],
   };
 }
