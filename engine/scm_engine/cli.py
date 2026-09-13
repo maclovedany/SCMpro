@@ -91,3 +91,14 @@ def fc_pending(n_jobs: int = 6):
     from .forecast import runner
     for rid in runner.process_pending(_pg(), n_jobs=n_jobs):
         typer.echo(f"done {rid}")
+
+@forecast_app.command("tune")
+def fc_tune(run_id: str = None, model: str = None):
+    """gpt-5-nano 로 최신(또는 지정) 백테스트 런의 오차를 분석해 조정안 저장 (R-FC-42)."""
+    from dotenv import load_dotenv; load_dotenv(ENGINE_DIR / ".env")
+    from .forecast import ai_tuning
+    db = _pg()
+    if not run_id:
+        run_id = db.read_df("select id from app.forecast_run where run_type='backtest' and status='done' order by finished_at desc limit 1").iloc[0, 0]
+    pid = ai_tuning.tune(db, str(run_id), model)
+    typer.echo(f"proposal_id={pid} (run {run_id})")
