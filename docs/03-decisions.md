@@ -155,3 +155,8 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 결정: (1) 공급처 출항 규칙 `sailing_rule={"weekday":1~7,"weeks":[1..5]}` (관리자 화면 편집), 발주일 = 출항일 − prep_days, 입고예정 = 출항일 + ship_lead_days, 둘 다 `fn_business_day` 로 이전 영업일 보정. (2) 수요자료 제출 `demand_submission`, 마감 = 대상월 −1개월 말일 −1, 미제출 부서 10분 반복 알림. (3) `app.fn_tick()` 을 pg_cron `scm-tick` */10 분 등록(확장 사용 가능 확인). 대안 `engine tick`. (4) 이메일: system 알림 insert 트리거로 email 행 복제 → `engine notify` 가 SMTP 설정 시 발송, 없으면 `skipped:no_smtp` (Q-019 유지). (5) 입고 차이는 `analytics.v_inbound_gap(_summary)` 차이값 하나로
 - 검증: 영업일 보정(개천절·추석 연휴), 캘린더 3개월, 제출/알림 E2E, pg_cron 잡 등록, engine tick 실행
 - 출처: 구현 검증
+
+## D-025 (2026-09-13) SP6 구현 결과 — AI Agent 는 function calling + 사용자 세션 RLS, 비스트리밍 JSON
+- 결정: (1) `/api/ai/chat` 가 OpenAI Chat Completions(`ai_model`=gpt-5-nano) 를 도구 9종(품목·예측·가용재고·발주계획·정확도·승인함·일정·영업주문·검색)과 함께 최대 5라운드 호출. 도구는 사용자 세션 supabase 클라이언트로 실행 → RLS 그대로 (R-AI-05). (2) 응답은 비스트리밍 JSON(안정성 우선; 스트리밍은 후속). (3) 대화 저장 ai_conversation/ai_message(user·assistant·tool 행), 최근 20턴 + 30개 초과 시 LLM 요약(summary). (4) 주제 분류는 별도 짧은 호출(7개 주제). (5) 패널 상태(열림·너비·현재 대화)는 localStorage. (6) 마크다운 렌더(react-markdown+gfm)
+- 검증: E2E — 리사이즈(+150px 유지), 질문→`get_item` 도구→근거 수치 답변(현재고·DoS·Holt), 후속 질문 맥락, 관리자 통계 카드·목록
+- 출처: 구현 검증

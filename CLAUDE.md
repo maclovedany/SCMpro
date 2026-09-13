@@ -52,6 +52,8 @@ uv --directory engine run engine forecast backtest --eval-fy 2025   # FY 롤링 
 uv --directory engine run engine forecast run --horizon 6           # 프로덕션 예측
 uv --directory engine run engine forecast tune                      # gpt-5-nano 오차 분석 → 제안 (승인은 /approvals)
 uv --directory engine run engine forecast pending                   # 웹에서 요청한 런 처리
+uv --directory engine run engine tick                               # pg_cron 대안: 배정 만료·알림·제출 알림·이메일 발송
+uv --directory engine run engine notify                             # 이메일 큐 발송 (SMTP 미설정 시 skipped)
 # Web
 cd web && npm run dev            # http://localhost:3000  (테스트 계정: admin@scm.test / lead@ / manager@ / sales@ / biz@ — 비밀번호 Scm!2026test)
 npm test · npm run test:e2e · npm run lint · npx tsc --noEmit
@@ -59,5 +61,12 @@ npm test · npm run test:e2e · npm run lint · npx tsc --noEmit
 cd engine && uv run pytest
 ```
 - Supabase 대시보드: Data API → Exposed schemas 에 `app, analytics, core` 필요.
-- 상태: **SP1·SP2 완료** (docs/reports/sp1-verification.md, sp2-verification.md). 다음: SP3 발주량 산출 (spec 부터). 서브프로젝트 목록: docs/01-business-process.md §7.
+- 상태: **SP1~SP6 전부 완료** (2026-09-13, docs/reports/final-verification.md). 남은 것은 실데이터 수령(장착률·EOL·재고·MOQ·단가·공급처)과 운영 이관(SMTP, 배포). 서브프로젝트 목록: docs/01-business-process.md §7.
 - LLM: OpenAI `gpt-5-nano` (D-017, R-AI). `OPENAI_API_KEY` 는 engine/.env, web/.env.local 에.
+
+## E2E 반복 실행 전 정리 (DB 상태를 바꾸는 테스트)
+```sql
+delete from app.order_plan where status='draft'; delete from app.allocation; delete from app.sales_order;
+update app.inbound set status='ordered', actual_date=null where po_no='PO-E2E-ALLOC'; delete from app.demand_submission;
+update app.approval set status='rejected', comment='cleanup', decided_at=now() where status='pending' and kind in ('bulkdeal','priority_alloc');
+```

@@ -33,7 +33,7 @@ test("영업 주문 → 임시배정 → 부족 시 부분/대기 → 입고 자
   await page.goto("/allocation");
   await expect(page.locator("[data-testid=queue-row]").filter({ hasText: ITEM }).first()).toBeVisible();
   const inb = page.locator("[data-testid=inbound-row]").filter({ hasText: "PO-E2E-ALLOC" }).first();
-  if (await inb.count()) { await inb.getByRole("button", { name: "입고 완료" }).click(); await expect(page.getByText(/입고 완료 ·/)).toBeVisible(); }
+  if (await inb.count()) { await inb.getByRole("button", { name: "입고 완료" }).click(); await expect(page.getByText(/입고 완료 ·/)).toBeVisible(); await page.reload(); await expect(page.locator("[data-testid=queue-row]").first()).toBeVisible(); }
   await page.screenshot({ path: "test-results/allocation.png", fullPage: true });
   // 우선 배정(승인) 버튼이 있는 행 (순번 ≠ 1, 가용 > 0) 이 있으면 승인 흐름
   const prioBtn = page.getByRole("button", { name: "우선 배정(승인)" }).first();

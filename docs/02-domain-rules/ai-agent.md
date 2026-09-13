@@ -1,6 +1,6 @@
 # 규칙: AI Agent (R-AI)
 
-최종 갱신: 2026-09-13 · 출처: D-017 · 구현: SP6
+최종 갱신: 2026-09-13 · 출처: D-017, D-025 · 구현: web/lib/ai/{tools,chat}.ts, app/api/ai/chat, components/ai/*, migrations/20260913005000_ai.sql, 화면 /admin/ai-stats
 
 | ID | 규칙 |
 |---|---|

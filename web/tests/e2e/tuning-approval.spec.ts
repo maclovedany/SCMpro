@@ -7,11 +7,10 @@ test("AI 제안 → 승인 요청 → 팀장 반려 (승인 경로는 sp2-verifi
   const box = page.getByTestId("proposals");
   await expect(box).toContainText("진단");
   const pendingBtn = box.getByRole("button", { name: "팀장 승인 요청" }).first();
-  if (await pendingBtn.isVisible()) {
-    await box.getByPlaceholder("승인 요청 사유 (필수)").first().fill("E2E: AI 조정안 검토 완료");
-    await pendingBtn.click();
-    await expect(page.getByText("승인 요청 완료")).toBeVisible();
-  }
+  if (!(await pendingBtn.isVisible())) { test.info().annotations.push({ type: "skip-reason", description: "대기 중 AI 제안 없음 (이미 처리됨)" }); return; }
+  await box.getByPlaceholder("승인 요청 사유 (필수)").first().fill("E2E: AI 조정안 검토 완료");
+  await pendingBtn.click();
+  await expect(page.getByText("승인 요청 완료")).toBeVisible();
   await page.context().clearCookies();
   await login(page, "lead@scm.test");
   await page.goto("/approvals?status=pending");

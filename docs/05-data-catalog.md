@@ -135,10 +135,17 @@ Project Settings → Data API → **Exposed schemas**: `public, graphql_public, 
 | RPC | `fn_request_forecast_run`, `fn_request_tuning_approval`, `fn_apply_tuning` (fn_decide_approval 분기) |
 엔진 CLI: `engine forecast backtest --eval-fy 2025` · `run --horizon 6` · `pending` · `tune --run-id X`
 
-### 아직 없는 테이블 (SP3~SP6)
+### 발주 (SP3, migration 002000)
+`app.extra_demand`(수주확정·수급회의·Bulkdeal) · `app.order_plan` / `order_plan_line`(근거·전개 jsonb) · `app.ol_submission`(승인 시 제출 OL) · `item_setting.supplier_id` · RPC `fn_order_inputs`, `fn_save_order_plan`, `fn_append_plan_lines`, `fn_finalize_order_plan`, `fn_override_line`, `fn_confirm_order_plan`, `fn_add_extra_demand`, `fn_plan_cat_projection` · 뷰 `analytics.v_order_plan_summary`. 계산은 `web/lib/order/calc.ts`.
+### 배정 (SP4, migration 003000)
+`app.sales_order` · `app.allocation`(temp/firm/hold) · 뷰 `app.v_sales_order`, `v_available_stock`(재정의), `v_allocation_queue` · RPC `fn_available_stock`, `fn_create_sales_order`, `fn_confirm_sales_order`, `fn_cancel_sales_order`, `fn_receive_inbound`, `fn_auto_allocate`, `fn_manual_allocate`, `fn_set_priority`, `fn_allocation_tick`.
+### 일정·알림 (SP5, migration 004000)
+`app.demand_submission` · `supplier.sailing_rule` · RPC `fn_business_day`, `fn_sailing_dates`, `fn_order_calendar`, `fn_submission_deadline/status`, `fn_submit_demand`, `fn_submission_reminder_tick`, `fn_tick`(pg_cron `scm-tick` */10) · 이메일 복제 트리거 `trg_email_copy` · 뷰 `analytics.v_inbound_gap(_summary)`.
+### AI Agent (SP6, migration 005000)
+`app.ai_conversation` · `app.ai_message` · 뷰 `analytics.v_ai_stats_daily`, `v_ai_message_log` · RPC `fn_ai_stats`.
+
+### 향후 확장 후보
 | 영역 | 후보 테이블 | 규칙 |
 |---|---|---|
-| 발주 | order_plan, order_plan_line(근거 컬럼 포함) | R-OQ-40/41 |
-| 추가수요 | confirmed_order, meeting_approval, bulkdeal | R-OQ-20~25 |
-| 배정 | sales_order, allocation, allocation_priority | R-AL |
-| 일정 | supplier_sailing, order_calendar | R-SCH |
+| 예측 | 옵션 장착률 전개 결과(attach_rate 수령 후), EOL 수렴 파라미터 | R-BOM-04, R-FC-07 |
+| AI | 스트리밍 응답, 대화 공유 | R-AI |
