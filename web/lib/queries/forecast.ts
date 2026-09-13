@@ -102,3 +102,24 @@ export async function fetchMethods(sb: SB) {
   const [m, p] = await Promise.all([sb.schema("app").from("forecast_method").select("*").order("sort"), sb.schema("app").from("forecast_policy").select("*").order("cell")]);
   return { methods: m.data ?? [], policy: p.data ?? [] };
 }
+
+/** 품목 백테스트 검증 (R-FC-40/41): 최신 백테스트 런에서 이 품목의 기법별 예측 vs 실적, 지표 */
+export async function fetchItemBacktest(sb: SB, code: string) {
+  const { data: run } = await sb.schema("analytics").from("v_forecast_latest_run").select("id,eval_fy,train_from,train_to").eq("run_type", "backtest").maybeSingle();
+  if (!run) return null;
+  const [res, acc] = await Promise.all([
+    sb.schema("app").from("forecast_result").select("ym,method,value,actual,is_champion").eq("run_id", run.id!).eq("level", "item").eq("key_code", code).order("ym"),
+    sb.schema("app").from("forecast_accuracy").select("method,wape,bias,mape,n").eq("run_id", run.id!).eq("level", "item").eq("key", code),
+  ]);
+  const rows = res.data ?? [];
+  if (!rows.length) return null;
+  const months = Array.from(new Set(rows.map(r => r.ym!))).sort();
+  const methods = Array.from(new Set(rows.map(r => r.method!)));
+  const champion = rows.find(r => r.is_champion)?.method ?? methods[0];
+  const actual = months.map(m => { const r = rows.find(x => x.ym === m); return r?.actual == null ? null : Number(r.actual); });
+  const byMethod: Record<string, (number | null)[]> = {};
+  for (const mk of methods) byMethod[mk] = months.map(m => { const r = rows.find(x => x.ym === m && x.method === mk); return r?.value == null ? null : Number(r.value); });
+  const metrics = (acc.data ?? []).map(a => ({ method: a.method!, label: METHOD_LABEL[a.method!] ?? a.method!, wape: a.wape, bias: a.bias, mape: a.mape, n: a.n, champion: a.method === champion })).sort((a, b) => (a.wape ?? 9) - (b.wape ?? 9));
+  return { run: { id: run.id!, eval_fy: run.eval_fy, train_from: run.train_from, train_to: run.train_to }, months, actual, byMethod, champion, metrics };
+}
+export type ItemBacktest = NonNullable<Awaited<ReturnType<typeof fetchItemBacktest>>>;

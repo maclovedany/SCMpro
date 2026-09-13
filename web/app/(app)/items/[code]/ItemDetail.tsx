@@ -8,11 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { fmtInt, fmtNum, fmtDate } from "@/lib/format";
 import { drillHref } from "@/lib/drill";
 import type { ItemDetail as D } from "@/lib/queries/items";
-import { METHOD_LABEL, PATTERN_LABEL } from "@/lib/queries/forecast";
+import { METHOD_LABEL, PATTERN_LABEL, type ItemBacktest } from "@/lib/queries/forecast";
+import { BacktestSection } from "./BacktestSection";
 import type { TsSeries } from "@/components/charts/chartOption";
 type Fc = { ym: string | null; method: string | null; value: number | null; lower: number | null; upper: number | null }[];
 type Cls = { pattern: string | null; abc: string | null; xyz: string | null; champion_method: string | null; cv: number | null; adi: number | null } | null;
-export function ItemDetail({ d, forecast = [], cls = null }: { d: D; forecast?: Fc; cls?: Cls }) {
+export function ItemDetail({ d, forecast = [], cls = null, backtest = null }: { d: D; forecast?: Fc; cls?: Cls; backtest?: ItemBacktest | null }) {
   const m = d.master!;
   const histMonths = useMemo(() => d.monthly.map(r => r.ym!), [d.monthly]);
   const fcMonths = useMemo(() => forecast.map(r => r.ym!), [forecast]);
@@ -54,6 +55,7 @@ export function ItemDetail({ d, forecast = [], cls = null }: { d: D; forecast?: 
         <h2 className="mb-2 text-sm font-medium">월별 출고 (HOC 합산) + 기준예측 (80% 구간)</h2>
         <TimeSeriesChart months={months} series={series} forecastFrom={fcMonths[0]} height={300} />
       </section>
+      <BacktestSection bt={backtest} histStart={histMonths[0]} />
       <section className="rounded-md border p-3">
         <h2 className="mb-2 text-sm font-medium">재고전개 (SP3 에서 재고·발주 행 추가)</h2>
         <TreeGrid months={gridMonths} rows={treeRows} pastUntil={histMonths[histMonths.length - 1] ?? ""} />
