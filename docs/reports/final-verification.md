@@ -8,7 +8,7 @@
 | engine pytest | 33 passed (기법·분류·백테스트·AI tuning mock·notify·fiscal) |
 | web vitest | 32 passed (발주 계산 R-OQ 7건, 예측 빌더, 업로드 검증, 권한, AI) |
 | Playwright E2E (프로덕션 서버, 13 spec) | 13 passed — 대시보드·품목·관리자·승인·업로드·예측·AI제안·발주계획·영업주문/배정·일정·AI Agent·성능 |
-| 메뉴 전환 성능 (R-UI-02) | 10개 라우트 43~92ms (< 1,000ms) |
+| 메뉴 전환 성능 (R-UI-02) | 10개 라우트 48~345ms, 본문(h1) 렌더 완료 기준 (< 1,000ms) |
 | lint / tsc / next build | 0 errors (경고 2: React Compiler 메모 건너뜀), 27 라우트 빌드 성공 |
 
 ## 서브프로젝트별 완료 기준
