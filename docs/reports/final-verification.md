@@ -41,3 +41,16 @@ ai messages|26
 5. 웹의 "런 요청"은 `engine forecast pending`(수동/크론) 이 처리. 엔진을 서버(cron)에 올리는 배포는 운영 단계.
 6. AI Agent 응답은 비스트리밍(수 초~수십 초). 스트리밍은 후속.
 7. E2E 는 실제 DB 상태를 바꾸므로 반복 실행 시 정리 SQL 필요(리포트 §테스트 데이터 정리 — CLAUDE.md 참조).
+
+## 최종 검증 이후 변경 (2026-09-13 저녁, 사용자 검수 반영) — D-026~D-028
+| 변경 | 검증 |
+|---|---|
+| 시스템 설정 비개발자 UI (R-UI-10) | vitest settings 8건, admin e2e |
+| 사이드바 6그룹·배지·접기 (R-UI-11) | vitest roles 4건, dashboard/perf e2e, 관리자·영업 스크린샷 |
+| 품목 상세 예측 검증 섹션 | items/forecast e2e, 556K59129 스크린샷(Holt WAPE 24.8%) |
+| 카드 동일 높이·표 여백·한글 keep-all (R-UI-07~09), 추가수요 표 열 분리·NULL 정규화 | 3001 서버 CSS 확인, orders e2e |
+| Bulkdeal 주문번호 선택 + 이중 계상 경고 (R-OQ-26) | orders e2e |
+| 발주 계획 생성 타임아웃 근본 수정 (force_custom_plan, 카테고리 분할, 청크 500) | fn_order_inputs 5.3s→0.7s, orders e2e |
+| Supabase 일시 오류 재시도 + 오류 경계 화면 | 수동 |
+| 실사용 계정 6개(1q2w3e), launchd 10분 tick | seed 로그, tick 로그 |
+E2E 는 `E2E_BASE_URL=http://localhost:3001` 로 기존 dev 서버에 붙여 실행 (Next 16 dev 서버 1개 제한). 전체 13 spec 통과 확인은 2026-09-13 21:40 기준.

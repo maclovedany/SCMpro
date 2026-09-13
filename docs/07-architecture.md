@@ -135,7 +135,7 @@ Topbar 버튼 → 우측 리사이즈 패널 → POST /api/ai/chat {conversation
 | 작업 | 실행 주체 | 주기 |
 |---|---|---|
 | `app.fn_tick()` (배정 만료·예고·승인 반복 알림·미제출 알림) | pg_cron `scm-tick` | 10분 |
-| 이메일 발송 (`notification.channel=email`) | `engine notify` (또는 `engine tick`) | 크론/수동 |
+| 이메일 발송 (`notification.channel=email`) | `engine tick` — 현재 이 Mac 의 launchd `com.scmpro.tick`(10분, 로그 /tmp/scmpro/tick.log). SMTP 미설정 시 skipped (Q-019) | 10분 |
 | 예측 백테스트·프로덕션 | `engine forecast backtest/run` 또는 웹 요청 후 `engine forecast pending` | 월 1회 + 수동 |
 | 물리화 뷰 refresh | `fn_refresh_matviews` — 출고 업로드 후 자동, 엔진 실행 후 | 이벤트 |
 
@@ -144,7 +144,8 @@ Topbar 버튼 → 우측 리사이즈 패널 → POST /api/ai/chat {conversation
 - 로컬: `web` dev 서버(3000/3001), `engine` uv, Supabase 클라우드 프로젝트 직결(psql/psycopg/supabase-js).
 - 마이그레이션: `supabase/scripts/migrate.sh` 가 파일명 순 psql 적용(재실행 안전, grants 가 항상 마지막). **엔진 런 중 실행 금지**(물리화 뷰 재생성).
 - 타입: `engine gen-types` → `web/lib/types/database.ts` (supabase CLI 는 Docker 필요해 자체 생성기).
-- 운영 이관 시 결정할 것: Web 호스팅(Vercel 등), Engine 실행 서버(cron), SMTP, OpenAI 키 관리, Supabase 요금제(statement_timeout 8s 고려).
+- Supabase PostgREST 는 요청당 `statement_timeout` 8s — 파라미터 집계 RPC 는 `plan_cache_mode=force_custom_plan`, 대량 저장은 청크 (D-027).
+- 운영 이관 시 결정할 것: Web 호스팅(Vercel 등), Engine 실행 서버(cron — 지금은 개발 Mac 의 launchd), SMTP, OpenAI 키 관리, Supabase 요금제.
 
 ## 8. 디렉터리 지도
 
@@ -152,6 +153,7 @@ Topbar 버튼 → 우측 리사이즈 패널 → POST /api/ai/chat {conversation
 web/app/(app)/*            라우트(서버 컴포넌트) + *Panel/*Form(클라이언트) + actions.ts(서버 액션)
 web/lib/queries/*          화면별 읽기 쿼리(supabase-js)     web/lib/order/calc.ts  발주량 계산(R-OQ)
 web/lib/ai/{tools,chat}.ts AI 도구·대화 루프                 web/lib/settings/registry.ts 설정 스펙(R-UI-10)
+web/lib/auth/roles.ts      역할·사이드바 6그룹 정의(MENU_GROUPS, R-UI-11) — 새 화면은 여기 배속
 web/components/{cards,charts,tables,ai,upload,layout}  공통 위젯(DrillCard·TimeSeriesChart·DataGrid·TreeGrid·AiPanel)
 engine/scm_engine/forecast/{classify,metrics,backtest,runner,store,ai_tuning}.py + methods/*  예측
 engine/scm_engine/{export_raw,verify,seed_app,gen_types,notify,cli}.py                      적재·검증·시드·타입·알림

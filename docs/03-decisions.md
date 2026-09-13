@@ -171,3 +171,15 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 배경: `/orders` 계획 생성에서 "canceling statement due to statement timeout"(PostgREST 8s). `fn_order_inputs` 가 순수 SQL 176ms 인데 함수 호출은 5.3초 — 파라미터(p_category) 로 인한 generic plan
 - 결정: 큰 집계를 하는 파라미터 함수(fn_order_inputs, fn_plan_cat_projection, fn_ai_stats)에 `set plan_cache_mode = force_custom_plan`. 결과 0.7초. 입력 조회는 카테고리별 3회, 라인 저장 청크 500 으로 8초 여유 확보
 - 규칙: 앞으로 파라미터가 있는 집계 RPC 를 만들면 같은 설정을 붙이고 `\timing` 으로 8초 내 확인
+
+## D-028 (2026-09-13) 최종 검증 이후 UX·운영 개선 묶음
+- 배경: 사용자 검수 피드백 (2026-09-13 저녁)
+- 결정·적용:
+  1. **시스템 설정 비개발자 UI** — JSON 노출 제거, 키별 컨트롤·단위·범위·현재값 문장 (`web/lib/settings/registry.ts`, R-UI-10)
+  2. **사이드바 6그룹**(현황·계획·운영·결재·데이터·관리) + 역할별 항목 필터 + 승인/미읽음 배지 + 접기 기억 (`lib/auth/roles.ts` MENU_GROUPS, R-UI-11). 배지는 `fn_sidebar_badges` 1회 왕복
+  3. **품목 상세 "예측 검증" 섹션** — 최신 백테스트(FY25)의 이 품목 예측 vs 실적: 챔피언·WAPE·Bias·12개월 합계, 기법 선택·비교, 월별 차이 표 (`BacktestSection.tsx`, R-FC-41)
+  4. **카드 동일 높이·표 여백·한글 keep-all** 전역 (R-UI-07~09), 추가수요 표 열 분리
+  5. **실사용 계정 6개**로 교체(초기 비밀번호 1q2w3e), 이 Mac 에 launchd `com.scmpro.tick` 10분 주기 등록(이메일 발송은 SMTP 설정 대기, Q-019)
+  6. 성능: `v_order_plan_summary` 를 summary jsonb 기반으로(라인 재집계 제거), `/orders` 전환 803→187ms(dev)
+- 출처: 사용자 피드백
+- 영향: 08-user-guide, 07-architecture §2/§6, 05-data-catalog RPC 목록
