@@ -2,7 +2,6 @@
 -- 20260913000600_app_views.sql — analytics 물리화 뷰(화면 소스) + app 뷰
 --   물리화 뷰는 app.fn_refresh_matviews() 로 갱신 (업로드·시드·엔진 실행 후)
 -- ============================================================
-drop materialized view if exists analytics.v_item_master cascade;   -- app.v_available_stock 등 의존 뷰는 아래에서 재생성
 drop materialized view if exists analytics.v_item_monthly cascade;
 
 -- 월별 시계열 (HOC 기준, 0 채움, SW 옵션은 category='SW', shipment_extra UNION). R-XCN-01, R-BOM-11
@@ -35,8 +34,9 @@ create unique index on analytics.v_item_monthly(key_code, ym);
 create index on analytics.v_item_monthly(category);
 comment on materialized view analytics.v_item_monthly is '품목(HOC)×월 출고. 0 채움. SP2 예측 입력';
 
--- 품목 마스터 (품목 목록 화면 소스)
-create materialized view analytics.v_item_master as
+-- 출고 통계 (물리화). 설정·재고는 아래 v_item_master(일반 뷰)에서 실시간 조인 → 승인·업로드 즉시 반영
+drop materialized view if exists analytics.mv_item_stats cascade;
+create materialized view analytics.mv_item_stats as
 with lastm as (select max(ym) as ym from analytics.v_item_monthly where qty > 0),
 m as (
   select v.key_code, max(v.category) as category,
@@ -44,22 +44,29 @@ m as (
          sum(case when v.ym > to_char((to_date(l.ym,'YYYY-MM') - interval '12 months'), 'YYYY-MM') then v.qty end) as total_12m,
          max(case when v.qty > 0 then v.ym end) as last_ship_ym
   from analytics.v_item_monthly v cross join lastm l group by v.key_code
-), inv as (
-  select item_code, qty, snap_date, is_dummy from (
-    select item_code, qty, snap_date, is_dummy, row_number() over (partition by item_code order by snap_date desc) rn
-    from app.inventory_snapshot where stock_class = 'normal') x where rn = 1
+)
+select m.key_code, m.category, d.description, d.family, round(m.avg_6m, 2) as avg_6m, m.total_12m, m.last_ship_ym
+from m left join raw.dim_item d on d.item_code = m.key_code;
+create unique index on analytics.mv_item_stats(key_code);
+create index on analytics.mv_item_stats(category);
+create index on analytics.mv_item_stats(total_12m desc nulls last);
+comment on materialized view analytics.mv_item_stats is '품목 출고 통계. avg_6m/total_12m 은 데이터 최종월 기준 (R-FC-03). 출고 데이터 변경 시 refresh';
+
+-- 품목 마스터 (품목 목록·상세 소스). 일반 뷰 — 설정·재고·입고 실시간
+drop view if exists analytics.v_item_master cascade;
+create view analytics.v_item_master as
+with inv as (
+  select distinct on (item_code) item_code, qty, snap_date, is_dummy
+  from app.inventory_snapshot where stock_class = 'normal' order by item_code, snap_date desc
 ), inb as (select item_code, sum(qty) qty from app.inbound where status <> 'received' group by 1)
-select m.key_code, m.category, d.description, d.family, round(m.avg_6m, 2) as avg_6m, m.total_12m, m.last_ship_ym,
+select m.key_code, m.category, m.description, m.family, m.avg_6m, m.total_12m, m.last_ship_ym,
        s.target_dos_days, s.moq, s.allocation_mode, s.status as setting_status, coalesce(s.is_dummy, false) as setting_is_dummy,
        inv.qty as on_hand, inv.snap_date, coalesce(inv.is_dummy, false) as stock_is_dummy, coalesce(inb.qty, 0) as inbound_qty,
        case when m.avg_6m > 0 and inv.qty is not null then round(inv.qty / m.avg_6m * 30) end as dos_days
-from m left join raw.dim_item d on d.item_code = m.key_code
+from analytics.mv_item_stats m
 left join app.item_setting s on s.item_code = m.key_code
 left join inv on inv.item_code = m.key_code left join inb on inb.item_code = m.key_code;
-create unique index on analytics.v_item_master(key_code);
-create index on analytics.v_item_master(category);
-create index on analytics.v_item_master(total_12m desc nulls last);
-comment on materialized view analytics.v_item_master is '품목 목록. avg_6m/total_12m 은 데이터 최종월 기준 (R-FC-03)';
+comment on view analytics.v_item_master is '품목 목록. mv_item_stats + 설정/재고/입고 실시간 조인';
 
 -- 단가 마스킹 (품목담당자/팀장/관리자만 단가)
 create or replace view app.v_item_setting as
@@ -95,6 +102,6 @@ create or replace function app.fn_refresh_matviews() returns void
 language plpgsql security definer set search_path = app, analytics, public as $$
 begin
   refresh materialized view analytics.v_item_monthly;
-  refresh materialized view analytics.v_item_master;
+  refresh materialized view analytics.mv_item_stats;
 end $$;
 

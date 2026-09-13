@@ -94,3 +94,9 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 결정: SP1 spec(docs/specs/2026-09-13-sp1-foundation-design.md) 승인. 구현 중 SCM 수요예측 관점에서 수정이 필요하면 Claude 가 판단해 수정하되, 변경은 반드시 docs(규칙/결정/spec)에 반영한다
 - 환경: git 초기화, origin = https://github.com/maclovedany/SCMpro.git. Supabase 접속 확인(PG 17.6, 빈 DB). 비밀값은 `web/.env.local`, `engine/.env` (git 제외)
 - 출처: 사용자 승인
+
+## D-014 (2026-09-13) 품목 마스터는 "출고 통계 물리화 + 설정/재고 실시간 뷰" 로 분리
+- 배경: SP1 spec 은 v_item_master 전체를 물리화 뷰로 잡았으나, 승인·업로드 결과가 refresh 전까지 화면에 반영되지 않는 결함 발견 (E2E)
+- 결정: `analytics.mv_item_stats`(출고 통계만 물리화) + `analytics.v_item_master`(일반 뷰, 설정·재고·입고 조인). 목록 200행 조회 약 230ms 로 R-UI-02 충족. refresh 는 출고 데이터 변경(업로드 shipment_extra, 엔진 실행) 시에만
+- 출처: 구현 중 검증
+- 영향: spec §3.3, 05-data-catalog

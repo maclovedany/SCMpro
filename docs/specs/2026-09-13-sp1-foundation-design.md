@@ -66,7 +66,7 @@ SCMpro/
 | `notification` | id, recipient uuid, channel enum(system,email), kind, title, body, payload jsonb, created_at, sent_at, read_at, result | SP1 은 system 채널만. email 은 SP4/5 |
 
 ### 3.3 뷰 (app / analytics)
-- `analytics.v_item_master` : dim_item + item_setting + 최신 현재고 + 입고예정 합 + 카테고리(PART/SUPPLY/OPTION/SW/MACHINE) — 품목 목록 화면 소스. **물리화 뷰**, 업로드·시드 후 refresh.
+- `analytics.mv_item_stats`(물리화: 출고 통계) + `analytics.v_item_master`(일반 뷰: + item_setting + 최신 현재고 + 입고예정) — 품목 목록 화면 소스. 설정·재고는 실시간 (D-014 로 변경).
 - `analytics.v_item_monthly` : `core.v_shipment_by_hoc` ∪ OPTION/SUPPLY 를 달력 LEFT JOIN 해 0 채운 월별 시계열 (HOC 기준). 물리화.
 - `app.v_available_stock` : 현재고 − 배정(SP4 전까지 0) — 영업 역할용.
 - `app.v_my_approvals` : 승인함.

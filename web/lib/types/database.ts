@@ -590,6 +590,18 @@ export type Database = {
     Tables: {
     }
     Views: {
+      mv_item_stats: {
+        Row: {
+          key_code: string | null
+          category: string | null
+          description: string | null
+          family: string | null
+          avg_6m: number | null
+          total_12m: number | null
+          last_ship_ym: string | null
+        }
+        Relationships: []
+      }
       v_bom_requirement: {
         Row: {
           model_base: string | null

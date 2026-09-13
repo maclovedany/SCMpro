@@ -104,7 +104,8 @@ raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `
 | 객체 | 내용 |
 |---|---|
 | `analytics.v_item_monthly` (MV) | 품목(HOC)×월 출고, 0 채움, SW 는 category='SW', shipment_extra 포함. **SP2 예측 입력** |
-| `analytics.v_item_master` (MV) | 품목 목록: 카테고리·6M평균·12M합·최근출고월·설정값·현재고·입고예정·DoS. PART 5,964 / SUPPLY 634 / OPTION 3,074 / SW 522 |
+| `analytics.mv_item_stats` (MV) | 품목 출고 통계: 카테고리·설명·6M평균·12M합·최근출고월. 출고 데이터 변경 시 refresh |
+| `analytics.v_item_master` (뷰) | 품목 목록·상세 소스 = mv_item_stats + 설정·현재고·입고예정·DoS **실시간 조인** (승인·업로드 즉시 반영). PART 5,964 / SUPPLY 634 / OPTION 3,074 / SW 522 |
 | `core.v_option_model_link` | 옵션↔기종 (bridge/parsed/none), is_sw |
 | `app.v_item_setting` | 단가 마스킹 뷰 (관리 역할만 단가) |
 | `app.v_available_stock` | 가용재고 = 현재고 − 배정 (SP4 전 배정 0) |

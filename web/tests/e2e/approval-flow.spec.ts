@@ -24,7 +24,7 @@ test("품목담당자 승인 요청 → 팀장 승인 → 반영·알림", async
   await expect(page.getByText("승인했습니다")).toBeVisible();
   // 팀장은 품목 상세에서 반영 확인 (품목 설정 화면은 품목담당자/관리자 전용)
   await page.goto(`/items/${CODE}`);
-  await expect(page.getByText(`${next} · `)).toBeVisible();
+  await expect(page.getByText(`${next} · 1`)).toBeVisible();
   // 요청자: 설정 화면 반영 + 알림
   await page.context().clearCookies();
   await login(page, "manager@scm.test");
