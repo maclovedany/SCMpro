@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { config } from "dotenv";
 config({ path: ".env.local" });
 const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
-const pw = process.env.SEED_USER_PASSWORD ?? "Scm!2026test";
+const pw = process.env.SEED_USER_PASSWORD ?? "1q2w3e";
 const users = [
   { email: "insightdany@naver.com", name: "insightdany", dept: "SCM", title: "SCM_PLANNER", role: "admin" },
   { email: "upflash@naver.com", name: "SCM팀장", dept: "SCM", title: "SCM_LEAD", role: "scm_lead" },
