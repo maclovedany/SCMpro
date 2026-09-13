@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   const sections = sectionsForRole(p.role, d); const kpis = buildKpis(d); const charts = chartData(d);
   return (
     <div className="space-y-6">
-      <div><h1 className="text-xl font-semibold">대시보드</h1><p className="text-sm text-muted-foreground">{ROLE_LABEL[p.role]} 관점으로 정렬 · 카드와 차트를 클릭하면 근거 목록으로 이동합니다. 노란 테두리 = 주의, 빨간 테두리 = 즉시 조치.</p></div>
+      <div><h1 className="text-xl font-semibold">대시보드</h1><p className="text-sm text-muted-foreground">{ROLE_LABEL[p.role]} 관점으로 정렬 · 카드와 차트를 클릭하면 근거 목록으로 이동합니다. 노란 배경 = 주의, 빨간 배경 = 즉시 조치.</p></div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5" data-testid="kpi-strip">{kpis.map(k => <KpiTile key={k.label} {...k} />)}</div>
       {sections.map(s => (
         <section key={s.key} data-testid={`dash-${s.key}`}>
