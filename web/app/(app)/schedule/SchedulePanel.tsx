@@ -13,7 +13,7 @@ import { fmtInt, fmtDateTime, fmtYm } from "@/lib/format";
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 type Cal = { supplier_code: string | null; supplier_name: string | null; ym: string | null; sailing_date: string | null; order_date: string | null; eta: string | null };
 type Sub = { ym: string; deadline: string; overdue: boolean; depts: { dept: string; submitted: boolean; submitted_at: string | null; by: string | null }[] | null };
-type Gap = { summary: { supplier_code: string | null; ym: string | null; n: number | null; avg_diff: number | null; min_diff: number | null; max_diff: number | null }[]; rows: { id: number; item_code: string; supplier_name: string | null; po_no: string | null; planned_date: string; actual_date: string | null; diff_days: number | null }[] };
+type Gap = { summary: { supplier_code: string | null; ym: string | null; n: number | null; avg_diff: number | null; min_diff: number | null; max_diff: number | null }[]; rows: { id: number | null; item_code: string | null; supplier_name: string | null; po_no: string | null; planned_date: string | null; actual_date: string | null; diff_days: number | null }[] };
 export function SchedulePanel({ cal, sub, gap, role, target }: { cal: Cal[]; sub: Sub; gap: Gap; role: string; target: string }) {
   const router = useRouter(); const [pending, start] = useTransition(); const [note, setNote] = useState("");
   const months = Array.from(new Set(gap.summary.map(s => s.ym!))).sort();
