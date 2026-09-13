@@ -53,5 +53,24 @@ begin
       'missing_target_dos', (select count(*) from analytics.v_item_master m where m.target_dos_days is null and m.category <> 'SW'),
       'snapshot_date', (select max(snap_date) from app.inventory_snapshot where stock_class = 'normal'),
       'last_upload', (select to_jsonb(u) from (select file_name, uploaded_at, ok_count, error_count from app.upload_log order by uploaded_at desc limit 1) u)));
+  -- 차트용 집계 (D-032)
+  r := r || jsonb_build_object('charts', jsonb_build_object(
+      'stock_by_cat', (select coalesce(jsonb_agg(jsonb_build_object('category', category, 'current', cur, 'target', tgt, 'expected_end', ee) order by category), '[]'::jsonb) from (
+          select l.category, sum(coalesce(l.on_hand, 0) * coalesce(l.unit_price, 0)) cur, sum(coalesce(l.target_stock, 0) * coalesce(l.unit_price, 0)) tgt,
+                 sum(greatest(coalesce(l.end_after, 0), 0) * coalesce(l.unit_price, 0)) ee
+          from app.order_plan_line l where l.plan_id = v_plan.id group by l.category) x),
+      'risk_by_cat_abc', (select coalesce(jsonb_agg(jsonb_build_object('category', category, 'abc', abc, 'n', n) order by category, abc), '[]'::jsonb) from (
+          select l.category, coalesce(c.abc, 'C') abc, count(*) n from app.order_plan_line l left join app.item_class c on c.key_code = l.key_code
+          where l.plan_id = v_plan.id and l.stockout_risk group by 1, 2) x),
+      'plan_history', (select coalesce(jsonb_agg(jsonb_build_object('plan_ym', plan_ym, 'status', status, 'amount', amount, 'stockout', stockout) order by plan_ym), '[]'::jsonb) from (
+          select distinct on (p.plan_ym) p.plan_ym, p.status, (p.summary->>'amount')::numeric amount, (p.summary->>'stockout')::int stockout
+          from app.order_plan p order by p.plan_ym, (p.status = 'approved') desc, p.created_at desc) h),
+      'alloc_mix', jsonb_build_object(
+          'temp', (select coalesce(sum(qty), 0) from app.allocation where released_at is null and kind = 'temp'),
+          'firm', (select coalesce(sum(qty), 0) from app.allocation where released_at is null and kind = 'firm'),
+          'hold', (select coalesce(sum(qty), 0) from app.allocation where released_at is null and kind = 'hold'),
+          'waiting', (select coalesce(sum(shortage), 0) from app.v_sales_order where status in ('partial','waiting'))),
+      'accuracy_rounds', (select coalesce(jsonb_agg(jsonb_build_object('finished_at', finished_at, 'model_wape', summary->>'model_wape', 'item_wape', summary->>'item_wape') order by finished_at), '[]'::jsonb)
+          from (select finished_at, summary from app.forecast_run where run_type = 'backtest' and status = 'done' order by finished_at desc limit 8) x)));
   return r;
 end $$;

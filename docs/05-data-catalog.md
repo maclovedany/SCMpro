@@ -142,7 +142,7 @@ Project Settings → Data API → **Exposed schemas**: `public, graphql_public, 
 ### 일정·알림 (SP5, migration 004000)
 `app.demand_submission` · `supplier.sailing_rule` · RPC `fn_business_day`, `fn_sailing_dates`, `fn_order_calendar`, `fn_submission_deadline/status`, `fn_submit_demand`, `fn_submission_reminder_tick`, `fn_tick`(pg_cron `scm-tick` */10) · 이메일 복제 트리거 `trg_email_copy` · 뷰 `analytics.v_inbound_gap(_summary)`.
 ### AI Agent (SP6, migration 005000)
-`app.ai_conversation` · `app.ai_message` · 뷰 `analytics.v_ai_stats_daily`, `v_ai_message_log` · RPC `fn_ai_stats`(force_custom_plan), `fn_sidebar_badges`(미읽음·승인 대기 배지, D-028), `fn_dashboard_v2`(SCM 대시보드 5묶음 + 데이터 준비, migration 006000, D-031; 구 `fn_dashboard_summary` 는 유지).
+`app.ai_conversation` · `app.ai_message` · 뷰 `analytics.v_ai_stats_daily`, `v_ai_message_log` · RPC `fn_ai_stats`(force_custom_plan), `fn_sidebar_badges`(미읽음·승인 대기 배지, D-028), `fn_dashboard_v2`(SCM 대시보드 5묶음 + 데이터 준비 + charts 집계: stock_by_cat·risk_by_cat_abc·plan_history·alloc_mix·accuracy_rounds, migration 006000, D-031/D-032; 구 `fn_dashboard_summary` 는 유지).
 
 ### 향후 확장 후보
 | 영역 | 후보 테이블 | 규칙 |

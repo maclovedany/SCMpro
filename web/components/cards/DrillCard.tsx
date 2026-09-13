@@ -2,18 +2,20 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-export type DrillCardProps = { label: string; value: string; hint?: string; href: string; tone?: "default" | "warn" | "danger"; icon?: React.ReactNode };
+import { ACCENT, type AccentKey } from "@/lib/design/palette";
+export type DrillCardProps = { label: string; value: string; hint?: string; href: string; tone?: "default" | "warn" | "danger"; icon?: React.ReactNode; accent?: AccentKey; compact?: boolean };
 /** 모든 요약 카드는 이 컴포넌트로만 — href 필수 (R-UI-01) */
-export function DrillCard({ label, value, hint, href, tone = "default", icon }: DrillCardProps) {
+export function DrillCard({ label, value, hint, href, tone = "default", icon, accent, compact }: DrillCardProps) {
+  const a = accent ? ACCENT[accent] : null;
   return (
     <Link href={href} prefetch className="group block h-full" aria-label={`${label} 상세 보기`}>
-      <Card className={cn("flex h-full min-h-[7.5rem] flex-col gap-1 p-4 transition hover:border-primary hover:shadow-md", tone === "danger" && "border-red-300 bg-red-50/40", tone === "warn" && "border-amber-300 bg-amber-50/40")}>
+      <Card className={cn("flex h-full flex-col gap-1 transition hover:border-primary hover:shadow-md", compact ? "min-h-[5.5rem] p-3" : "min-h-[7.5rem] p-4", tone === "danger" && "border-[#d03b3b]/50 bg-[#fdf1f1]", tone === "warn" && "border-[#fab219]/60 bg-[#fffaea]", a && tone === "default" && "border-l-4")} style={a && tone === "default" ? { borderLeftColor: a.hex } : undefined}>
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span className="flex items-center gap-1">{icon}{label}</span>
           <ArrowUpRight className="h-4 w-4 opacity-0 transition group-hover:opacity-100" />
         </div>
-        <div className="truncate text-2xl font-semibold tabular-nums" title={value}>{value}</div>
-        {hint && <div className="line-clamp-2 min-h-[2rem] text-xs text-muted-foreground" title={hint}>{hint}</div>}
+        <div className={cn("truncate font-semibold tabular-nums", compact ? "text-xl" : "text-2xl")} title={value}>{value}</div>
+        {hint && <div className={cn("text-xs text-muted-foreground", compact ? "line-clamp-1" : "line-clamp-2 min-h-[2rem]")} title={hint}>{hint}</div>}
       </Card>
     </Link>
   );

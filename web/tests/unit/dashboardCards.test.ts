@@ -1,5 +1,5 @@
 import { it, expect } from "vitest";
-import { buildSections, sectionsForRole, type DashboardV2 } from "@/lib/queries/dashboard";
+import { buildSections, sectionsForRole, buildKpis, chartData, type DashboardV2 } from "@/lib/queries/dashboard";
 const d: DashboardV2 = {
   stock: { expected_end_amount: 1200, target_amount: 1000, current_amount: 5000 }, dos: [{ category: "PART", avg_dos: 20, avg_target: 30, n: 10 }], excess: { n: 3, amount: 2000 },
   risk: { stockout: 5, stockout_a: 1, out_of_stock_with_orders: 0, inbound_delayed: { n: 2, qty: 40 } },
@@ -7,7 +7,21 @@ const d: DashboardV2 = {
   forecast: { backtest: { id: "b1", eval_fy: 2025, finished_at: "2026-09-13", model_wape: "0.319", item_wape: "0.323", scm_ol_wape: "0.482", sales_ol_wape: "0.464" }, production: { id: "r1", train_to: "2026-07", finished_at: "2026-09-13", age_days: 0 }, pending_proposals: 1 },
   ops: { approvals: [{ kind: "order_plan", n: 1 }], approvals_total: 1, oldest_pending_hours: 30, expiring_7d: 2, waiting: { n: 2, shortage: 369 } },
   data: { items_by_category: { PART: 1 }, dummy_items: 10, dummy_stock: 10, missing_target_dos: 0, snapshot_date: "2026-09-13", last_upload: null },
+  charts: { stock_by_cat: [{ category: "PART", current: 100, target: 80, expected_end: 120 }], risk_by_cat_abc: [{ category: "PART", abc: "A", n: 1 }, { category: "PART", abc: "C", n: 4 }],
+    plan_history: [{ plan_ym: "2026-08", status: "approved", amount: 400, stockout: 3 }, { plan_ym: "2026-09", status: "draft", amount: 500, stockout: 5 }], alloc_mix: { temp: 10, firm: 5, hold: 0, waiting: 369 },
+    accuracy_rounds: [{ finished_at: "2026-09-12", model_wape: "0.35", item_wape: "0.33" }, { finished_at: "2026-09-13", model_wape: "0.319", item_wape: "0.323" }] },
 };
+it("kpi strip: 5 tiles with deltas/progress and hrefs", () => {
+  const k = buildKpis(d); expect(k.length).toBe(5); k.forEach(x => expect(x.href.startsWith("/")).toBe(true));
+  expect(k[0].progress?.pct).toBe(100); expect(k[2].delta?.dir).toBe("up"); expect(k[2].delta?.good).toBe(false);
+  expect(k[3].delta?.dir).toBe("down"); expect(k[3].delta?.good).toBe(true); expect(k[4].value).toBe("1 · 1");
+});
+it("chart data shapes and insights", () => {
+  const c = chartData(d);
+  expect(c.stock.series.map(s => s.name)).toEqual(["현재고", "목표 재고", "예상 월말"]); expect(c.stock.insight).toContain("150.0%");
+  expect(c.risk.series[0].data).toEqual([1]); expect(c.risk.insight).toContain("20.0%");
+  expect(c.forecast.values).toEqual([0.319, 0.464, 0.482]); expect(c.ops.data[3].value).toBe(369);
+});
 it("every card has href; tones reflect SCM risk rules", () => {
   const s = buildSections(d); const all = Object.values(s).flatMap(x => x.cards);
   expect(all.length).toBe(18); all.forEach(c => expect(c.href.startsWith("/")).toBe(true));
