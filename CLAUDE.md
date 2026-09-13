@@ -36,3 +36,21 @@
 - `raw` 스키마는 원본 그대로, 수정 금지. 앱/화면은 `analytics` 뷰만 읽는다.
 - 부품 출고는 반드시 `core.v_shipment_by_hoc`(XCN 합산) 기준. `raw.fact_shipment` 직접 조회 금지.
 - `fact_shipment` 는 0인 달을 저장하지 않는다(희소). 평균 계산 시 `core.v_ym_calendar` 와 LEFT JOIN.
+
+## 실행 (SP1 기준)
+```bash
+# DB (Supabase) — engine/.env 의 SUPABASE_DB_URL 사용
+supabase/scripts/migrate.sh                 # migrations 순서 적용 (재실행 안전)
+uv --directory engine run engine export-raw # scm.db → data/export/*.csv
+supabase/scripts/load-raw.sh                # raw 적재 (+ bridge_scc_config 시드)
+uv --directory engine run engine seed-app && supabase/scripts/seed-app.sh   # 더미 시드 (D-007) + 물리화 뷰 refresh
+uv --directory engine run engine verify --target postgres                  # 행수 대조·XCN 리포트 → docs/reports/
+uv --directory engine run engine gen-types  # web/lib/types/database.ts 생성 (스키마 변경 시)
+# Web
+cd web && npm run dev            # http://localhost:3000  (테스트 계정: admin@scm.test / lead@ / manager@ / sales@ / biz@ — 비밀번호 Scm!2026test)
+npm test · npm run test:e2e · npm run lint · npx tsc --noEmit
+# Engine
+cd engine && uv run pytest
+```
+- Supabase 대시보드: Data API → Exposed schemas 에 `app, analytics, core` 필요.
+- 상태: **SP1 완료** (docs/reports/sp1-verification.md). 다음: SP2 예측 엔진 (spec 작성부터).

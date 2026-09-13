@@ -1,5 +1,6 @@
 -- 자동 생성: engine seed-app (D-007 더미). 실데이터 업로드 시 덮어써짐. 재실행 시 더미만 교체.
 begin;
+set local session_replication_role = replica;   -- 더미 시드는 감사 트리거(trg_audit) 제외
 delete from app.inbound where is_dummy; delete from app.inventory_snapshot where is_dummy;
 delete from app.item_setting where is_dummy; delete from app.supplier where is_dummy and id not in (select supplier_id from app.inbound where supplier_id is not null);
 insert into app.supplier(code,name,country,prep_days,lead_time_days,source,is_dummy) values

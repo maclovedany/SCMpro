@@ -1,5 +1,7 @@
 # SP1 기반(Foundation) 구현 계획
 
+> 상태: **완료** 2026-09-13. 실제 구현에서 달라진 점은 docs/reports/sp1-verification.md 참조.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Supabase 에 실데이터와 `app` 스키마를 세우고, 인증·이력·승인·알림·업로드 공통 메커니즘과 Next.js/Python 뼈대를 만들어 SP2~SP5 가 올라탈 토대를 완성한다.
@@ -100,7 +102,7 @@ SCMpro/
 **Interfaces:**
 - Produces: `scm_engine.config.Settings` — `sqlite_path: Path`, `db_url: str | None`; `settings = Settings.load()` 가 `engine/.env` 를 읽는다.
 
-- [ ] **Step 1: 파일 이동**
+- [x] **Step 1: 파일 이동**
 
 ```bash
 cd /Users/danymac/Projects/SCMpro
@@ -114,7 +116,7 @@ git mv 02-data-*.sql 03-verify.sql 07-deprecate-and-agent.sql supabase/legacy/
 echo "data/export/" >> .gitignore
 ```
 
-- [ ] **Step 2: 엔진 pyproject 작성**
+- [x] **Step 2: 엔진 pyproject 작성**
 
 `engine/pyproject.toml`:
 ```toml
@@ -146,7 +148,7 @@ packages = ["scm_engine"]
 testpaths = ["tests"]
 ```
 
-- [ ] **Step 3: config 테스트 작성**
+- [x] **Step 3: config 테스트 작성**
 
 `engine/tests/test_config.py`:
 ```python
@@ -166,14 +168,14 @@ def test_settings_missing_db_url_is_none(tmp_path):
     assert Settings.load(env).db_url is None
 ```
 
-- [ ] **Step 4: 실패 확인**
+- [x] **Step 4: 실패 확인**
 
 ```bash
 cd engine && uv venv && uv pip install -e ".[dev]" && uv run pytest tests/test_config.py -v
 ```
 Expected: FAIL `ModuleNotFoundError: scm_engine.config`
 
-- [ ] **Step 5: config 구현**
+- [x] **Step 5: config 구현**
 
 `engine/scm_engine/__init__.py`: 빈 파일.
 `engine/scm_engine/config.py`:
@@ -211,11 +213,11 @@ def scm_db_path() -> Path:
     return p
 ```
 
-- [ ] **Step 6: 통과 확인**
+- [x] **Step 6: 통과 확인**
 
 Run: `uv run pytest -v` → 2 passed
 
-- [ ] **Step 7: 문서·커밋**
+- [x] **Step 7: 문서·커밋**
 
 `docs/05-data-catalog.md` §1 표의 파일 경로에 `data/raw/` 접두, §2 "SQL 파일 실행 순서" 표를 migrations 파일명으로 교체(02-data 는 "legacy, CSV 적재로 대체").
 ```bash
@@ -243,7 +245,7 @@ git add -A && git commit -m "chore: 레포 재구성 (data/raw, supabase/migrati
   ```
 - SQLite 에는 스키마가 없으므로 어댑터가 `raw.`/`core.` 접두를 제거해 준다 (`strip_schema`).
 
-- [ ] **Step 1: 어댑터 테스트**
+- [x] **Step 1: 어댑터 테스트**
 
 `engine/tests/test_db.py`:
 ```python
@@ -266,9 +268,9 @@ def test_sqlite_execute_creates_temp(scm_db_path):
     assert db.read_df("select * from t").iloc[0, 0] == 1
 ```
 
-- [ ] **Step 2: 실패 확인** — `uv run pytest tests/test_db.py -v` → ModuleNotFoundError
+- [x] **Step 2: 실패 확인** — `uv run pytest tests/test_db.py -v` → ModuleNotFoundError
 
-- [ ] **Step 3: 어댑터 구현**
+- [x] **Step 3: 어댑터 구현**
 
 `engine/scm_engine/db/base.py`:
 ```python
@@ -341,9 +343,9 @@ from .postgres import PostgresDB
 __all__ = ["DB", "strip_schema", "SQLiteDB", "PostgresDB"]
 ```
 
-- [ ] **Step 4: 통과 확인** — `uv run pytest tests/test_db.py -v` → 3 passed
+- [x] **Step 4: 통과 확인** — `uv run pytest tests/test_db.py -v` → 3 passed
 
-- [ ] **Step 5: 로더 테스트**
+- [x] **Step 5: 로더 테스트**
 
 `engine/tests/test_loaders.py`:
 ```python
@@ -372,9 +374,9 @@ def test_load_mc_plan_actual_fills_biz(scm_db_path):
     assert df["biz"].isna().mean() < 0.01
 ```
 
-- [ ] **Step 6: 실패 확인** — ModuleNotFoundError `loaders`
+- [x] **Step 6: 실패 확인** — ModuleNotFoundError `loaders`
 
-- [ ] **Step 7: 로더 구현**
+- [x] **Step 7: 로더 구현**
 
 `engine/scm_engine/loaders.py`:
 ```python
@@ -412,9 +414,9 @@ def load_mc_plan_actual(db: DB) -> pd.DataFrame:
     return df
 ```
 
-- [ ] **Step 8: 통과 확인** — `uv run pytest -v` → 전부 passed
+- [x] **Step 8: 통과 확인** — `uv run pytest -v` → 전부 passed
 
-- [ ] **Step 9: 커밋** — `git commit -m "feat(engine): DB 어댑터(sqlite/postgres) + 월별 시계열 로더"`
+- [x] **Step 9: 커밋** — `git commit -m "feat(engine): DB 어댑터(sqlite/postgres) + 월별 시계열 로더"`
 
 ---
 
@@ -428,7 +430,7 @@ def load_mc_plan_actual(db: DB) -> pd.DataFrame:
 - Produces: `export_raw.export_all(db: SQLiteDB, out_dir: Path) -> dict[str,int]` (테이블별 행수, CSV 는 헤더 포함, 컬럼 순서 = sqlite 테이블 순서), `verify.compare_counts(src: DB, dst: DB) -> DataFrame[table, src_n, dst_n, ok]`, `verify.xcn_multi_hoc_report(db) -> DataFrame[related_item, n_hoc, chosen_hoc]`, CLI `engine export-raw`, `engine verify --target postgres`.
 - `RAW_TABLES` 순서(FK 없음이지만 통일): dim_item, dim_model, fact_shipment, fact_mc_plan_actual, bridge_bom, bridge_scc_config, bridge_mc_cap, bridge_cap_option, bridge_option_model, bridge_xcn
 
-- [ ] **Step 1: 테스트**
+- [x] **Step 1: 테스트**
 
 `engine/tests/test_export_verify.py`:
 ```python
@@ -456,9 +458,9 @@ def test_xcn_multi_hoc_report_picks_one(scm_db_path):
     assert df["chosen_hoc"].notna().all()
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `engine/scm_engine/export_raw.py`:
 ```python
@@ -568,9 +570,9 @@ if __name__ == "__main__":
 ```
 `pyproject.toml` dependencies 에 `"tabulate>=0.9"` 추가 (to_markdown 용).
 
-- [ ] **Step 4: 통과 확인** — `uv pip install -e ".[dev]" && uv run pytest -v`; `uv run engine export-raw` 로 `data/export/*.csv` 10개 생성 확인
+- [x] **Step 4: 통과 확인** — `uv pip install -e ".[dev]" && uv run pytest -v`; `uv run engine export-raw` 로 `data/export/*.csv` 10개 생성 확인
 
-- [ ] **Step 5: 커밋** — `git commit -m "feat(engine): raw CSV export, 검증 리포트, CLI"`
+- [x] **Step 5: 커밋** — `git commit -m "feat(engine): raw CSV export, 검증 리포트, CLI"`
 
 ---
 
@@ -585,7 +587,7 @@ if __name__ == "__main__":
 - Produces: `core.v_part_linkage(related_item, hoc_item)` — related_item 당 정확히 1행. `core.v_option_model_link(item_code, model_base, link_source('bridge'|'parsed'), is_sw boolean)`.
 - 스크립트는 `engine/.env` 의 `SUPABASE_DB_URL` 을 읽는다.
 
-- [ ] **Step 1: migrate.sh / load-raw.sh 작성**
+- [x] **Step 1: migrate.sh / load-raw.sh 작성**
 
 `supabase/scripts/migrate.sh`:
 ```bash
@@ -618,7 +620,7 @@ psql "$SUPABASE_DB_URL" -Atc "select 'dim_item', count(*) from raw.dim_item unio
 ```
 `chmod +x supabase/scripts/*.sh`
 
-- [ ] **Step 2: core 뷰 수정** — `20260913000200_core_views.sql` 의 `create or replace view core.v_part_linkage …` 블록을 아래로 교체하고, 파일 끝(확인 블록 앞)에 `v_option_model_link` 추가:
+- [x] **Step 2: core 뷰 수정** — `20260913000200_core_views.sql` 의 `create or replace view core.v_part_linkage …` 블록을 아래로 교체하고, 파일 끝(확인 블록 앞)에 `v_option_model_link` 추가:
 
 ```sql
 -- v_part_linkage — XCN 연계 (구코드 → 대표코드). R-XCN-08: 구코드가 여러 HOC 에 걸리면
@@ -658,7 +660,7 @@ join raw.dim_item d on d.item_code = l.item_code;
 ```
 `v_shipment_by_hoc` 는 기존대로 `v_part_linkage` 를 조인하므로 변경 없음(단, 위 drop cascade 로 지워지므로 파일 내 순서상 `v_shipment_by_hoc` 정의가 `v_part_linkage` **뒤**에 있는지 확인).
 
-- [ ] **Step 3: verify.sql 작성**
+- [x] **Step 3: verify.sql 작성**
 
 `supabase/scripts/verify.sql`:
 ```sql
@@ -682,7 +684,7 @@ select 'sw share' as chk, round(sum(case when l.is_sw then f.qty else 0 end) / s
 from raw.fact_shipment f left join core.v_option_model_link l on l.item_code = f.item_code where f.item_type = 'OPTION' and f.qty > 0;
 ```
 
-- [ ] **Step 4: 실행**
+- [x] **Step 4: 실행**
 
 ```bash
 cd /Users/danymac/Projects/SCMpro
@@ -695,7 +697,7 @@ uv --directory engine run engine verify --target postgres
 Expected: 10개 전부 OK, `v_part_linkage dup = 0`, `sw share ≈ 0.40`, engine verify exit 0.
 주의: `000300_analytics_views.sql` 이 `core.v_part_linkage` 컬럼을 참조하면 컬럼명(related_item, hoc_item)이 동일하므로 그대로 동작. 오류 시 해당 뷰 정의를 확인해 수정.
 
-- [ ] **Step 5: 문서·커밋**
+- [x] **Step 5: 문서·커밋**
 `docs/02-domain-rules/parts-xcn.md` R-XCN-08 에 "구현: core.v_part_linkage" 추가, `bom-option.md` R-BOM-11 에 "구현: core.v_option_model_link" 추가.
 `git commit -m "feat(db): raw 적재 스크립트, core 뷰 R-XCN-08/R-BOM-11 반영"`
 
@@ -718,7 +720,7 @@ Expected: 10개 전부 OK, `v_part_linkage dup = 0`, `sw share ≈ 0.40`, engine
 - 물리화 뷰 `analytics.v_item_master`, `analytics.v_item_monthly` (컬럼은 Step 3 참조)
 - 뷰 `app.v_item_setting`(단가 마스킹), `app.v_available_stock`, `app.v_my_approvals`
 
-- [ ] **Step 1: app_schema.sql**
+- [x] **Step 1: app_schema.sql**
 
 ```sql
 -- 20260913000400_app_schema.sql — 업무 데이터 스키마 (재실행 가능)
@@ -862,7 +864,7 @@ insert into app.system_settings(key, value, description) values
 on conflict (key) do nothing;
 ```
 
-- [ ] **Step 2: app_functions.sql**
+- [x] **Step 2: app_functions.sql**
 
 ```sql
 -- 20260913000500_app_functions.sql
@@ -1058,7 +1060,7 @@ language sql security definer set search_path = app, public as
 $$ update app.notification set read_at = now() where id = any(p_ids) and recipient = auth.uid() and read_at is null $$;
 ```
 
-- [ ] **Step 3: app_views.sql**
+- [x] **Step 3: app_views.sql**
 
 ```sql
 -- 20260913000600_app_views.sql
@@ -1124,7 +1126,7 @@ select a.*, p.name as requester_name from app.approval a left join app.profiles 
 where a.requested_by = auth.uid() or app.current_role() in ('scm_lead','admin');
 ```
 
-- [ ] **Step 4: rls.sql**
+- [x] **Step 4: rls.sql**
 
 ```sql
 -- 20260913000700_rls.sql
@@ -1171,7 +1173,7 @@ drop policy if exists p_self on app.profiles;
 create policy p_self on app.profiles for update to authenticated using (user_id = auth.uid() or app.current_role() = 'admin') with check (user_id = auth.uid() or app.current_role() = 'admin');
 ```
 
-- [ ] **Step 5: grants.sql 끝에 추가**
+- [x] **Step 5: grants.sql 끝에 추가**
 
 ```sql
 -- app / analytics 물리화 뷰 권한 (SP1)
@@ -1185,7 +1187,7 @@ alter default privileges in schema app grant select, insert, update, delete on t
 alter default privileges in schema analytics grant select on tables to authenticated;
 ```
 
-- [ ] **Step 6: 적용·검증**
+- [x] **Step 6: 적용·검증**
 
 ```bash
 supabase/scripts/migrate.sh
@@ -1197,7 +1199,7 @@ select 'audit trigger', count(*) from pg_trigger where tgname = 'trg_audit';   -
 select 'rls on', count(*) from pg_tables where schemaname = 'app' and rowsecurity;  -- 14
 ```
 
-- [ ] **Step 7: 문서·커밋**
+- [x] **Step 7: 문서·커밋**
 `docs/05-data-catalog.md` §3 "앞으로 추가될 테이블" → "app 스키마 (SP1 구현)" 로 바꾸고 12개 테이블·뷰·RPC 를 표로 등록.
 `git commit -m "feat(db): app 스키마, 감사 트리거, 승인/업로드 RPC, 물리화 뷰, RLS"`
 
@@ -1214,7 +1216,7 @@ select 'rls on', count(*) from pg_tables where schemaname = 'app' and rowsecurit
 - Produces: `seed_app.build_seed_sql(db: DB, snap_date: str, seed: int = 42) -> str` — 결정적(난수 seed 고정) SQL 텍스트. 생성물 `supabase/seed/app_seed.sql`.
 - 시드 내용 (spec §3.5): supplier 5, item_setting(v_item_monthly 의 key_code 전부, 카테고리별 MOQ: PART 1/SUPPLY 10/OPTION 5, target_dos 30, unit_price 카테고리별 균등난수 PART 5,000~200,000 / SUPPLY 20,000~300,000 / OPTION 100,000~3,000,000), inventory_snapshot(normal = round(avg_6m × U(0.5,2.0)), 10% 품목에 inspection 소량), inbound(총 12개월 출고 상위 300 품목 각 1건, planned 2026-09-15~2026-10-31, supplier 순환), holiday 2026 KR.
 
-- [ ] **Step 1: 테스트**
+- [x] **Step 1: 테스트**
 
 `engine/tests/test_seed_app.py`:
 ```python
@@ -1236,9 +1238,9 @@ def test_seed_moq_by_category(scm_db_path):
     assert any("'SUPPLY'" in ln or ", 10," in ln for ln in sql.splitlines() if "item_setting" in ln or ln.startswith("("))
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `engine/scm_engine/seed_app.py`:
 ```python
@@ -1326,9 +1328,9 @@ psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/seed/app_seed.s
 psql "$SUPABASE_DB_URL" -Atc "select app.fn_refresh_matviews()" -Atc "select 'item_setting', count(*) from app.item_setting union all select 'inventory', count(*) from app.inventory_snapshot union all select 'inbound', count(*) from app.inbound"
 ```
 
-- [ ] **Step 4: 통과·적용** — `uv run pytest -v`; `uv run engine seed-app`; `supabase/scripts/seed-app.sh` → item_setting ≈ 10,700, inventory ≈ 11,700, inbound 300
+- [x] **Step 4: 통과·적용** — `uv run pytest -v`; `uv run engine seed-app`; `supabase/scripts/seed-app.sh` → item_setting ≈ 10,700, inventory ≈ 11,700, inbound 300
 
-- [ ] **Step 5: 테스트 사용자 스크립트** (Task 7 에서 web 생성 후 실행)
+- [x] **Step 5: 테스트 사용자 스크립트** (Task 7 에서 web 생성 후 실행)
 
 `web/scripts/seed-users.ts`:
 ```ts
@@ -1352,7 +1354,7 @@ for (const u of users) {
 }
 ```
 
-- [ ] **Step 6: 커밋** — `git add -A && git commit -m "feat: 더미 시드 생성기(seed-app) + 테스트 사용자 스크립트"`
+- [x] **Step 6: 커밋** — `git add -A && git commit -m "feat: 더미 시드 생성기(seed-app) + 테스트 사용자 스크립트"`
 
 ---
 
@@ -1366,7 +1368,7 @@ for (const u of users) {
 - Produces: `createClient()` (browser), `createServerSupabase()` (server components/actions, cookies), `createAdminClient()` (service role, 서버 전용), `getProfile(): Promise<Profile|null>` (`{user_id,email,name,role,dept}`), `ROLE_LABEL: Record<Role,string>`, `menuForRole(role): MenuItem[]` (`{href,label,icon}`), `fmtInt(n)`, `fmtPct(x)`, `fmtYm(ym)`.
 - 메뉴(역할): 공통 `/dashboard`, `/items`, `/notifications`; item_manager/scm_lead/admin 추가 `/upload`, `/approvals`; admin 추가 `/admin/settings`, `/admin/suppliers`, `/admin/item-settings`, `/admin/holidays`, `/admin/eol`; item_manager 도 `/admin/item-settings`.
 
-- [ ] **Step 1: 스캐폴드**
+- [x] **Step 1: 스캐폴드**
 
 ```bash
 cd /Users/danymac/Projects/SCMpro
@@ -1380,13 +1382,13 @@ npx --yes shadcn@latest add button card input label table badge dialog select ta
 `package.json` scripts 에 추가: `"test": "vitest run"`, `"test:e2e": "playwright test"`, `"gen:types": "supabase gen types typescript --db-url \"$SUPABASE_DB_URL\" --schema app,analytics,core > lib/types/database.ts"`.
 create-next-app 이 `.env.local` 을 건드리지 않는지 확인(이미 존재).
 
-- [ ] **Step 2: 타입 생성**
+- [x] **Step 2: 타입 생성**
 
 ```bash
 cd web && SUPABASE_DB_URL="$(grep SUPABASE_DB_URL ../engine/.env | cut -d= -f2-)" npm run gen:types && head -5 lib/types/database.ts
 ```
 
-- [ ] **Step 3: 단위 테스트 작성**
+- [x] **Step 3: 단위 테스트 작성**
 
 `web/vitest.config.ts`:
 ```ts
@@ -1431,9 +1433,9 @@ it("formats", () => {
 });
 ```
 
-- [ ] **Step 4: 실패 확인** — `npm test` → 모듈 없음
+- [x] **Step 4: 실패 확인** — `npm test` → 모듈 없음
 
-- [ ] **Step 5: 구현**
+- [x] **Step 5: 구현**
 
 `web/lib/auth/roles.ts`:
 ```ts
@@ -1527,11 +1529,11 @@ export async function getProfile(): Promise<Profile | null> {
 `web/components/layout/Sidebar.tsx`: `next/link` 로 메뉴 렌더(`prefetch` 기본 true — hover 프리페치), 현재 경로 강조(`usePathname`), 아이콘은 `lucide-react` 동적 매핑.
 `web/components/layout/Topbar.tsx`: 사용자명·역할 배지·로그아웃 버튼(서버 액션), 미읽음 알림 수 배지(`app.notification` count where read_at is null, TanStack Query).
 
-- [ ] **Step 6: 통과 확인 + 수동 로그인**
+- [x] **Step 6: 통과 확인 + 수동 로그인**
 
 `npm test` → passed. `npx tsx scripts/seed-users.ts` (Task 6 Step 5). `npm run dev` → `/login` 에서 admin@scm.test 로그인 → `/dashboard`(빈 페이지) 로 이동, 사이드바에 관리자 메뉴 12개 표시. sales@scm.test 는 3개.
 
-- [ ] **Step 7: 커밋** — `git add -A && git commit -m "feat(web): Next.js 스캐폴드, Supabase Auth, 역할별 레이아웃"`
+- [x] **Step 7: 커밋** — `git add -A && git commit -m "feat(web): Next.js 스캐폴드, Supabase Auth, 역할별 레이아웃"`
 
 ---
 
@@ -1550,7 +1552,7 @@ export async function getProfile(): Promise<Profile | null> {
 - `<DataGrid columns rows rowKey pageSize? onRowClick? csvName? toolbar? />` — TanStack Table + Virtual, 정렬·컬럼 필터·컬럼 숨김·CSV 다운로드.
 - `TreeRow = { id, label, level, parentId?, values: Record<string /*ym*/, number|null>, editable?, children?: TreeRow[] }`; `<TreeGrid months rows pastUntil onCellEdit?(rowId, ym, value) />` — 접기/펼치기, 과거/미래 열 배경 구분, editable 셀 인라인 편집.
 
-- [ ] **Step 1: 테스트**
+- [x] **Step 1: 테스트**
 
 `web/tests/unit/drill.test.ts`:
 ```ts
@@ -1594,9 +1596,9 @@ it("collapses and expands children", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인** — `npm test`
+- [x] **Step 2: 실패 확인** — `npm test`
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `web/lib/drill.ts`:
 ```ts
@@ -1663,9 +1665,9 @@ export function buildTimeSeriesOption(p: { months: string[]; series: TsSeries[];
 `web/components/tables/DataGrid.tsx`: `"use client"`; `useReactTable({ getCoreRowModel, getSortedRowModel, getFilteredRowModel })`, `useVirtualizer` 로 행 가상화(rowHeight 36), 헤더 클릭 정렬, 상단 툴바(전역 검색 Input, 컬럼 표시 토글 DropdownMenu, CSV 다운로드 버튼 — `rows` 를 `Papa`-없이 직접 CSV 문자열로 만들어 Blob 다운로드), `onRowClick`.
 `web/components/tables/TreeGrid.tsx`: `"use client"`; 재귀 평탄화 + `expanded: Set<string>` 상태(기본 전부 펼침), 첫 열 sticky, 월 열은 `pastUntil` 이하이면 `bg-muted/40`, 이후 `bg-blue-50/40`; `editable` 셀은 클릭 시 `<input type=number>` → blur/Enter 시 `onCellEdit`; 접기 버튼은 `aria-label={label}` 인 `<button>`.
 
-- [ ] **Step 4: 통과 확인** — `npm test` → 전부 passed
+- [x] **Step 4: 통과 확인** — `npm test` → 전부 passed
 
-- [ ] **Step 5: 커밋** — `git commit -m "feat(web): DrillCard, ECharts 시계열 래퍼, DataGrid, TreeGrid"`
+- [x] **Step 5: 커밋** — `git commit -m "feat(web): DrillCard, ECharts 시계열 래퍼, DataGrid, TreeGrid"`
 
 ---
 
@@ -1685,7 +1687,7 @@ export function buildTimeSeriesOption(p: { months: string[]; series: TsSeries[];
   5. 재고 스냅샷 기준일 → `/items?sort=snap_date` (30일 이상 오래되면 warn)
   6. 목표 DoS 미설정 → `/items?target_dos=missing` (>0 이면 danger)
 
-- [ ] **Step 1: 테스트**
+- [x] **Step 1: 테스트**
 
 `web/tests/unit/dashboardCards.test.ts`:
 ```ts
@@ -1703,9 +1705,9 @@ it("every card has href and drill filters", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `web/lib/queries/dashboard.ts`:
 ```ts
@@ -1737,9 +1739,9 @@ export function cardsFromSummary(s: DashboardSummary): CardSpec[] {
 `web/app/(app)/dashboard/page.tsx`: 서버 컴포넌트. `createServerSupabase()` → `fetchDashboardSummary` → `cardsFromSummary` → `<DashboardCards cards />` (grid 3열). 상단 제목 "대시보드", 부제 "카드를 클릭하면 상세 데이터로 이동합니다".
 `DashboardCards.tsx`: `cards.map(c => <DrillCard key={c.label} {...c} />)`.
 
-- [ ] **Step 4: 통과·수동 확인** — `npm test`; 브라우저에서 6개 카드 클릭 시 각 URL 로 이동(404 여도 됨 — 다음 Task 에서 구현).
+- [x] **Step 4: 통과·수동 확인** — `npm test`; 브라우저에서 6개 카드 클릭 시 각 URL 로 이동(404 여도 됨 — 다음 Task 에서 구현).
 
-- [ ] **Step 5: 커밋** — `git commit -m "feat(web): 대시보드 요약 카드 + 드릴다운"`
+- [x] **Step 5: 커밋** — `git commit -m "feat(web): 대시보드 요약 카드 + 드릴다운"`
 
 ---
 
@@ -1755,7 +1757,7 @@ export function cardsFromSummary(s: DashboardSummary): CardSpec[] {
 - `fetchItems(sb, f): Promise<{rows: ItemMasterRow[], count: number}>` — `analytics.v_item_master`, `.range()` 200행, `count: 'exact'`
 - `fetchItemDetail(sb, code): Promise<{ master: ItemMasterRow; monthly: {ym,qty}[]; xcn: {related_item}[]; models: {model_base, link_source}[]; setting: ItemSettingRow|null; inbound: InboundRow[]; snapshots: SnapshotRow[] }>`
 
-- [ ] **Step 1: 테스트**
+- [x] **Step 1: 테스트**
 
 `web/tests/unit/itemsQuery.test.ts`:
 ```ts
@@ -1772,9 +1774,9 @@ it("applies filters to builder", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `web/lib/queries/items.ts`:
 ```ts
@@ -1821,9 +1823,9 @@ export async function fetchItemDetail(sb: SupabaseClient<any>, code: string) {
 `ItemsTable.tsx`: `DataGrid` 컬럼 — 코드, 설명, 카테고리, 제품군, 6M평균, 12M합, 현재고, 입고예정, DoS, 목표DoS, MOQ, 설정상태(더미 배지), 최근출고월. `onRowClick` → `router.push('/items/'+code)`. 페이지네이션(이전/다음 링크).
 `items/[code]/page.tsx` + `ItemDetail.tsx`: 헤더(코드·설명·카테고리·제품군), 4개 `DrillCard`(현재고→`/items/[code]#snapshots`, 입고예정→`#inbound`, DoS, 목표DoS→`/admin/item-settings?item=code`), `TimeSeriesChart`(실제 출고, role actual), `TreeGrid`(1행 "월별 출고", pastUntil=마지막 월) — SP3 에서 전개 행 추가, XCN 연계 코드 배지 목록(PART), 연결 기종 배지(OPTION, link_source 표시), 재고 스냅샷/입고예정 표(더미는 회색 배지).
 
-- [ ] **Step 4: 통과·수동 확인** — `npm test`; `/items?category=PART` 6,001건, 검색·정렬 동작, 행 클릭 → 상세, 상세에 차트 표시. 드릴다운 `/items?target_dos=missing` 은 0건(시드 후).
+- [x] **Step 4: 통과·수동 확인** — `npm test`; `/items?category=PART` 6,001건, 검색·정렬 동작, 행 클릭 → 상세, 상세에 차트 표시. 드릴다운 `/items?target_dos=missing` 은 0건(시드 후).
 
-- [ ] **Step 5: 커밋** — `git commit -m "feat(web): 품목 목록/상세 (필터·드릴다운·차트)"`
+- [x] **Step 5: 커밋** — `git commit -m "feat(web): 품목 목록/상세 (필터·드릴다운·차트)"`
 
 ---
 
@@ -1841,7 +1843,7 @@ export async function fetchItemDetail(sb: SupabaseClient<any>, code: string) {
   - `upsertHoliday(date, name)`, `deleteHoliday(date)`, `upsertEol(model_base, launch_date, eol_date, eos_date)`
 - `validateItemSettingPayload(p): {ok:true} | {ok:false, error:string}` — target_dos 1~365, moq ≥1 정수, unit_price ≥0, 사유 필수(빈 문자열 불가). 순수 함수.
 
-- [ ] **Step 1: 테스트**
+- [x] **Step 1: 테스트**
 
 `web/tests/unit/adminActions.test.ts`:
 ```ts
@@ -1856,9 +1858,9 @@ it("accepts valid", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `web/lib/queries/admin.ts` (validate + 조회 함수 `fetchSettings`, `fetchSuppliers`, `fetchItemSetting(code)`, `fetchHolidays(year)`, `fetchEol()`):
 ```ts
@@ -1878,9 +1880,9 @@ export function validateItemSettingPayload(p: ItemSettingPayload, reason: string
 - `/admin/holidays`: 연도 선택, 표 + 추가/삭제.
 - `/admin/eol`: `v_model`(core) 기종 목록 + launch/eol/eos 날짜 인라인 편집 → `upsertEol`.
 
-- [ ] **Step 4: 통과·수동 확인** — `npm test`; manager@scm.test 로 품목 설정 변경 → 승인 요청 → `app.approval` pending 1행, lead 계정 알림 1건 생성 확인(`select * from app.notification`).
+- [x] **Step 4: 통과·수동 확인** — `npm test`; manager@scm.test 로 품목 설정 변경 → 승인 요청 → `app.approval` pending 1행, lead 계정 알림 1건 생성 확인(`select * from app.notification`).
 
-- [ ] **Step 5: 커밋** — `git commit -m "feat(web): 관리자 화면 (설정·공급처·품목설정 승인요청·공휴일·EOL)"`
+- [x] **Step 5: 커밋** — `git commit -m "feat(web): 관리자 화면 (설정·공급처·품목설정 승인요청·공휴일·EOL)"`
 
 ---
 
@@ -1896,7 +1898,7 @@ export function validateItemSettingPayload(p: ItemSettingPayload, reason: string
 - `fetchNotifications(sb, {unreadOnly})`, 서버 액션 `markRead(ids: number[])` → `fn_mark_read`
 - `describeApproval(a): string` — kind·payload 를 한국어 문장으로 ("품목 556K59129 목표 DoS 30 → 45, MOQ 1 → 10")
 
-- [ ] **Step 1: 테스트**
+- [x] **Step 1: 테스트**
 
 `web/tests/unit/approvals.test.ts`:
 ```ts
@@ -1911,9 +1913,9 @@ it("requires comment on reject", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `web/lib/queries/approvals.ts`:
 ```ts
@@ -1932,9 +1934,9 @@ export function validateDecision(d: "approved" | "rejected", comment: string) {
 - `/approvals?status=pending`: 상태 탭(대기/승인/반려 — `drillHref`), 목록 카드: 요청자·시각·`describeApproval`(현재값은 `v_item_setting` 조회)·사유. 팀장/관리자에게만 승인/반려 버튼(Dialog 에 의견 입력). 처리 후 `router.refresh()`.
 - `/notifications`: 미읽음 우선 목록, 클릭 시 `payload.approval_id` 있으면 `/approvals?status=pending` 로 이동 + `markRead`. "모두 읽음" 버튼. Topbar 배지는 TanStack Query `invalidateQueries(['unread'])`.
 
-- [ ] **Step 4: 통과·수동 확인** — Task 11 의 pending 건을 lead 로 승인 → `item_setting.status='approved'`, `target_dos_days` 반영, `audit_log` 에 UPDATE 행, manager 에 알림 도착. 반려 경로도 1회.
+- [x] **Step 4: 통과·수동 확인** — Task 11 의 pending 건을 lead 로 승인 → `item_setting.status='approved'`, `target_dos_days` 반영, `audit_log` 에 UPDATE 행, manager 에 알림 도착. 반려 경로도 1회.
 
-- [ ] **Step 5: 커밋** — `git commit -m "feat(web): 승인함, 알림"`
+- [x] **Step 5: 커밋** — `git commit -m "feat(web): 승인함, 알림"`
 
 ---
 
@@ -1951,7 +1953,7 @@ export function validateDecision(d: "approved" | "rejected", comment: string) {
 - `normalizeRows(rows, mapping, target): { rows: Record<string,unknown>[]; errors: {row:number; message:string}[] }` — 타입 변환(int/number/date 'YYYY-MM-DD'/ym 'YYYY-MM')·필수 검사·enum 검사. 오류 행은 제외.
 - 서버 액션 `applyUpload(target, rows, fileName)` → `fn_apply_upload(target, rows, mode, fileName)` → 결과 + `fn_refresh_matviews()` 호출 → `revalidatePath('/items')`.
 
-- [ ] **Step 1: 테스트**
+- [x] **Step 1: 테스트**
 
 `web/tests/fixtures/inventory_sample.csv`:
 ```
@@ -1976,9 +1978,9 @@ it("normalizes and reports row errors", () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
-- [ ] **Step 3: 구현**
+- [x] **Step 3: 구현**
 
 `templates.ts`: 8개 대상 정의. 예:
 ```ts
@@ -2032,9 +2034,9 @@ export function normalizeRows(rows: Record<string, string>[], mapping: Record<st
 `UploadWizard.tsx` 4단계: ① 대상 선택 + 템플릿 다운로드 링크 + 파일 드롭 → ② `ColumnMapper`(대상 컬럼별 select, autoMap 초기값, 미리보기 50행) → ③ 검증 결과 카드 2개(`DrillCard` 스타일: 정상 N건 / 오류 N건 → 클릭 시 아래 표 필터) + 오류 CSV 다운로드 → ④ "반영" → `applyUpload` → 결과(서버 오류 행 포함) + upload_log 링크.
 `upload/page.tsx?tab=log`: 탭 "업로드" / "이력"(upload_log DataGrid, 행 클릭 시 errors 펼침).
 
-- [ ] **Step 4: 통과·수동 확인** — `npm test`; fixtures CSV 업로드 → 정상 1 / 클라이언트 오류 1(abc) / 서버 오류 1(BAD-CODE → UNKNOWN_ITEM) → `/items/556K59129` 현재고 120, snap_date 2026-09-10, 더미 배지 사라짐.
+- [x] **Step 4: 통과·수동 확인** — `npm test`; fixtures CSV 업로드 → 정상 1 / 클라이언트 오류 1(abc) / 서버 오류 1(BAD-CODE → UNKNOWN_ITEM) → `/items/556K59129` 현재고 120, snap_date 2026-09-10, 더미 배지 사라짐.
 
-- [ ] **Step 5: 커밋** — `git commit -m "feat(web): 업로드 위저드 (파싱·매핑·검증·반영·이력)"`
+- [x] **Step 5: 커밋** — `git commit -m "feat(web): 업로드 위저드 (파싱·매핑·검증·반영·이력)"`
 
 ---
 
@@ -2044,9 +2046,9 @@ export function normalizeRows(rows: Record<string, string>[], mapping: Record<st
 - Create: `web/playwright.config.ts`, `web/tests/e2e/smoke.spec.ts`, `web/tests/e2e/perf.spec.ts`, `docs/reports/sp1-verification.md`
 - Modify: `docs/05-data-catalog.md`, `docs/03-decisions.md`, `docs/04-open-questions.md`, `CLAUDE.md`(실행 명령 섹션)
 
-- [ ] **Step 1: Playwright 설정** — `npx playwright install chromium`; config: `baseURL: http://localhost:3000`, `webServer: { command: 'npm run dev', port: 3000, reuseExistingServer: true }`, 환경변수 `E2E_PASSWORD`(기본 Scm!2026test).
+- [x] **Step 1: Playwright 설정** — `npx playwright install chromium`; config: `baseURL: http://localhost:3000`, `webServer: { command: 'npm run dev', port: 3000, reuseExistingServer: true }`, 환경변수 `E2E_PASSWORD`(기본 Scm!2026test).
 
-- [ ] **Step 2: smoke.spec.ts**
+- [x] **Step 2: smoke.spec.ts**
 
 ```ts
 import { test, expect } from "@playwright/test";
@@ -2081,18 +2083,18 @@ test("영업 역할은 관리자 메뉴가 없다", async ({ page }) => {
 });
 ```
 
-- [ ] **Step 3: perf.spec.ts** — 로그인 후 `/dashboard → /items → /items/[code] → /approvals → /notifications` 순회하며 각 전환의 `performance.now()` 차이(클릭 → `networkidle`)를 측정, **각 1,000ms 미만** 단언, 결과를 콘솔 표로 출력.
+- [x] **Step 3: perf.spec.ts** — 로그인 후 `/dashboard → /items → /items/[code] → /approvals → /notifications` 순회하며 각 전환의 `performance.now()` 차이(클릭 → `networkidle`)를 측정, **각 1,000ms 미만** 단언, 결과를 콘솔 표로 출력.
 
-- [ ] **Step 4: 실행** — `npm run build && npm start` (프로덕션 모드로 측정) 후 `npm run test:e2e`. 실패 시 원인 수정(초기 데이터 서버 동봉, 물리화 뷰 인덱스, `select` 컬럼 축소).
+- [x] **Step 4: 실행** — `npm run build && npm start` (프로덕션 모드로 측정) 후 `npm run test:e2e`. 실패 시 원인 수정(초기 데이터 서버 동봉, 물리화 뷰 인덱스, `select` 컬럼 축소).
 
-- [ ] **Step 5: 검증 리포트·문서**
+- [x] **Step 5: 검증 리포트·문서**
 
 `docs/reports/sp1-verification.md`: 완료 기준 6개(spec §10) 각각 증거(명령·출력 요약·스크린샷 경로). `uv run engine verify --target postgres` 결과 포함.
 `docs/05-data-catalog.md`: app 테이블·뷰·RPC 등록, "Exposed schemas 설정" 기록.
 `CLAUDE.md`: "## 실행" 섹션 — migrate/load-raw/seed-app/gen:types/dev/test 명령.
 `docs/03-decisions.md`: 구현 중 변경한 결정 D-nnn 추가. `04-open-questions.md` 갱신.
 
-- [ ] **Step 6: 커밋·푸시** — `git add -A && git commit -m "test: SP1 E2E·성능 측정, 검증 리포트, 문서 마감" && git push`
+- [x] **Step 6: 커밋·푸시** — `git add -A && git commit -m "test: SP1 E2E·성능 측정, 검증 리포트, 문서 마감" && git push`
 
 ---
 

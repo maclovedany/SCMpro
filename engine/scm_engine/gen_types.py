@@ -67,7 +67,8 @@ def generate(db: PostgresDB, schemas: tuple[str, ...] = ("app", "analytics", "co
                 tst = {"text": "string", "uuid": "string", "jsonb": "Json", "bigint[]": "number[]", "integer": "number"}.get(base, "unknown")
                 args.append(f"{nm}: {tst}")
             ret = {"uuid": "string", "jsonb": "Json", "void": "undefined", "integer": "number"}.get(f.ret, "unknown")
-            out.append(f"      {f.name}: {{ Args: {{ {'; '.join(args)} }}; Returns: {ret} }}")
+            args_t = "{ " + "; ".join(args) + " }" if args else "Record<string, never>"
+            out.append(f"      {f.name}: {{ Args: {args_t}; Returns: {ret} }}")
         out.append("    }")
         out.append("    Enums: {")
         for e in enums.itertuples():

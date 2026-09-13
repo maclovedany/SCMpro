@@ -561,16 +561,16 @@ export type Database = {
       }
     }
     Functions: {
-      current_role: { Args: {  }; Returns: unknown }
+      current_role: { Args: Record<string, never>; Returns: unknown }
       fn_apply_upload: { Args: { p_target: string; p_rows: Json; p_mode: string; p_file_name: string }; Returns: Json }
-      fn_audit: { Args: {  }; Returns: unknown }
-      fn_dashboard_summary: { Args: {  }; Returns: Json }
+      fn_audit: { Args: Record<string, never>; Returns: unknown }
+      fn_dashboard_summary: { Args: Record<string, never>; Returns: Json }
       fn_decide_approval: { Args: { p_id: string; p_decision: string; p_comment: string }; Returns: undefined }
       fn_mark_read: { Args: { p_ids: number[] }; Returns: undefined }
-      fn_refresh_matviews: { Args: {  }; Returns: undefined }
+      fn_refresh_matviews: { Args: Record<string, never>; Returns: undefined }
       fn_request_approval: { Args: { p_kind: string; p_target_table: string; p_target_pk: string; p_payload: Json; p_reason: string }; Returns: string }
-      fn_unread_count: { Args: {  }; Returns: number }
-      handle_new_user: { Args: {  }; Returns: unknown }
+      fn_unread_count: { Args: Record<string, never>; Returns: number }
+      handle_new_user: { Args: Record<string, never>; Returns: unknown }
       notify_role: { Args: { p_role: unknown; p_kind: string; p_title: string; p_body: string; p_payload: Json }; Returns: undefined }
       notify_user: { Args: { p_user: string; p_kind: string; p_title: string; p_body: string; p_payload: Json }; Returns: undefined }
     }
