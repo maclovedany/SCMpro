@@ -1,0 +1,115 @@
+<title>월간 발주 사이클 — 업무절차 ①~⑩ ↔ 시스템</title>
+
+<div class="title">
+  <span class="kicker">SCMPRO ARCHITECTURE · §5.1</span>
+  <h1>월간 발주 사이클</h1>
+  <p>업무절차의 각 단계가 어느 화면·어느 함수에 대응하는지. 한 바퀴가 한 달이다.</p>
+</div>
+
+<!-- ── 1행 ─────────────────────────────────────────────────────── -->
+<div class="node hl" id="S1" style="left:60px; top:250px; width:420px; height:215px">
+  <div class="num">1</div>
+  <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
+  <div class="body">
+    <div class="t">수요자료 제출</div>
+    <div class="d">부서별 수요를 기한 안에 올린다.<br>마감 후 미제출 부서는 10분마다 알림</div>
+    <span class="tag">/schedule · demand_submission</span>
+    <span class="tag">fn_tick</span>
+  </div>
+</div>
+
+<div class="node a-blue" id="S2" style="left:520px; top:250px; width:420px; height:215px">
+  <div class="num">2</div>
+  <div class="ic"><svg><use href="#i-upload"/></svg></div>
+  <div class="body">
+    <div class="t">실적 · 재고 반영</div>
+    <div class="d">출고 실적은 업로드로,<br>재고는 입고 처리로 들어온다</div>
+    <span class="tag">/upload</span>
+    <span class="tag">/allocation → inventory_snapshot</span>
+  </div>
+</div>
+
+<div class="node a-blue" id="S5" style="left:980px; top:250px; width:420px; height:215px">
+  <div class="num">5</div>
+  <div class="ic"><svg><use href="#i-users"/></svg></div>
+  <div class="body">
+    <div class="t">수급회의</div>
+    <div class="d">수주확정 · 수급회의 승인<br>Bulkdeal 은 팀장 승인까지</div>
+    <span class="tag">/extra-demand · extra_demand</span>
+  </div>
+</div>
+
+<div class="node hl" id="S6" style="left:1440px; top:250px; width:420px; height:215px">
+  <div class="num">6</div>
+  <div class="ic"><svg><use href="#i-fx"/></svg></div>
+  <div class="body">
+    <div class="t">소요량 산출</div>
+    <div class="d mono">engine forecast run<br>fn_order_inputs → calc.ts(R-OQ)<br>fn_save_order_plan<br>fn_append_plan_lines · fn_finalize_order_plan</div>
+    <span class="tag">/orders</span>
+  </div>
+</div>
+
+<!-- ── 2행 ─────────────────────────────────────────────────────── -->
+<div class="node a-blue" id="S7" style="left:60px; top:600px; width:420px; height:215px">
+  <div class="ic"><svg><use href="#i-search"/></svg></div>
+  <div class="body">
+    <div class="t">담당자 검토</div>
+    <div class="d">재고전개 그리드에서 라인을 보고<br>필요하면 사유와 함께 오버라이드 → 확정</div>
+    <span class="tag">/orders/[id] · fn_override_line</span>
+    <span class="tag">fn_confirm_order_plan → approval</span>
+  </div>
+</div>
+
+<div class="node hl" id="S8" style="left:520px; top:600px; width:420px; height:215px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="body">
+    <div class="t">팀장 승인</div>
+    <div class="d">승인이 나야 OL 이 제출된다.<br>제출 OL 은 다음 달 Flex 의 기준이 된다</div>
+    <span class="tag">/approvals · fn_decide_approval</span>
+    <span class="tag">→ ol_submission</span>
+  </div>
+</div>
+
+<div class="node a-blue" id="S9" style="left:980px; top:600px; width:420px; height:215px">
+  <div class="num">7</div>
+  <div class="ic"><svg><use href="#i-file"/></svg></div>
+  <div class="body">
+    <div class="t">보고</div>
+    <div class="d">확정된 계획을 보고서 형태로 내보낸다<br>CSV · 인쇄</div>
+    <span class="tag">/orders/[id]/report</span>
+  </div>
+</div>
+
+<div class="node a-green" id="S10" style="left:1440px; top:600px; width:420px; height:215px">
+  <div class="num">10</div>
+  <div class="ic"><svg><use href="#i-inbox"/></svg></div>
+  <div class="body">
+    <div class="t">입고 확인</div>
+    <div class="d">입고를 완료 처리하면<br>계획 대비 실제 차이가 뷰로 드러난다</div>
+    <span class="tag">/allocation → v_inbound_gap</span>
+  </div>
+</div>
+
+<div class="note" style="left:60px; top:870px; width:1320px">
+  <b>① ② ⑤ ⑥ ⑦⑧ ⑩ 은 업무절차 번호</b> — 번호가 없는 두 단계(담당자 검토 · 팀장 승인)는 ⑥ 안에서 일어나는 시스템 단계다.
+  상세 규칙은 <span style="font-family:ui-monospace,Menlo,monospace">docs/01-업무절차</span> 와 <span style="font-family:ui-monospace,Menlo,monospace">docs/02-domain-rules/R-OQ</span>.
+</div>
+
+<div class="legend" style="left:1440px; top:880px">
+  <div class="li"><span class="box hl"></span>계산 · 승인이 일어나는 단계</div>
+</div>
+<div class="foot">docs/07-architecture.md §5.1 · 2026-09-13</div>
+
+<script>
+window.EDGES = [
+  { from:'S1', to:'S2', fs:'right', ts:'left', ta:0.5 },
+  { from:'S2', to:'S5', fs:'right', ts:'left', ta:0.5 },
+  { from:'S5', to:'S6', fs:'right', ts:'left', ta:0.5 },
+  // 1행 끝 → 2행 머리 (아래 회랑으로 되돌아온다)
+  { from:'S6', to:'S7', fs:'bottom', fa:0.5, ts:'top', ta:0.5,
+    via:[[1650,530],[270,530]], label:'계획 생성 완료 → 검토로' },
+  { from:'S7', to:'S8', fs:'right', ts:'left', ta:0.5 },
+  { from:'S8', to:'S9', fs:'right', ts:'left', ta:0.5 },
+  { from:'S9', to:'S10', fs:'right', ts:'left', ta:0.5 },
+];
+</script>

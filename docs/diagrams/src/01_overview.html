@@ -1,0 +1,159 @@
+<title>시스템 아키텍처 — 한 장 요약</title>
+
+<div class="title">
+  <span class="kicker">SCMPRO ARCHITECTURE · §1</span>
+  <h1>한 장 요약</h1>
+  <p>사용자 요청은 Web → Supabase 로, 분 단위 배치는 Engine → Supabase 로. 외부 의존은 OpenAI 와 SMTP 둘뿐이다.</p>
+</div>
+
+<!-- ── 외부 서비스 ─────────────────────────────────────────────── -->
+<div class="node ext" id="OAI" style="left:1380px; top:100px; width:330px">
+  <div class="ic"><svg><use href="#i-cloud"/></svg></div>
+  <div class="body"><div class="t">OpenAI API</div><div class="d mono">gpt-5-nano · 설정 ai_model</div></div>
+</div>
+
+<!-- ── 사용자 · 입력 ───────────────────────────────────────────── -->
+<div class="zone" id="ZU" style="left:60px; top:300px; width:220px; height:580px">
+  <div class="zl"><svg><use href="#i-users"/></svg>사용자 · 입력</div>
+</div>
+<div class="actor" id="U1" style="left:75px; top:350px; width:190px">
+  <div class="ic"><svg><use href="#i-user"/></svg></div>
+  <div class="t">SCM 품목담당자</div>
+  <div class="d">SCM 팀장</div>
+</div>
+<div class="actor" id="U2" style="left:75px; top:490px; width:190px">
+  <div class="ic"><svg><use href="#i-users"/></svg></div>
+  <div class="t">수요 제출 부서</div>
+  <div class="d">영업 · 마케팅 · 서비스</div>
+</div>
+<div class="actor" id="U3" style="left:75px; top:630px; width:190px">
+  <div class="ic"><svg><use href="#i-shield"/></svg></div>
+  <div class="t">관리자</div>
+  <div class="d">설정 · 마스터</div>
+</div>
+<div class="node a-gray" id="FILES" style="left:72px; top:770px; width:196px">
+  <div class="ic"><svg><use href="#i-upload"/></svg></div>
+  <div class="body"><div class="t">업로드 파일</div><div class="d mono">xlsx · csv</div></div>
+</div>
+
+<!-- ── Web ─────────────────────────────────────────────────────── -->
+<div class="zone z-blue" id="ZW" style="left:310px; top:280px; width:430px; height:600px">
+  <div class="zl"><svg><use href="#i-monitor"/></svg>Web — Next.js 16 App Router</div>
+</div>
+<div class="node hl" id="AI" style="left:332px; top:320px; width:380px">
+  <div class="ic"><svg><use href="#i-bot"/></svg></div>
+  <div class="body"><div class="t">/api/ai/chat</div><div class="d">AI Agent 대화 루프 · 도구 9종</div><span class="tag">lib/ai/{tools,chat}.ts</span></div>
+</div>
+<div class="node a-blue" id="P" style="left:332px; top:470px; width:380px">
+  <div class="ic"><svg><use href="#i-monitor"/></svg></div>
+  <div class="body"><div class="t">화면 27 라우트</div><div class="d">서버 컴포넌트 + 클라이언트 위젯</div></div>
+</div>
+<div class="node a-blue" id="SA" style="left:332px; top:600px; width:380px">
+  <div class="ic"><svg><use href="#i-code"/></svg></div>
+  <div class="body"><div class="t">서버 액션 / API</div><div class="d">권한 검사 → RPC 호출</div></div>
+</div>
+<div class="node a-blue" id="PX" style="left:332px; top:730px; width:380px">
+  <div class="ic"><svg><use href="#i-key"/></svg></div>
+  <div class="body"><div class="t">proxy.ts</div><div class="d">세션 갱신 · 미로그인 리다이렉트</div></div>
+</div>
+
+<!-- ── Supabase ────────────────────────────────────────────────── -->
+<div class="zone z-green" id="ZS" style="left:780px; top:280px; width:575px; height:600px">
+  <div class="zl"><svg><use href="#i-db"/></svg>Supabase — PostgreSQL 17</div>
+</div>
+<div class="db gold" id="AN" style="left:830px; top:350px; width:160px; height:175px">
+  <div class="ic"><svg><use href="#i-sigma"/></svg></div>
+  <div class="t">analytics</div>
+  <div class="d">화면용 뷰 22</div>
+</div>
+<div class="db silver" id="CORE" style="left:1000px; top:350px; width:160px; height:175px">
+  <div class="ic"><svg><use href="#i-layers"/></svg></div>
+  <div class="t">core</div>
+  <div class="d">정제 뷰 7</div>
+</div>
+<div class="db bronze" id="RAW" style="left:1170px; top:350px; width:160px; height:175px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="t">raw</div>
+  <div class="d">원본 10 테이블</div>
+</div>
+<div class="node hl" id="APP" style="left:830px; top:570px; width:500px">
+  <div class="ic"><svg><use href="#i-box"/></svg></div>
+  <div class="body"><div class="t">app — 업무 데이터</div><div class="d">30 테이블 · RPC 43 (security definer) · 감사 트리거</div></div>
+</div>
+<div class="node a-green" id="AUTH" style="left:830px; top:715px; width:245px">
+  <div class="ic"><svg><use href="#i-lock"/></svg></div>
+  <div class="body"><div class="t">Auth</div><div class="d">이메일 · 비밀번호</div></div>
+</div>
+<div class="node a-green" id="CRON" style="left:1090px; top:715px; width:245px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body"><div class="t">pg_cron</div><div class="d mono">scm-tick */10분</div></div>
+</div>
+
+<!-- ── Engine ──────────────────────────────────────────────────── -->
+<div class="zone z-violet" id="ZE" style="left:1380px; top:280px; width:490px; height:600px">
+  <div class="zl"><svg><use href="#i-terminal"/></svg>Engine — Python 3.12 (uv)</div>
+</div>
+<div class="node a-violet stack" id="CLI" style="left:1405px; top:360px; width:130px; height:420px">
+  <div class="ic"><svg><use href="#i-terminal"/></svg></div>
+  <div class="body"><div class="t">engine<br>CLI</div><div class="d mono">uv run</div></div>
+</div>
+<div class="node a-violet" id="FC" style="left:1560px; top:360px; width:285px">
+  <div class="ic"><svg><use href="#i-trend"/></svg></div>
+  <div class="body"><div class="t">forecast</div><div class="d">분류 · 기법 13 · 백테스트 · 프로덕션</div></div>
+</div>
+<div class="node a-violet" id="TUNE" style="left:1560px; top:520px; width:285px">
+  <div class="ic"><svg><use href="#i-sparkles"/></svg></div>
+  <div class="body"><div class="t">ai_tuning</div><div class="d">오차 분석 → 조정 제안</div></div>
+</div>
+<div class="node a-violet" id="TICK" style="left:1560px; top:660px; width:285px">
+  <div class="ic"><svg><use href="#i-bell"/></svg></div>
+  <div class="body"><div class="t">tick / notify</div><div class="d">배정 만료 · 알림 · 이메일</div></div>
+</div>
+
+<div class="node ext" id="SMTP" style="left:1560px; top:900px; width:285px">
+  <div class="ic"><svg><use href="#i-inbox"/></svg></div>
+  <div class="body"><div class="t">SMTP</div><div class="d">선택 · 미설정 시 skipped:no_smtp</div></div>
+</div>
+
+<div class="legend" style="left:60px; top:925px">
+  <div class="li"><span class="sw"></span>요청 · 데이터 흐름</div>
+  <div class="li"><span class="sw dash"></span>읽기 전용 · 선택</div>
+  <div class="li"><span class="box hl"></span>업무 로직이 사는 곳</div>
+  <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>외부 서비스</div>
+</div>
+<div class="foot">docs/07-architecture.md §1 · 2026-09-13</div>
+
+<script>
+window.EDGES = [
+  // 사용자 → 화면
+  { from:'U1', to:'P', ts:'left', ta:0.25 },
+  { from:'U2', to:'P', ts:'left', ta:0.5, label:'로그인 후 화면', loff:[22,0] },
+  { from:'U3', to:'P', ts:'left', ta:0.75 },
+  { from:'FILES', to:'SA', ts:'left', ta:0.5, mid:312, label:'업로드' },
+
+  // Web → Supabase (레인 사이 짧은 수평)
+  { from:'AI',  to:'AN',  ts:'left', ta:0.3, mid:776, dash:true, label:'도구 조회\n사용자 세션' },
+  { from:'P',   to:'AN',  ts:'left', ta:0.85, mid:766, label:'뷰 직접 읽기' },
+  { from:'SA',  to:'APP', ts:'left', ta:0.5, mid:776, label:'RPC 호출' },
+  { from:'PX',  to:'AUTH',ts:'left', ta:0.5, mid:766, label:'세션 갱신' },
+
+  // Supabase 내부
+  { from:'RAW',  to:'CORE', fs:'left', ts:'right', label:'정제 규칙 1회', loff:[0,-112] },
+  { from:'CORE', to:'AN',   fs:'left', ts:'right', label:'집계 · 조인', loff:[0,-112] },
+  { from:'APP',  to:'AN',   fs:'top', fa:0.12, ts:'bottom', ta:0.5, label:'업무 데이터' },
+  { from:'CRON', to:'APP',  fs:'top', ta:0.5, ts:'bottom', fa:0.5, cls:'green', label:'fn_tick' },
+
+  // Engine
+  { from:'CLI', to:'FC',   fs:'right', fa:0.12, ts:'left', ta:0.5 },
+  { from:'CLI', to:'TUNE', fs:'right', fa:0.45, ts:'left', ta:0.5 },
+  { from:'CLI', to:'TICK', fs:'right', fa:0.78, ts:'left', ta:0.5 },
+  { from:'CLI', to:'RAW',  fs:'left', fa:0.08, ts:'top', ta:0.5, via:[[1362,394],[1362,322],[1250,322]], label:'export_raw 적재' },
+  { from:'FC',  to:'APP',  fs:'left', fa:0.55, ts:'right', ta:0.35, mid:1358, cls:'violet', label:'forecast_* 쓰기', lat:0.80 },
+  { from:'TICK',to:'APP',  fs:'left', fa:0.5, ts:'right', ta:0.8, mid:1350, dash:true, label:'알림 조회' },
+
+  // 외부
+  { from:'AI', to:'OAI', fs:'top', fa:0.85, ts:'bottom', via:[[655,235],[1480,235]], cls:'orange', label:'gpt-5-nano 호출' },
+  { from:'TUNE', to:'OAI', fs:'right', fa:0.5, ts:'right', mid:1885, cls:'orange', label:'조정안 생성', lat:0.86 },
+  { from:'TICK', to:'SMTP', fs:'bottom', fa:0.5, ts:'top', ta:0.5, cls:'orange', label:'이메일 발송' },
+];
+</script>

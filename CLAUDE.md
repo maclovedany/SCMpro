@@ -15,6 +15,7 @@
 | `docs/05-data-catalog.md` | 파일 → DB 테이블 → 뷰 매핑, 정제 규칙 |
 | `docs/06-data-profile.md` | 데이터 검증 결과 (희소도, OL 정확도 기준선, 마스터 매핑 갭) |
 | `docs/07-architecture.md` | 시스템 아키텍처 한 장 (구성 요소·데이터 계층·권한·주요 흐름·배치·디렉터리) |
+| `docs/08-user-guide.md` | 사용자 가이드 — 역할별 시나리오(한 달 흐름, 메뉴별 할 일, FAQ). 화면·기능 변경 시 함께 갱신 |
 | `docs/meetings/` | 회의록 요약 |
 | `docs/specs/` | 서브프로젝트별 설계 문서 (SP1~SP5) |
 | `docs/plans/` | 서브프로젝트별 구현 계획 |

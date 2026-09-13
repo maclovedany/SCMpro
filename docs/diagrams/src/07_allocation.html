@@ -1,0 +1,101 @@
+<title>주문 · 배정 — SP4</title>
+
+<div class="title">
+  <span class="kicker">SCMPRO ARCHITECTURE · §5.3</span>
+  <h1>주문 · 배정 상태 흐름</h1>
+  <p>여러 사람이 같은 품목을 동시에 건드린다. 그래서 상태를 바꾸는 일은 전부 RPC 안에서만 일어난다.</p>
+</div>
+
+<div class="note" style="left:60px; top:185px; width:1800px">
+  <b>전부 RPC 안 트랜잭션 · 품목 단위 advisory lock</b> — 화면은 상태를 직접 쓰지 않는다. 아래 함수 이름이 곧 트랜잭션 경계다.
+</div>
+
+<!-- ── 주문 생성 ───────────────────────────────────────────────── -->
+<div class="node hl" id="CRE" style="left:60px; top:400px; width:290px; height:180px">
+  <div class="ic"><svg><use href="#i-pen"/></svg></div>
+  <div class="body"><div class="t">주문 생성</div><div class="d">재고 상황에 따라 셋 중 하나로 떨어진다</div><span class="tag">fn_create_sales_order</span></div>
+</div>
+
+<!-- ── 초기 상태 ───────────────────────────────────────────────── -->
+<div class="node a-blue" id="TEMP" style="left:430px; top:250px; width:280px; height:150px">
+  <div class="ic"><svg><use href="#i-hourglass"/></svg></div>
+  <div class="body"><div class="t">temp</div><div class="d">가배정 30일<br>재고가 충분할 때</div></div>
+</div>
+<div class="node a-blue" id="PART" style="left:430px; top:430px; width:280px; height:150px">
+  <div class="ic"><svg><use href="#i-scale"/></svg></div>
+  <div class="body"><div class="t">partial</div><div class="d">일부 수량만 잡힌 상태</div></div>
+</div>
+<div class="node a-blue" id="WAIT" style="left:430px; top:610px; width:280px; height:150px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body"><div class="t">waiting</div><div class="d">재고가 없어 입고를 기다린다</div></div>
+</div>
+
+<!-- ── 다음 동작 ───────────────────────────────────────────────── -->
+<div class="node a-green" id="CONF" style="left:780px; top:250px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="body"><div class="t">확정</div><div class="d">temp → firm</div><span class="tag">fn_confirm_sales_order</span></div>
+</div>
+<div class="node a-orange" id="CANC" style="left:780px; top:430px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body"><div class="t">취소</div><div class="d">배정 해제 · 주문 취소 · 알림</div><span class="tag">fn_cancel_sales_order</span></div>
+</div>
+<div class="node a-green" id="RECV" style="left:780px; top:610px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-inbox"/></svg></div>
+  <div class="body"><div class="t">입고</div><div class="d">재고 반영 후 품목 설정대로 갈린다</div><span class="tag">fn_receive_inbound</span></div>
+</div>
+
+<!-- ── 배정 실행 ───────────────────────────────────────────────── -->
+<div class="node hl" id="AUTO" style="left:1180px; top:500px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-cpu"/></svg></div>
+  <div class="body"><div class="t">자동 배정</div><div class="d">우선순위 → 요청순</div><span class="tag">fn_auto_allocate</span></div>
+</div>
+<div class="node hl" id="MAN" style="left:1180px; top:680px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-user"/></svg></div>
+  <div class="body"><div class="t">수동 배정</div><div class="d">담당자에게 알림 후 처리</div><span class="tag">fn_manual_allocate</span></div>
+</div>
+
+<!-- ── 최종 상태 ───────────────────────────────────────────────── -->
+<div class="node a-green" id="FIRM" style="left:1580px; top:490px; width:280px; height:160px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="body"><div class="t">firm</div><div class="d">확정 배정<br>더 이상 만료되지 않는다</div></div>
+</div>
+<div class="node a-amber" id="HOLD" style="left:1580px; top:690px; width:280px; height:160px">
+  <div class="ic"><svg><use href="#i-shield"/></svg></div>
+  <div class="body"><div class="t">hold</div><div class="d">큐 선두를 건너뛴 배정<br>승인을 받아야 풀린다</div><span class="tag">approval · priority_alloc</span></div>
+</div>
+
+<!-- ── 주기 스윕 ───────────────────────────────────────────────── -->
+<div class="node dim" id="TICK" style="left:60px; top:890px; width:1800px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body">
+    <div class="t">10분마다 전체를 훑는다 <span class="d mono" style="display:inline;font-size:13px">fn_allocation_tick</span></div>
+    <div class="d">만료된 가배정 해제 &nbsp;·&nbsp; 만료 예고 알림 10 · 5 · 3 · 2 · 1일 전 &nbsp;·&nbsp; 승인 대기 건 반복 알림</div>
+  </div>
+</div>
+
+<div class="legend" style="left:60px; top:820px">
+  <div class="li"><span class="box hl"></span>배정을 실행하는 RPC</div>
+  <div class="li"><span class="box" style="border-color:var(--amber);background:var(--amber-bg)"></span>사람 승인이 필요한 상태</div>
+</div>
+<div class="foot">docs/07-architecture.md §5.3 · 2026-09-13</div>
+
+<script>
+window.EDGES = [
+  { from:'CRE', to:'TEMP', ts:'left', ta:0.5 },
+  { from:'CRE', to:'PART', ts:'left', ta:0.5 },
+  { from:'CRE', to:'WAIT', ts:'left', ta:0.5 },
+
+  { from:'TEMP', to:'CONF', fs:'right', ts:'left', ta:0.5 },
+  { from:'PART', to:'CANC', fs:'right', ts:'left', ta:0.5 },
+  { from:'WAIT', to:'RECV', fs:'right', ts:'left', ta:0.5 },
+
+  { from:'RECV', to:'AUTO', fs:'right', fa:0.5, ts:'left', ta:0.5, label:'auto' },
+  { from:'RECV', to:'MAN',  fs:'right', fa:0.5, ts:'left', ta:0.5, label:'manual' },
+
+  { from:'CONF', to:'FIRM', fs:'right', ts:'left', ta:0.25, mid:1540 },
+  { from:'AUTO', to:'FIRM', fs:'right', ts:'left', ta:0.6 },
+  { from:'MAN',  to:'FIRM', fs:'right', ts:'left', ta:0.85, label:'큐 선두' },
+  { from:'MAN',  to:'HOLD', fs:'right', fa:0.75, ts:'left', ta:0.5, label:'건너뜀' },
+  { from:'HOLD', to:'FIRM', fs:'top', fa:0.5, ts:'bottom', ta:0.5, cls:'green', label:'승인 시' },
+];
+</script>

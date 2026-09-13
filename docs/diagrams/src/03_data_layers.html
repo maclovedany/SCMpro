@@ -1,0 +1,91 @@
+<title>데이터 계층 — Supabase 스키마</title>
+
+<div class="title">
+  <span class="kicker">SCMPRO ARCHITECTURE · §3</span>
+  <h1>데이터 계층</h1>
+  <p>원본은 손대지 않는다. 정제 규칙은 한 번만 적용하고, 화면과 엔진은 가장 바깥 층만 읽는다.</p>
+</div>
+
+<!-- ── raw → core → analytics 파이프라인 ───────────────────────── -->
+<div class="zone z-green" id="ZPIPE" style="left:60px; top:230px; width:1120px; height:370px">
+  <div class="zl"><svg><use href="#i-layers"/></svg>읽기 전용 파이프라인</div>
+</div>
+
+<div class="db bronze" id="RAW" style="left:90px; top:290px; width:290px; height:270px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="t">raw</div>
+  <div class="d">CSV 원본 그대로 적재<br>원본 10 테이블<br><br><b>수정 금지</b><br>앱 역할 USAGE 없음<br>(fail-closed)</div>
+  <span class="tag">브론즈</span>
+</div>
+
+<div class="db silver" id="CORE" style="left:475px; top:290px; width:290px; height:270px">
+  <div class="ic"><svg><use href="#i-layers"/></svg></div>
+  <div class="t">core</div>
+  <div class="d">정제 규칙 1회 적용<br>정제 뷰 7</div>
+  <span class="tag">v_shipment_by_hoc</span>
+  <span class="tag">v_option_model_link</span>
+  <span class="tag">v_item · v_model</span>
+</div>
+
+<div class="db gold" id="AN" style="left:860px; top:290px; width:290px; height:270px">
+  <div class="ic"><svg><use href="#i-sigma"/></svg></div>
+  <div class="t">analytics</div>
+  <div class="d">화면 · 엔진이 읽는 층<br>뷰 22</div>
+  <span class="tag">물리화 v_item_monthly</span>
+  <span class="tag">물리화 mv_item_stats</span>
+  <span class="tag">실시간 v_item_master</span>
+</div>
+
+<!-- ── app 업무 스키마 ─────────────────────────────────────────── -->
+<div class="zone z-blue" id="ZAPP" style="left:1230px; top:230px; width:630px; height:500px">
+  <div class="zl"><svg><use href="#i-box"/></svg>app — 업무 데이터 30 테이블</div>
+</div>
+<div class="node a-blue" id="A1" style="left:1255px; top:285px; width:290px; height:120px">
+  <div class="ic"><svg><use href="#i-sliders"/></svg></div>
+  <div class="body"><div class="t">설정 · 마스터</div><div class="d mono">system_settings · supplier<br>item_setting · inventory_snapshot</div></div>
+</div>
+<div class="node a-blue" id="A2" style="left:1565px; top:285px; width:270px; height:120px">
+  <div class="ic"><svg><use href="#i-shield"/></svg></div>
+  <div class="body"><div class="t">공통 메커니즘</div><div class="d mono">profiles · approval<br>notification · audit_log</div></div>
+</div>
+<div class="node a-blue" id="A3" style="left:1255px; top:425px; width:290px; height:120px">
+  <div class="ic"><svg><use href="#i-trend"/></svg></div>
+  <div class="body"><div class="t">예측</div><div class="d mono">forecast_method/policy/run<br>result · accuracy · item_class</div></div>
+</div>
+<div class="node a-blue" id="A4" style="left:1565px; top:425px; width:270px; height:120px">
+  <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
+  <div class="body"><div class="t">발주</div><div class="d mono">extra_demand · order_plan<br>order_plan_line · ol_submission</div></div>
+</div>
+<div class="node a-blue" id="A5" style="left:1255px; top:565px; width:290px; height:120px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body"><div class="t">배정</div><div class="d mono">sales_order<br>allocation</div></div>
+</div>
+<div class="node a-blue" id="A6" style="left:1565px; top:565px; width:270px; height:120px">
+  <div class="ic"><svg><use href="#i-chat"/></svg></div>
+  <div class="body"><div class="t">일정 · AI</div><div class="d mono">demand_submission<br>ai_conversation · ai_message</div></div>
+</div>
+
+<!-- ── 공통 규칙 ───────────────────────────────────────────────── -->
+<div class="node dim" id="D7" style="left:60px; top:790px; width:1800px">
+  <div class="ic"><svg><use href="#i-pen"/></svg></div>
+  <div class="body"><div class="t">모든 app 마스터 테이블의 공통 칼럼 <span style="font-weight:600;color:var(--ink-3)">· D-007</span></div><div class="d mono">source(upload/manual/seed/parsed) · is_dummy · updated_by/at &nbsp;—&nbsp; 감사 트리거 trg_audit → audit_log</div></div>
+</div>
+<div class="node dim" id="D14" style="left:60px; top:640px; width:1120px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body"><div class="t">물리화 뷰는 언제 갱신하나 <span style="font-weight:600;color:var(--ink-3)">· D-014</span></div><div class="d">출고 데이터가 바뀔 때만 <span class="d mono" style="display:inline">fn_refresh_matviews</span>. 설정 · 재고는 실시간 뷰로 조인해 승인 · 업로드가 즉시 반영된다.</div></div>
+</div>
+
+<div class="legend" style="left:60px; top:945px">
+  <div class="li"><span class="sw"></span>정제 단계</div>
+  <div class="li"><span class="sw dash"></span>실시간 조인 (물리화하지 않음)</div>
+</div>
+<div class="foot">docs/07-architecture.md §3 · 2026-09-13</div>
+
+<script>
+window.EDGES = [
+  { from:'RAW',  to:'CORE', label:'정제 규칙 1회 적용', loff:[0,-163] },
+  { from:'CORE', to:'AN',   label:'집계 · 조인 · 물리화', loff:[0,-163] },
+  { from:'A1', to:'AN', fs:'left', ts:'right', ta:0.25, mid:1205, dash:true, label:'실시간 조인', loff:[-25,120] },
+  { from:'A3', to:'AN', fs:'left', ts:'right', ta:0.75, mid:1205, dash:true },
+];
+</script>

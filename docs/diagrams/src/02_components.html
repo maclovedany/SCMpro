@@ -1,0 +1,96 @@
+<title>구성 요소와 책임 분리</title>
+
+<div class="title">
+  <span class="kicker">SCMPRO ARCHITECTURE · §2</span>
+  <h1>구성 요소와 책임 분리</h1>
+  <p>같은 계산을 두 곳에 두지 않는다. 무엇을 어디에 두는지는 반응 속도와 동시성이 정한다. (D-011 · D-022)</p>
+</div>
+
+<!-- ── Web 층 ──────────────────────────────────────────────────── -->
+<div class="zone z-blue" id="ZWEB" style="left:60px; top:200px; width:1120px; height:190px">
+  <div class="zl"><svg><use href="#i-monitor"/></svg>Web &nbsp;<span class="tag">web/</span></div>
+</div>
+<div class="node a-blue" id="W1" style="left:88px; top:245px; width:520px; height:120px">
+  <div class="ic"><svg><use href="#i-grid"/></svg></div>
+  <div class="body"><div class="t">화면 · 워크플로</div><div class="d">확정 · 승인 · 배정 · 업로드</div><span class="tag">Next.js 16 · Tailwind v4 · TanStack · ECharts</span></div>
+</div>
+<div class="node hl" id="W2" style="left:640px; top:245px; width:512px; height:120px">
+  <div class="ic"><svg><use href="#i-fx"/></svg></div>
+  <div class="body"><div class="t">발주량 산출 계산</div><div class="d">DoS · Flex · MOQ · 재고전개 what-if</div><span class="tag">web/lib/order/calc.ts</span></div>
+</div>
+
+<!-- ── Supabase 층 ─────────────────────────────────────────────── -->
+<div class="zone z-green" id="ZSB" style="left:60px; top:440px; width:1120px; height:190px">
+  <div class="zl"><svg><use href="#i-db"/></svg>Supabase &nbsp;<span class="tag">supabase/migrations/</span></div>
+</div>
+<div class="node a-green" id="S1" style="left:88px; top:485px; width:520px; height:120px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="body"><div class="t">단일 데이터 저장소</div><div class="d">4 스키마 · RLS · pg_cron</div><span class="tag">PostgreSQL 17 · Auth</span></div>
+</div>
+<div class="node hl" id="S2" style="left:640px; top:485px; width:512px; height:120px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body"><div class="t">트랜잭션 업무 로직</div><div class="d">배정 상태머신 · 승인 적용 · 업로드 반영</div><span class="tag">RPC 43 · security definer</span></div>
+</div>
+
+<!-- ── Engine 층 ───────────────────────────────────────────────── -->
+<div class="zone z-violet" id="ZENG" style="left:60px; top:680px; width:1120px; height:190px">
+  <div class="zl"><svg><use href="#i-terminal"/></svg>Engine &nbsp;<span class="tag">engine/</span></div>
+</div>
+<div class="node a-violet" id="E1" style="left:88px; top:725px; width:520px; height:120px">
+  <div class="ic"><svg><use href="#i-trend"/></svg></div>
+  <div class="body"><div class="t">예측 배치</div><div class="d">백테스트 · 프로덕션 · AI 오차 분석</div><span class="tag">pandas · statsforecast · prophet · lightgbm</span></div>
+</div>
+<div class="node a-violet" id="E2" style="left:640px; top:725px; width:512px; height:120px">
+  <div class="ic"><svg><use href="#i-wrench"/></svg></div>
+  <div class="body"><div class="t">적재 · 검증 · 타입 생성</div><div class="d">주기 작업 대안 실행</div><span class="tag">Python 3.12 · psycopg · openai</span></div>
+</div>
+
+<!-- ── 책임 분리 원칙 ──────────────────────────────────────────── -->
+<div class="note" style="left:1240px; top:200px; width:620px"><b>책임 분리 원칙 — 무엇을 어디에 두는가</b></div>
+
+<div class="node" id="R1" style="left:1240px; top:245px; width:620px; height:120px">
+  <div class="ic"><svg><use href="#i-gauge"/></svg></div>
+  <div class="body"><div class="t">즉시 반응해야 하는 계산 → TS 단일 구현</div><div class="d">서버 액션과 화면이 <b>같은 함수</b>를 쓴다. 두 벌로 갈라지지 않는다.</div><span class="tag">D-011 · 즉시 반응</span></div>
+</div>
+<div class="node" id="R2" style="left:1240px; top:485px; width:620px; height:120px">
+  <div class="ic"><svg><use href="#i-lock"/></svg></div>
+  <div class="body"><div class="t">동시에 건드리는 상태 변경 → DB RPC</div><div class="d">트랜잭션 · advisory lock · RLS 가 <b>한 곳</b>에서 보장된다.</div><span class="tag">D-022 · 동시성</span></div>
+</div>
+<div class="node" id="R3" style="left:1240px; top:725px; width:620px; height:120px">
+  <div class="ic"><svg><use href="#i-hourglass"/></svg></div>
+  <div class="body"><div class="t">분 단위 이상 걸리는 계산 → Python 배치</div><div class="d">결과를 <b>버전(run)</b> 으로 저장하고 화면은 읽기만 한다.</div><span class="tag">D-011 · 분 단위</span></div>
+</div>
+
+<!-- ── 외부 ────────────────────────────────────────────────────── -->
+<div class="node ext" id="OAI" style="left:88px; top:915px; width:520px">
+  <div class="ic"><svg><use href="#i-cloud"/></svg></div>
+  <div class="body"><div class="t">OpenAI — gpt-5-nano</div><div class="d">답변 · 주제 분류 · 요약 · 예측 조정안</div></div>
+</div>
+<div class="node ext" id="SMTP" style="left:640px; top:915px; width:512px">
+  <div class="ic"><svg><use href="#i-inbox"/></svg></div>
+  <div class="body"><div class="t">SMTP — 선택</div><div class="d">이메일 채널 발송 · 미설정 시 skipped:no_smtp</div></div>
+</div>
+
+<div class="legend" style="left:1240px; top:920px">
+  <div class="li"><span class="box hl"></span>업무 로직이 사는 곳</div>
+  <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>외부 서비스</div>
+</div>
+<div class="foot">docs/07-architecture.md §2 · 2026-09-13</div>
+
+<script>
+window.EDGES = [
+  // 층 사이 흐름
+  { from:'W2', to:'S2', fs:'bottom', fa:0.5, ts:'top', ta:0.5, label:'RPC 호출' },
+  { from:'S1', to:'W1', fs:'top', fa:0.85, ts:'bottom', ta:0.85, label:'뷰 읽기' },
+  { from:'E1', to:'S1', fs:'top', fa:0.85, ts:'bottom', ta:0.85, cls:'violet', label:'run 저장' },
+
+  // 원칙 → 그 원칙이 사는 곳 (각 층의 오른쪽 노드)
+  { from:'R1', to:'W2', fs:'left', ts:'right', ta:0.5, thin:true },
+  { from:'R2', to:'S2', fs:'left', ts:'right', ta:0.5, thin:true },
+  { from:'R3', to:'E2', fs:'left', ts:'right', ta:0.5, thin:true },
+
+  // 외부로 나가는 호출
+  { from:'E1', to:'OAI', fs:'bottom', fa:0.5, ts:'top', ta:0.5, cls:'orange', thin:true },
+  { from:'E2', to:'SMTP', fs:'bottom', fa:0.5, ts:'top', ta:0.5, cls:'orange', thin:true },
+];
+</script>
