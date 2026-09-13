@@ -144,3 +144,9 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 검증: 2026-09 계획 9,672 라인 생성 ~15초, 품절위험 3,979(더미 재고 기준), 승인 → 제출 OL 4,294건, 재생성 시 Flex 클램프 2,306 라인
 - 출처: 구현 검증
 - 영향: R-OQ 규칙에 구현 위치 주석, spec SP3 §3
+
+## D-023 (2026-09-13) SP4 구현 결과 — 배정 상태머신은 전부 SQL RPC, 주기 처리는 fn_allocation_tick
+- 결정: 주문·배정 트랜잭션은 `pg_advisory_xact_lock(hashtext(item))` 로 품목 단위 직렬화 (R-AL-05). 만료·예고·10분 반복 알림은 `app.fn_allocation_tick()` 하나로, 화면 버튼 + SP5 pg_cron 10분 주기. 알림 중복은 notification(kind, payload.order_id, days_before/approval_id) 로 방지
+- 검증: E2E 전체 흐름 + SQL 로 만료(자동 해제 알림)·3일 전 예고 확인. 자동배정은 입고 RPC 직접 호출로 확인(auto_allocated_orders=1)
+- 출처: 구현 검증
+- 영향: R-AL 규칙에 구현 위치, spec SP4

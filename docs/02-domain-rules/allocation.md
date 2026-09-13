@@ -1,6 +1,6 @@
 # 규칙: 영업 주문과 재고 배정 (R-AL)
 
-최종 갱신: 2026-09-13 · 출처: stage1.md §2
+최종 갱신: 2026-09-13 · 출처: stage1.md §2 · 구현: migrations/20260913003000_allocation.sql (fn_create_sales_order·fn_confirm/cancel·fn_receive_inbound·fn_auto_allocate·fn_manual_allocate·fn_set_priority·fn_allocation_tick), 화면 /sales-orders, /allocation, /allocation/priority (D-023)
 범위 주의: 이 영역은 수요예측이 아니라 **주문/재고 배정 운영** 기능이다. 예측·발주 엔진과 별도 모듈로 본다.
 
 ## 주문 상태와 배정 종류

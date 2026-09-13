@@ -9,6 +9,7 @@ export function describeApproval(a: { kind: string; target_pk: string; payload: 
     return `AI 예측 조정: ` + props.map(p => `${p.method_key}${p.enabled != null ? `(${p.enabled ? "on" : "off"})` : ""} ${p.param_patch && Object.keys(p.param_patch).length ? JSON.stringify(p.param_patch) : ""}`.trim()).join(", ");
   }
   if (a.kind === "order_plan") return "발주 계획 승인: " + Object.entries(a.payload ?? {}).map(([k, v]) => `${PLAN_KEYS[k] ?? k} ${typeof v === "number" ? v.toLocaleString("ko-KR") : String(v)}`).join(", ");
+  if (a.kind === "priority_alloc") { const p = a.payload ?? {}; return `우선 배정: ${p.order_no} · ${p.item_code} ${p.qty}개 (가용 ${p.available}) — 등록 순서 건너뜀`; }
   if (a.kind === "bulkdeal") { const p = a.payload ?? {}; return `Bulkdeal 추가 발주: ${p.item_code} ${p.qty}개 (${p.need_ym}) · 고객 ${p.customer} · 기종 ${p.model}`; }
   const parts = Object.entries(a.payload ?? {}).map(([k, v]) => `${LABEL[k] ?? k} ${current?.[k] ?? "-"} → ${v}`);
   const subject = a.kind === "item_setting" ? `품목 ${a.target_pk}` : `${KIND_LABEL[a.kind] ?? a.kind} ${a.target_pk}`;

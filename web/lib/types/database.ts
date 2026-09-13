@@ -4,6 +4,48 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   app: {
     Tables: {
+      allocation: {
+        Row: {
+          id: number
+          order_id: string
+          item_code: string
+          qty: number
+          kind: Database["app"]["Enums"]["alloc_kind"]
+          created_at: string | null
+          expires_at: string | null
+          released_at: string | null
+          release_reason: string | null
+          approval_id: string | null
+          created_by: string | null
+        }
+        Insert: {
+          id?: number
+          order_id?: string
+          item_code?: string
+          qty?: number
+          kind?: Database["app"]["Enums"]["alloc_kind"]
+          created_at?: string | null
+          expires_at?: string | null
+          released_at?: string | null
+          release_reason?: string | null
+          approval_id?: string | null
+          created_by?: string | null
+        }
+        Update: {
+          id?: number
+          order_id?: string
+          item_code?: string
+          qty?: number
+          kind?: Database["app"]["Enums"]["alloc_kind"]
+          created_at?: string | null
+          expires_at?: string | null
+          released_at?: string | null
+          release_reason?: string | null
+          approval_id?: string | null
+          created_by?: string | null
+        }
+        Relationships: []
+      }
       approval: {
         Row: {
           id: string
@@ -913,6 +955,63 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_order: {
+        Row: {
+          id: string
+          order_no: string
+          item_code: string
+          qty: number
+          customer: string | null
+          sales_rep: string
+          status: Database["app"]["Enums"]["so_status"]
+          alloc_mode: Database["app"]["Enums"]["alloc_mode_choice"]
+          priority: number
+          requested_at: string
+          expires_at: string | null
+          confirmed_at: string | null
+          decided_at: string | null
+          cancel_reason: string | null
+          prev_order_id: string | null
+          note: string | null
+        }
+        Insert: {
+          id?: string
+          order_no?: string
+          item_code?: string
+          qty?: number
+          customer?: string | null
+          sales_rep?: string
+          status?: Database["app"]["Enums"]["so_status"]
+          alloc_mode?: Database["app"]["Enums"]["alloc_mode_choice"]
+          priority?: number
+          requested_at?: string
+          expires_at?: string | null
+          confirmed_at?: string | null
+          decided_at?: string | null
+          cancel_reason?: string | null
+          prev_order_id?: string | null
+          note?: string | null
+        }
+        Update: {
+          id?: string
+          order_no?: string
+          item_code?: string
+          qty?: number
+          customer?: string | null
+          sales_rep?: string
+          status?: Database["app"]["Enums"]["so_status"]
+          alloc_mode?: Database["app"]["Enums"]["alloc_mode_choice"]
+          priority?: number
+          requested_at?: string
+          expires_at?: string | null
+          confirmed_at?: string | null
+          decided_at?: string | null
+          cancel_reason?: string | null
+          prev_order_id?: string | null
+          note?: string | null
+        }
+        Relationships: []
+      }
       shipment_extra: {
         Row: {
           item_code: string
@@ -1050,12 +1149,45 @@ export type Database = {
       }
     }
     Views: {
+      v_allocation_queue: {
+        Row: {
+          id: string | null
+          order_no: string | null
+          item_code: string | null
+          qty: number | null
+          customer: string | null
+          sales_rep: string | null
+          status: Database["app"]["Enums"]["so_status"] | null
+          alloc_mode: Database["app"]["Enums"]["alloc_mode_choice"] | null
+          priority: number | null
+          requested_at: string | null
+          expires_at: string | null
+          confirmed_at: string | null
+          decided_at: string | null
+          cancel_reason: string | null
+          prev_order_id: string | null
+          note: string | null
+          sales_rep_name: string | null
+          description: string | null
+          temp_qty: number | null
+          firm_qty: number | null
+          hold_qty: number | null
+          shortage: number | null
+          available: number | null
+          allocation_mode: Database["app"]["Enums"]["allocation_mode"] | null
+          queue_pos: number | null
+        }
+        Relationships: []
+      }
       v_available_stock: {
         Row: {
           item_code: string | null
+          description: string | null
+          category: string | null
           on_hand: number | null
           temp_allocated: number | null
           firm_allocated: number | null
+          hold_qty: number | null
           available: number | null
         }
         Relationships: []
@@ -1099,33 +1231,72 @@ export type Database = {
         }
         Relationships: []
       }
+      v_sales_order: {
+        Row: {
+          id: string | null
+          order_no: string | null
+          item_code: string | null
+          qty: number | null
+          customer: string | null
+          sales_rep: string | null
+          status: Database["app"]["Enums"]["so_status"] | null
+          alloc_mode: Database["app"]["Enums"]["alloc_mode_choice"] | null
+          priority: number | null
+          requested_at: string | null
+          expires_at: string | null
+          confirmed_at: string | null
+          decided_at: string | null
+          cancel_reason: string | null
+          prev_order_id: string | null
+          note: string | null
+          sales_rep_name: string | null
+          description: string | null
+          temp_qty: number | null
+          firm_qty: number | null
+          hold_qty: number | null
+          shortage: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       current_role: { Args: Record<string, never>; Returns: unknown }
       fn_add_extra_demand: { Args: { p_kind: string; p_item: string; p_need_ym: unknown; p_qty: unknown; p_order_no: string; p_customer: string; p_model: string; p_reason: string }; Returns: string }
+      fn_allocation_tick: { Args: Record<string, never>; Returns: Json }
       fn_append_plan_lines: { Args: { p_plan_id: string; p_lines: Json }; Returns: number }
       fn_apply_tuning: { Args: { p_approval: unknown; p_decision: string }; Returns: undefined }
       fn_apply_upload: { Args: { p_target: string; p_rows: Json; p_mode: string; p_file_name: string }; Returns: Json }
       fn_audit: { Args: Record<string, never>; Returns: unknown }
+      fn_auto_allocate: { Args: { p_item: string }; Returns: number }
+      fn_available_stock: { Args: { p_item: string }; Returns: unknown }
+      fn_cancel_sales_order: { Args: { p_id: string; p_reason: string }; Returns: undefined }
       fn_confirm_order_plan: { Args: { p_plan_id: string; p_reason: string }; Returns: string }
+      fn_confirm_sales_order: { Args: { p_id: string }; Returns: undefined }
+      fn_create_sales_order: { Args: { p_item: string; p_qty: unknown; p_customer: string; p_mode: string; p_prev: string }; Returns: Json }
       fn_dashboard_summary: { Args: Record<string, never>; Returns: Json }
       fn_decide_approval: { Args: { p_id: string; p_decision: string; p_comment: string }; Returns: undefined }
       fn_finalize_order_plan: { Args: { p_plan_id: string }; Returns: Json }
+      fn_manual_allocate: { Args: { p_order: string; p_qty: unknown; p_reason: string }; Returns: Json }
       fn_mark_read: { Args: { p_ids: number[] }; Returns: undefined }
       fn_order_inputs: { Args: { p_plan_ym: unknown }; Returns: Json }
       fn_override_line: { Args: { p_line_id: unknown; p_qty: unknown; p_reason: string }; Returns: undefined }
       fn_plan_cat_projection: { Args: { p_plan_id: string }; Returns: Json }
+      fn_receive_inbound: { Args: { p_inbound_id: unknown; p_actual: unknown }; Returns: Json }
       fn_refresh_matviews: { Args: Record<string, never>; Returns: undefined }
       fn_request_approval: { Args: { p_kind: string; p_target_table: string; p_target_pk: string; p_payload: Json; p_reason: string }; Returns: string }
       fn_request_forecast_run: { Args: { p_run_type: string; p_eval_fy: number; p_horizon: number }; Returns: string }
       fn_request_tuning_approval: { Args: { p_proposal_id: string; p_reason: string }; Returns: string }
       fn_save_order_plan: { Args: { p_plan_ym: unknown; p_note: string; p_user: string }; Returns: string }
+      fn_set_priority: { Args: { p_order: string; p_priority: number; p_reason: string }; Returns: undefined }
       fn_unread_count: { Args: Record<string, never>; Returns: number }
       handle_new_user: { Args: Record<string, never>; Returns: unknown }
+      notify_order: { Args: { p_order: string; p_kind: string; p_title: string; p_body: string; p_payload: Json }; Returns: undefined }
       notify_role: { Args: { p_role: unknown; p_kind: string; p_title: string; p_body: string; p_payload: Json }; Returns: undefined }
       notify_user: { Args: { p_user: string; p_kind: string; p_title: string; p_body: string; p_payload: Json }; Returns: undefined }
     }
     Enums: {
+      alloc_kind: "temp" | "firm" | "hold"
+      alloc_mode_choice: "partial" | "wait"
       allocation_mode: "auto" | "manual"
       approval_kind: "item_setting" | "target_dos" | "allocation_mode" | "order_plan" | "priority_alloc" | "bulkdeal" | "forecast_tuning"
       approval_status: "pending" | "approved" | "rejected"
@@ -1138,6 +1309,7 @@ export type Database = {
       run_status: "requested" | "running" | "done" | "failed"
       run_type: "backtest" | "production"
       setting_status: "draft" | "pending" | "approved"
+      so_status: "review_requested" | "partial" | "waiting" | "confirmed" | "rejected" | "cancelled" | "expired"
       stock_class: "normal" | "inspection" | "defect" | "service_center" | "partner" | "in_transit"
     }
     CompositeTypes: Record<string, never>
