@@ -73,13 +73,6 @@ create table if not exists app.forecast_accuracy (
 );
 create index if not exists ix_fa_run on app.forecast_accuracy(run_id, level, method);
 
-create table if not exists app.item_class (
-  key_code text primary key, category text, pattern text, abc text, xyz text,
-  adi numeric, cv2 numeric, cv numeric, value_12m numeric, share numeric, champion_method text,
-  run_id uuid, computed_at timestamptz default now()
-);
-create index if not exists ix_item_class_cell on app.item_class(abc, xyz);
-
 create table if not exists app.forecast_tuning_proposal (
   id uuid primary key default gen_random_uuid(), run_id uuid references app.forecast_run(id) on delete cascade,
   model text not null, prompt text, response jsonb, status text not null default 'pending',
@@ -200,12 +193,16 @@ from app.forecast_result r join analytics.v_forecast_latest_run l on l.id = r.ru
 where r.level = 'item' and r.is_champion;
 
 -- 기종 비교: 실적 + Sales OL + SCM OL + 기준예측(최신 백테스트 챔피언, 평가 FY 구간) (R-FC-10, D-002)
-create or replace view analytics.v_mc_compare as
-with p as (
-  select p.model_base, coalesce(p.biz, m.biz) as biz, p.ym, p.sales_ol, p.scm_ol, p.act
+drop view if exists analytics.v_mc_compare cascade;
+create view analytics.v_mc_compare as
+with p as (   -- 기종 변형(model_key) 을 기종·월로 합산. 전부 null 이면 null 유지
+  select p.model_base, max(coalesce(p.biz, m.biz)) as biz, p.ym,
+         case when count(p.sales_ol) > 0 then sum(p.sales_ol) end as sales_ol,
+         case when count(p.scm_ol) > 0 then sum(p.scm_ol) end as scm_ol,
+         case when count(p.act) > 0 then sum(p.act) end as act
   from raw.fact_mc_plan_actual p
   left join (select model_base, max(biz) biz from raw.dim_model where biz is not null group by 1) m on m.model_base = p.model_base
-  where p.model_base is not null
+  where p.model_base is not null group by p.model_base, p.ym
 ), bt as (
   select r.key_code as model_base, r.ym, r.value as system_fc, r.method, r.run_id
   from app.forecast_result r join analytics.v_forecast_latest_run l on l.id = r.run_id and l.run_type = 'backtest'

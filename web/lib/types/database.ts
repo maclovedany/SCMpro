@@ -1038,6 +1038,10 @@ export type Database = {
           stock_is_dummy: boolean | null
           inbound_qty: number | null
           dos_days: number | null
+          pattern: string | null
+          abc: string | null
+          xyz: string | null
+          champion_method: string | null
         }
         Relationships: []
       }

@@ -7,12 +7,14 @@ export type MenuItem = { href: string; label: string; icon: string };
 const COMMON: MenuItem[] = [
   { href: "/dashboard", label: "대시보드", icon: "LayoutDashboard" },
   { href: "/items", label: "품목", icon: "Package" },
+  { href: "/forecast", label: "예측", icon: "TrendingUp" },
   { href: "/notifications", label: "알림", icon: "Bell" },
 ];
 const SCM: MenuItem[] = [
   { href: "/upload", label: "데이터 업로드", icon: "Upload" },
   { href: "/approvals", label: "승인함", icon: "CheckSquare" },
   { href: "/admin/item-settings", label: "품목 설정", icon: "SlidersHorizontal" },
+  { href: "/admin/forecast-methods", label: "예측 기법", icon: "FlaskConical" },
 ];
 const ADMIN: MenuItem[] = [
   { href: "/admin/settings", label: "시스템 설정", icon: "Settings" },

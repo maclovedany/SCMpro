@@ -133,7 +133,7 @@ def run_items(monthly: pd.DataFrame, prices: pd.Series | None, cfg: Config, *, t
     cls["champion_method"] = cls["key_code"].map(champions)
     return pd.DataFrame(rows), cls, pd.DataFrame(acc_rows)
 
-def run_models(mc: pd.DataFrame, cfg: Config, *, train_to: str, horizon: int, eval_to: str | None) -> tuple[pd.DataFrame, pd.DataFrame]:
+def run_models(mc: pd.DataFrame, cfg: Config, *, train_to: str, horizon: int, eval_to: str | None, model_champ: dict[str, str] | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """기종 레벨. mc: [model_base, biz, ym, sales_ol, scm_ol, act]. ACT 시계열 기법 + ol_bias. 백테스트면 eval 구간 정확도·챔피언, 또 Sales/SCM OL 정확도(level='ol') 도 기록."""
     mc = mc.sort_values(["model_base", "ym"])
     fut_months = [str(m) for m in _months_between(pd.Period(train_to, "M") + 1, pd.Period(train_to, "M") + horizon)]
@@ -153,7 +153,10 @@ def run_models(mc: pd.DataFrame, cfg: Config, *, train_to: str, horizon: int, ev
         fut = g.reindex(fut_months)
         for spec in ol_specs:
             src = spec.params.get("source", "scm_ol")
-            f = ol_bias(fut[src].to_numpy(dtype=float), hist[src].to_numpy(dtype=float), hist["act"].to_numpy(dtype=float), spec.params)
+            ol_fut = fut[src].to_numpy(dtype=float)
+            if np.isnan(ol_fut).all():
+                continue   # 미래 OL 없음 → ol_bias 사용 불가
+            f = ol_bias(ol_fut, hist[src].to_numpy(dtype=float), hist["act"].to_numpy(dtype=float), spec.params)
             fc["ol_bias"] = (f.point, None, None)
         a = fut["act"].to_numpy(dtype=float) if eval_to else None
         scores = {}
@@ -162,7 +165,12 @@ def run_models(mc: pd.DataFrame, cfg: Config, *, train_to: str, horizon: int, ev
                 m = all_metrics(pt, a); scores[mk] = m["wape"]; acc.append({"level": "model", "key": mb, "method": mk, **m})
             for olk in ("sales_ol", "scm_ol"):
                 m = all_metrics(fut[olk].to_numpy(dtype=float), a); acc.append({"level": "model", "key": mb, "method": olk, **m})
-        champ = _pick_champion(scores) if a is not None else ("ol_bias" if "ol_bias" in fc else "baseline6")
+        if a is not None:
+            champ = _pick_champion(scores)
+        else:
+            champ = (model_champ or {}).get(mb)
+            if champ not in fc:
+                champ = "ol_bias" if "ol_bias" in fc else ("baseline6" if "baseline6" in fc else next(iter(fc), "baseline6"))
         for mk, (pt, lo, up) in fc.items():
             for i, ym in enumerate(fut_months):
                 rows.append({"level": "model", "key_code": mb, "category": g["biz"].dropna().iloc[0] if g["biz"].notna().any() else None, "ym": ym, "method": mk,

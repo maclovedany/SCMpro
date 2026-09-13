@@ -93,15 +93,17 @@ def production(db: PostgresDB, horizon: int | None = None, *, n_jobs: int = 6, h
         res_i, cls, _ = run_items(monthly, prices, cfg, train_to=train_to, horizon=horizon, eval_actual=None)
         if not champ.empty:
             cm = champ.set_index("key_code")["champion_method"]
-            def pick(g):
-                k = g.name; c = cm.get(k)
-                g = g.copy(); g["is_champion"] = False
-                if c in set(g.method): g.loc[g.method == c, "is_champion"] = True
-                elif "baseline6" in set(g.method): g.loc[g.method == "baseline6", "is_champion"] = True
-                return g
-            res_i = res_i.groupby("key_code", group_keys=False).apply(pick)
+            have = res_i.groupby("key_code")["method"].agg(set)
+            def champ_for(k):
+                c = cm.get(k)
+                return c if c in have.get(k, set()) else ("baseline6" if "baseline6" in have.get(k, set()) else next(iter(have.get(k, {None}))))
+            target = res_i["key_code"].map(champ_for)
+            res_i["is_champion"] = res_i["method"] == target
         mc_train_to = mc.dropna(subset=["act"])["ym"].max()
-        res_m, _ = run_models(mc, cfg, train_to=mc_train_to, horizon=horizon, eval_to=None)
+        mchamp = db.read_df("""select distinct on (r.key_code) r.key_code, r.method from app.forecast_result r
+            join app.forecast_run f on f.id = r.run_id where f.run_type='backtest' and f.status='done' and r.level='model' and r.is_champion
+            order by r.key_code, f.finished_at desc""")
+        res_m, _ = run_models(mc, cfg, train_to=mc_train_to, horizon=horizon, eval_to=None, model_champ=dict(zip(mchamp.key_code, mchamp.method)))
         results = pd.concat([res_i, res_m], ignore_index=True)
         store.write_results(db, rid, results)
         summary = {"train_to": train_to, "horizon": horizon, "n_items": int(res_i.key_code.nunique()), "n_models": int(res_m.key_code.nunique()) if not res_m.empty else 0,

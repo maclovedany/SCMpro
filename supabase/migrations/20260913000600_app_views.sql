@@ -62,10 +62,12 @@ with inv as (
 select m.key_code, m.category, m.description, m.family, m.avg_6m, m.total_12m, m.last_ship_ym,
        s.target_dos_days, s.moq, s.allocation_mode, s.status as setting_status, coalesce(s.is_dummy, false) as setting_is_dummy,
        inv.qty as on_hand, inv.snap_date, coalesce(inv.is_dummy, false) as stock_is_dummy, coalesce(inb.qty, 0) as inbound_qty,
-       case when m.avg_6m > 0 and inv.qty is not null then round(inv.qty / m.avg_6m * 30) end as dos_days
+       case when m.avg_6m > 0 and inv.qty is not null then round(inv.qty / m.avg_6m * 30) end as dos_days,
+       ic.pattern, ic.abc, ic.xyz, ic.champion_method
 from analytics.mv_item_stats m
 left join app.item_setting s on s.item_code = m.key_code
-left join inv on inv.item_code = m.key_code left join inb on inb.item_code = m.key_code;
+left join inv on inv.item_code = m.key_code left join inb on inb.item_code = m.key_code
+left join app.item_class ic on ic.key_code = m.key_code;
 comment on view analytics.v_item_master is '품목 목록. mv_item_stats + 설정/재고/입고 실시간 조인';
 
 -- 단가 마스킹 (품목담당자/팀장/관리자만 단가)

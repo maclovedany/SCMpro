@@ -100,6 +100,14 @@ create table if not exists app.shipment_extra (
 );
 comment on table app.shipment_extra is 'raw 수정 금지 원칙에 따른 추가월 출고. v_item_monthly 가 UNION';
 
+-- 품목 분류 (SP2, R-FC-30/35). v_item_master 가 조인하므로 여기서 생성
+create table if not exists app.item_class (
+  key_code text primary key, category text, pattern text, abc text, xyz text,
+  adi numeric, cv2 numeric, cv numeric, value_12m numeric, share numeric, champion_method text,
+  run_id uuid, computed_at timestamptz default now()
+);
+create index if not exists ix_item_class_cell on app.item_class(abc, xyz);
+
 create table if not exists app.upload_log (
   id uuid primary key default gen_random_uuid(), file_name text, target text not null,
   row_count int not null default 0, ok_count int not null default 0, error_count int not null default 0,

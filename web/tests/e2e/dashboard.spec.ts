@@ -11,5 +11,5 @@ test("대시보드 카드 6개 전부 드릴다운 링크", async ({ page }) => 
 });
 test("영업 역할은 메뉴 3개", async ({ page }) => {
   await login(page, "sales@scm.test");
-  await expect(page.locator("nav[aria-label='주 메뉴'] a")).toHaveCount(3);
+  await expect(page.locator("nav[aria-label='주 메뉴'] a")).toHaveCount(4);
 });
