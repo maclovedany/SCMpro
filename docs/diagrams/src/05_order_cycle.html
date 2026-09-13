@@ -7,7 +7,7 @@
 </div>
 
 <!-- ── 1행 ─────────────────────────────────────────────────────── -->
-<div class="node hl" id="S1" style="left:60px; top:250px; width:420px; height:215px">
+<div class="node hl" id="S1" style="left:60px; top:245px; width:420px; height:190px">
   <div class="num">1</div>
   <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
   <div class="body">
@@ -18,7 +18,7 @@
   </div>
 </div>
 
-<div class="node a-blue" id="S2" style="left:520px; top:250px; width:420px; height:215px">
+<div class="node a-blue" id="S2" style="left:520px; top:245px; width:420px; height:190px">
   <div class="num">2</div>
   <div class="ic"><svg><use href="#i-upload"/></svg></div>
   <div class="body">
@@ -29,7 +29,7 @@
   </div>
 </div>
 
-<div class="node a-blue" id="S5" style="left:980px; top:250px; width:420px; height:215px">
+<div class="node a-blue" id="S5" style="left:980px; top:245px; width:420px; height:190px">
   <div class="num">5</div>
   <div class="ic"><svg><use href="#i-users"/></svg></div>
   <div class="body">
@@ -39,7 +39,7 @@
   </div>
 </div>
 
-<div class="node hl" id="S6" style="left:1440px; top:250px; width:420px; height:215px">
+<div class="node hl" id="S6" style="left:1440px; top:245px; width:420px; height:190px">
   <div class="num">6</div>
   <div class="ic"><svg><use href="#i-fx"/></svg></div>
   <div class="body">
@@ -50,7 +50,7 @@
 </div>
 
 <!-- ── 2행 ─────────────────────────────────────────────────────── -->
-<div class="node a-blue" id="S7" style="left:60px; top:600px; width:420px; height:215px">
+<div class="node a-blue" id="S7" style="left:60px; top:615px; width:420px; height:190px">
   <div class="ic"><svg><use href="#i-search"/></svg></div>
   <div class="body">
     <div class="t">담당자 검토</div>
@@ -60,7 +60,7 @@
   </div>
 </div>
 
-<div class="node hl" id="S8" style="left:520px; top:600px; width:420px; height:215px">
+<div class="node hl" id="S8" style="left:520px; top:615px; width:420px; height:190px">
   <div class="ic"><svg><use href="#i-check"/></svg></div>
   <div class="body">
     <div class="t">팀장 승인</div>
@@ -70,17 +70,18 @@
   </div>
 </div>
 
-<div class="node a-blue" id="S9" style="left:980px; top:600px; width:420px; height:215px">
+<div class="node a-blue" id="S9" style="left:980px; top:615px; width:420px; height:190px">
   <div class="num">7</div>
   <div class="ic"><svg><use href="#i-file"/></svg></div>
   <div class="body">
     <div class="t">보고</div>
     <div class="d">확정된 계획을 보고서 형태로 내보낸다<br>CSV · 인쇄</div>
     <span class="tag">/orders/[id]/report</span>
+    <span class="tag">업무절차 ⑦⑧</span>
   </div>
 </div>
 
-<div class="node a-green" id="S10" style="left:1440px; top:600px; width:420px; height:215px">
+<div class="node a-green" id="S10" style="left:1440px; top:615px; width:420px; height:190px">
   <div class="num">10</div>
   <div class="ic"><svg><use href="#i-inbox"/></svg></div>
   <div class="body">
@@ -90,12 +91,12 @@
   </div>
 </div>
 
-<div class="note" style="left:60px; top:870px; width:1320px">
-  <b>① ② ⑤ ⑥ ⑦⑧ ⑩ 은 업무절차 번호</b> — 번호가 없는 두 단계(담당자 검토 · 팀장 승인)는 ⑥ 안에서 일어나는 시스템 단계다.
+<div class="note" style="left:60px; top:865px; width:1320px">
+  <b>카드 왼쪽 위 숫자는 업무절차 번호</b> — 번호가 없는 두 단계(담당자 검토 · 팀장 승인)는 ⑥ 소요량 산출 안에서 일어나는 시스템 단계다.
   상세 규칙은 <span style="font-family:ui-monospace,Menlo,monospace">docs/01-업무절차</span> 와 <span style="font-family:ui-monospace,Menlo,monospace">docs/02-domain-rules/R-OQ</span>.
 </div>
 
-<div class="legend" style="left:1440px; top:880px">
+<div class="legend" style="left:1440px; top:875px">
   <div class="li"><span class="box hl"></span>계산 · 승인이 일어나는 단계</div>
 </div>
 <div class="foot">docs/07-architecture.md §5.1 · 2026-09-13</div>
@@ -107,7 +108,7 @@ window.EDGES = [
   { from:'S5', to:'S6', fs:'right', ts:'left', ta:0.5 },
   // 1행 끝 → 2행 머리 (아래 회랑으로 되돌아온다)
   { from:'S6', to:'S7', fs:'bottom', fa:0.5, ts:'top', ta:0.5,
-    via:[[1650,530],[270,530]], label:'계획 생성 완료 → 검토로' },
+    via:[[1650,525],[270,525]], label:'계획 생성 완료 → 검토로' },
   { from:'S7', to:'S8', fs:'right', ts:'left', ta:0.5 },
   { from:'S8', to:'S9', fs:'right', ts:'left', ta:0.5 },
   { from:'S9', to:'S10', fs:'right', ts:'left', ta:0.5 },

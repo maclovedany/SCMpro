@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>권한 · 보안 — 요청이 통과하는 층</title>
+<title>주문 · 배정 — SP4</title>
 <style>
 /* ── 16:9 다이어그램 공통 스타일 (skill: diagram) ─────────────────── */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
@@ -244,108 +244,102 @@ svg.edges .lbl.mono text { font-family: ui-monospace, Menlo, monospace; font-siz
 <div class="wrap">
 <div class="stage">
 <div class="title">
-  <span class="kicker">SCMPRO ARCHITECTURE · §4</span>
-  <h1>권한 · 보안</h1>
-  <p>한 요청은 네 개의 관문을 차례로 지난다. 어느 하나가 막으면 그 뒤는 실행되지 않는다.</p>
+  <span class="kicker">SCMPRO ARCHITECTURE · §5.3</span>
+  <h1>주문 · 배정 상태 흐름</h1>
+  <p>여러 사람이 같은 품목을 동시에 건드린다. 그래서 상태를 바꾸는 일은 전부 RPC 안에서만 일어난다.</p>
 </div>
 
-<div class="actor" id="REQ" style="left:60px; top:399px; width:170px">
-  <div class="ic"><svg><use href="#i-user"/></svg></div>
-  <div class="t">요청</div>
-  <div class="d">브라우저</div>
+<div class="note" style="left:60px; top:185px; width:1800px">
+  <b>전부 RPC 안 트랜잭션 · 품목 단위 advisory lock</b> — 화면은 상태를 직접 쓰지 않는다. 아래 함수 이름이 곧 트랜잭션 경계다.
 </div>
 
-<!-- ── 관문 4개 ────────────────────────────────────────────────── -->
-<div class="zone z-blue" id="ZGATE" style="left:275px; top:245px; width:1585px; height:360px">
-  <div class="zl"><svg><use href="#i-shield"/></svg>요청이 통과하는 관문</div>
+<!-- ── 주문 생성 ───────────────────────────────────────────────── -->
+<div class="node hl" id="CRE" style="left:60px; top:400px; width:290px; height:180px">
+  <div class="ic"><svg><use href="#i-pen"/></svg></div>
+  <div class="body"><div class="t">주문 생성</div><div class="d">재고 상황에 따라 셋 중 하나로 떨어진다</div><span class="tag">fn_create_sales_order</span></div>
 </div>
 
-<div class="node hl" id="G1" style="left:300px; top:300px; width:360px; height:300px">
-  <div class="num">1</div>
-  <div class="ic"><svg><use href="#i-key"/></svg></div>
-  <div class="body">
-    <div class="t">인증</div>
-    <div class="d">Supabase Auth 이메일 · 비밀번호<br><br>매 요청 세션 갱신<br>미로그인 → <span class="d mono" style="display:inline">/login</span><br><br>가입 트리거가 <span class="d mono" style="display:inline">app.profiles.role</span> 7종 생성</div>
-    <span class="tag">item_manager · scm_lead · admin</span>
-    <span class="tag">sales · marketing · service · biz_enable</span>
-    <span class="tag">web/proxy.ts</span>
-  </div>
+<!-- ── 초기 상태 ───────────────────────────────────────────────── -->
+<div class="node a-blue" id="TEMP" style="left:430px; top:250px; width:280px; height:150px">
+  <div class="ic"><svg><use href="#i-hourglass"/></svg></div>
+  <div class="body"><div class="t">temp</div><div class="d">가배정 30일<br>재고가 충분할 때</div></div>
+</div>
+<div class="node a-blue" id="PART" style="left:430px; top:430px; width:280px; height:150px">
+  <div class="ic"><svg><use href="#i-scale"/></svg></div>
+  <div class="body"><div class="t">partial</div><div class="d">일부 수량만 잡힌 상태</div></div>
+</div>
+<div class="node a-blue" id="WAIT" style="left:430px; top:610px; width:280px; height:150px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body"><div class="t">waiting</div><div class="d">재고가 없어 입고를 기다린다</div></div>
 </div>
 
-<div class="node hl" id="G2" style="left:695px; top:300px; width:360px; height:300px">
-  <div class="num">2</div>
-  <div class="ic"><svg><use href="#i-list"/></svg></div>
-  <div class="body">
-    <div class="t">화면 접근</div>
-    <div class="d">역할별 메뉴 구성<br><br>각 page 가 역할을 다시 검사<br>불일치 시 redirect</div>
-    <span class="tag">web/lib/auth/roles.ts</span>
-  </div>
+<!-- ── 다음 동작 ───────────────────────────────────────────────── -->
+<div class="node a-green" id="CONF" style="left:780px; top:250px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="body"><div class="t">확정</div><div class="d">temp → firm</div><span class="tag">fn_confirm_sales_order</span></div>
 </div>
-
-<div class="node hl" id="G3" style="left:1090px; top:300px; width:360px; height:300px">
-  <div class="num">3</div>
-  <div class="ic"><svg><use href="#i-lock"/></svg></div>
-  <div class="body">
-    <div class="t">데이터 — RLS</div>
-    <div class="d"><span class="d mono" style="display:inline">raw</span> 폐쇄<br><span class="d mono" style="display:inline">core · analytics</span> 로그인 사용자 읽기<br><span class="d mono" style="display:inline">app</span> 테이블별 정책<br>본인 대화 · 본인 승인 · 단가는 관리 역할만</div>
-    <span class="tag">Row Level Security</span>
-  </div>
-</div>
-
-<div class="node hl" id="G4" style="left:1485px; top:300px; width:350px; height:300px">
-  <div class="num">4</div>
+<div class="node a-orange" id="CANC" style="left:780px; top:430px; width:320px; height:150px">
   <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body"><div class="t">취소</div><div class="d">배정 해제 · 주문 취소 · 알림</div><span class="tag">fn_cancel_sales_order</span></div>
+</div>
+<div class="node a-green" id="RECV" style="left:780px; top:610px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-inbox"/></svg></div>
+  <div class="body"><div class="t">입고</div><div class="d">재고 반영 후 품목 설정대로 갈린다</div><span class="tag">fn_receive_inbound</span></div>
+</div>
+
+<!-- ── 배정 실행 ───────────────────────────────────────────────── -->
+<div class="node hl" id="AUTO" style="left:1180px; top:500px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-cpu"/></svg></div>
+  <div class="body"><div class="t">자동 배정</div><div class="d">우선순위 → 요청순</div><span class="tag">fn_auto_allocate</span></div>
+</div>
+<div class="node hl" id="MAN" style="left:1180px; top:680px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-user"/></svg></div>
+  <div class="body"><div class="t">수동 배정</div><div class="d">담당자에게 알림 후 처리</div><span class="tag">fn_manual_allocate</span></div>
+</div>
+
+<!-- ── 최종 상태 ───────────────────────────────────────────────── -->
+<div class="node a-green" id="FIRM" style="left:1580px; top:490px; width:280px; height:160px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="body"><div class="t">firm</div><div class="d">확정 배정<br>더 이상 만료되지 않는다</div></div>
+</div>
+<div class="node a-amber" id="HOLD" style="left:1580px; top:690px; width:280px; height:160px">
+  <div class="ic"><svg><use href="#i-shield"/></svg></div>
+  <div class="body"><div class="t">hold</div><div class="d">큐 선두를 건너뛴 배정<br>승인을 받아야 풀린다</div><span class="tag">approval · priority_alloc</span></div>
+</div>
+
+<!-- ── 주기 스윕 ───────────────────────────────────────────────── -->
+<div class="node dim" id="TICK" style="left:60px; top:890px; width:1800px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
   <div class="body">
-    <div class="t">쓰기 — RPC</div>
-    <div class="d">쓰기는 대부분 RPC 로만<br><br>security definer 함수 안에서<br>역할을 다시 검사한다</div>
-    <span class="tag">app.fn_* · RPC 43</span>
+    <div class="t">10분마다 전체를 훑는다 <span class="d mono" style="display:inline;font-size:13px">fn_allocation_tick</span></div>
+    <div class="d">만료된 가배정 해제 &nbsp;·&nbsp; 만료 예고 알림 10 · 5 · 3 · 2 · 1일 전 &nbsp;·&nbsp; 승인 대기 건 반복 알림</div>
   </div>
 </div>
 
-<!-- ── 예외와 보조 규칙 ────────────────────────────────────────── -->
-<div class="note" style="left:60px; top:660px; width:900px"><b>관문 밖의 규칙 — 비밀값은 저장소 밖에, 예외 권한은 함수 안에서 다시 검사한다</b></div>
-
-<div class="node a-orange" id="X1" style="left:1290px; top:705px; width:570px; height:170px">
-  <div class="ic"><svg><use href="#i-server"/></svg></div>
-  <div class="body">
-    <div class="t">service_role — 서버 전용</div>
-    <div class="d">admin 클라이언트는 <b>두 가지에만</b> 쓴다.<br>대량 저장(발주 라인 청크) · 물리화 뷰 refresh<br>호출자를 <span class="d mono" style="display:inline">p_user</span> 로 넘겨 함수 안에서 역할 검사</div>
-    <span class="tag">D-022</span>
-  </div>
+<div class="legend" style="left:60px; top:820px">
+  <div class="li"><span class="box hl"></span>배정을 실행하는 RPC</div>
+  <div class="li"><span class="box" style="border-color:var(--amber);background:var(--amber-bg)"></span>사람 승인이 필요한 상태</div>
 </div>
-
-<div class="node a-blue" id="X2" style="left:675px; top:705px; width:580px; height:170px">
-  <div class="ic"><svg><use href="#i-bot"/></svg></div>
-  <div class="body">
-    <div class="t">AI 도구 — 사용자 세션으로 실행</div>
-    <div class="d">도구는 관리자 권한이 아니라 <b>그 사용자</b> 의 세션 클라이언트로 실행한다.<br>사용자가 못 보는 데이터는 AI 도 못 본다.</div>
-    <span class="tag">R-AI-05</span>
-  </div>
-</div>
-
-<div class="node dim" id="X3" style="left:60px; top:705px; width:580px; height:170px">
-  <div class="ic"><svg><use href="#i-key"/></svg></div>
-  <div class="body">
-    <div class="t">비밀값</div>
-    <div class="d mono">web/.env.local · engine/.env → git 제외<br>.env.example 은 빈 값<br>OpenAI API 키는 서버 env 에만</div>
-  </div>
-</div>
-
-<div class="legend" style="left:60px; top:945px">
-  <div class="li"><span class="box hl"></span>모든 요청이 지나는 관문</div>
-  <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>권한을 넘겨받는 예외</div>
-  <div class="li"><span class="box" style="border-style:dashed"></span>저장소 밖 비밀값</div>
-</div>
-<div class="foot">docs/07-architecture.md §4 · 2026-09-13</div>
+<div class="foot">docs/07-architecture.md §5.3 · 2026-09-13</div>
 
 <script>
 window.EDGES = [
-  { from:'REQ', to:'G1', ts:'left', ta:0.5 },
-  { from:'G1', to:'G2', fs:'right', ts:'left', ta:0.5, label:'세션' },
-  { from:'G2', to:'G3', fs:'right', ts:'left', ta:0.5, label:'역할' },
-  { from:'G3', to:'G4', fs:'right', ts:'left', ta:0.5, label:'정책' },
-  { from:'X1', to:'G4', fs:'top', fa:0.5, ts:'bottom', ta:0.5, cls:'orange', dash:true, label:'p_user 전달' },
-  { from:'X2', to:'G3', fs:'top', fa:0.5, ts:'bottom', ta:0.5, dash:true, label:'같은 RLS 적용' },
+  { from:'CRE', to:'TEMP', ts:'left', ta:0.5 },
+  { from:'CRE', to:'PART', ts:'left', ta:0.5 },
+  { from:'CRE', to:'WAIT', ts:'left', ta:0.5 },
+
+  { from:'TEMP', to:'CONF', fs:'right', ts:'left', ta:0.5 },
+  { from:'PART', to:'CANC', fs:'right', ts:'left', ta:0.5 },
+  { from:'WAIT', to:'RECV', fs:'right', ts:'left', ta:0.5 },
+
+  { from:'RECV', to:'AUTO', fs:'right', fa:0.5, ts:'left', ta:0.5, label:'auto' },
+  { from:'RECV', to:'MAN',  fs:'right', fa:0.5, ts:'left', ta:0.5, label:'manual' },
+
+  { from:'CONF', to:'FIRM', fs:'right', ts:'left', ta:0.25, mid:1540 },
+  { from:'AUTO', to:'FIRM', fs:'right', ts:'left', ta:0.6 },
+  { from:'MAN',  to:'FIRM', fs:'right', ts:'left', ta:0.85, label:'큐 선두' },
+  { from:'MAN',  to:'HOLD', fs:'right', fa:0.75, ts:'left', ta:0.5, label:'건너뜀', loff:[-28,0] },
+  { from:'HOLD', to:'FIRM', fs:'top', fa:0.5, ts:'bottom', ta:0.5, cls:'green', label:'승인 시' },
 ];
 </script>
 </div>

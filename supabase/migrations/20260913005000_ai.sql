@@ -40,3 +40,10 @@ language sql stable security definer set search_path = app, analytics, public as
     'top_users', coalesce((select jsonb_agg(jsonb_build_object('name', name, 'n', n) order by n desc) from (select p.name, count(*) n from app.ai_message m join app.ai_conversation c on c.id = m.conversation_id left join app.profiles p on p.user_id = c.user_id where m.role = 'user' and m.created_at > now() - (p_days || ' days')::interval group by 1 order by 2 desc limit 10) u), '[]'::jsonb)
   ) $$;
 alter function app.fn_ai_stats(int) set plan_cache_mode = force_custom_plan;
+
+-- 사이드바 배지 (R-UI-11): 미읽음·승인 대기 한 번에
+create or replace function app.fn_sidebar_badges() returns jsonb
+language sql stable security definer set search_path = app, public as $$
+  select jsonb_build_object(
+    'unread', (select count(*) from app.notification where recipient = auth.uid() and read_at is null),
+    'approvals', case when app.current_role() in ('scm_lead','admin') then (select count(*) from app.approval where status = 'pending') else 0 end) $$;

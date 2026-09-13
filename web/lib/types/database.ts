@@ -1395,6 +1395,7 @@ export type Database = {
       fn_sailing_dates: { Args: { p_rule: Json; p_ym: unknown }; Returns: unknown }
       fn_save_order_plan: { Args: { p_plan_ym: unknown; p_note: string; p_user: string }; Returns: string }
       fn_set_priority: { Args: { p_order: string; p_priority: number; p_reason: string }; Returns: undefined }
+      fn_sidebar_badges: { Args: Record<string, never>; Returns: Json }
       fn_submission_deadline: { Args: { p_ym: unknown }; Returns: unknown }
       fn_submission_reminder_tick: { Args: Record<string, never>; Returns: number }
       fn_submission_status: { Args: { p_ym: unknown }; Returns: Json }

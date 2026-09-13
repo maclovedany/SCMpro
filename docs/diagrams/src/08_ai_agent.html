@@ -6,14 +6,14 @@
   <p>모델은 DB 를 직접 보지 않는다. 도구가 사용자 세션으로 대신 조회하고, 모델은 그 결과만 받는다.</p>
 </div>
 
-<div class="actor" id="USR" style="left:70px; top:330px; width:180px">
+<div class="actor" id="USR" style="left:70px; top:288px; width:180px">
   <div class="ic"><svg><use href="#i-user"/></svg></div>
   <div class="t">사용자</div>
   <div class="d">아무 화면에서나</div>
 </div>
 
 <!-- ── 진입 ────────────────────────────────────────────────────── -->
-<div class="node a-blue" id="ENTRY" style="left:310px; top:300px; width:320px; height:190px">
+<div class="node a-blue" id="ENTRY" style="left:310px; top:258px; width:320px; height:190px">
   <div class="ic"><svg><use href="#i-chat"/></svg></div>
   <div class="body">
     <div class="t">Topbar 버튼 → 우측 패널</div>
@@ -22,7 +22,7 @@
   </div>
 </div>
 
-<div class="node hl" id="API" style="left:700px; top:300px; width:340px; height:190px">
+<div class="node hl" id="API" style="left:700px; top:258px; width:340px; height:190px">
   <div class="ic"><svg><use href="#i-bot"/></svg></div>
   <div class="body">
     <div class="t">POST /api/ai/chat</div>
@@ -30,7 +30,7 @@
   </div>
 </div>
 
-<div class="node a-blue" id="CTX" style="left:1110px; top:300px; width:320px; height:190px">
+<div class="node a-blue" id="CTX" style="left:1110px; top:258px; width:320px; height:190px">
   <div class="ic"><svg><use href="#i-book"/></svg></div>
   <div class="body">
     <div class="t">문맥 구성</div>
@@ -39,17 +39,17 @@
 </div>
 
 <!-- ── 모델 ⇄ 도구 루프 ───────────────────────────────────────── -->
-<div class="zone z-orange" id="ZLOOP" style="left:1030px; top:560px; width:830px; height:270px">
+<div class="zone z-orange" id="ZLOOP" style="left:1030px; top:518px; width:830px; height:270px">
   <div class="zl" style="left:auto; right:18px"><svg><use href="#i-swap"/></svg>최대 5라운드</div>
 </div>
-<div class="node ext" id="LLM" style="left:1060px; top:620px; width:340px; height:170px">
+<div class="node ext" id="LLM" style="left:1060px; top:578px; width:340px; height:170px">
   <div class="ic"><svg><use href="#i-cloud"/></svg></div>
   <div class="body">
     <div class="t">OpenAI — gpt-5-nano</div>
     <div class="d">tools 스펙을 받고<br>어떤 도구를 부를지 고른다</div>
   </div>
 </div>
-<div class="node hl" id="TOOLS" style="left:1490px; top:620px; width:340px; height:170px">
+<div class="node hl" id="TOOLS" style="left:1490px; top:578px; width:340px; height:170px">
   <div class="ic"><svg><use href="#i-wrench"/></svg></div>
   <div class="body">
     <div class="t">도구 9종 실행</div>
@@ -59,14 +59,14 @@
 </div>
 
 <!-- ── 마무리 ──────────────────────────────────────────────────── -->
-<div class="node a-green" id="SAVE" style="left:620px; top:620px; width:320px; height:170px">
+<div class="node a-green" id="SAVE" style="left:620px; top:578px; width:320px; height:170px">
   <div class="ic"><svg><use href="#i-box"/></svg></div>
   <div class="body">
     <div class="t">답변 · 도구 이력 저장</div>
     <div class="d mono">ai_conversation<br>ai_message</div>
   </div>
 </div>
-<div class="node a-green" id="POST" style="left:210px; top:620px; width:320px; height:170px">
+<div class="node a-green" id="POST" style="left:210px; top:578px; width:320px; height:170px">
   <div class="ic"><svg><use href="#i-sparkles"/></svg></div>
   <div class="body">
     <div class="t">사후 처리</div>
@@ -74,7 +74,7 @@
   </div>
 </div>
 
-<div class="node a-gray" id="STATS" style="left:210px; top:880px; width:730px">
+<div class="node a-gray" id="STATS" style="left:210px; top:838px; width:730px">
   <div class="ic"><svg><use href="#i-chart"/></svg></div>
   <div class="body">
     <div class="t">관리자 — 사용 통계</div>
@@ -82,7 +82,7 @@
   </div>
 </div>
 
-<div class="legend" style="left:1030px; top:895px">
+<div class="legend" style="left:1030px; top:853px">
   <div class="li"><span class="box hl"></span>사용자 권한 그대로 실행</div>
   <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>외부 모델</div>
 </div>
@@ -94,7 +94,7 @@ window.EDGES = [
   { from:'ENTRY', to:'API', fs:'right', ts:'left', ta:0.5 },
   { from:'API', to:'CTX', fs:'right', ts:'left', ta:0.5 },
   { from:'CTX', to:'LLM', fs:'bottom', fa:0.5, ts:'top', ta:0.35, label:'프롬프트 + tools' },
-  { from:'LLM', to:'TOOLS', fs:'right', ts:'left', ta:0.5, both:true, cls:'orange', label:'호출 ⇄ 결과' },
+  { from:'LLM', to:'TOOLS', fs:'right', ts:'left', ta:0.5, both:true, cls:'orange', label:'호출 ⇄ 결과', loff:[0,-108] },
   { from:'LLM', to:'SAVE', fs:'left', ts:'right', ta:0.5, cls:'green', label:'최종 답변' },
   { from:'SAVE', to:'POST', fs:'left', ts:'right', ta:0.5 },
   { from:'POST', to:'STATS', fs:'bottom', fa:0.3, ts:'top', ta:0.2, dash:true, thin:true },

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>권한 · 보안 — 요청이 통과하는 층</title>
+<title>디렉터리 지도</title>
 <style>
 /* ── 16:9 다이어그램 공통 스타일 (skill: diagram) ─────────────────── */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
@@ -244,109 +244,87 @@ svg.edges .lbl.mono text { font-family: ui-monospace, Menlo, monospace; font-siz
 <div class="wrap">
 <div class="stage">
 <div class="title">
-  <span class="kicker">SCMPRO ARCHITECTURE · §4</span>
-  <h1>권한 · 보안</h1>
-  <p>한 요청은 네 개의 관문을 차례로 지난다. 어느 하나가 막으면 그 뒤는 실행되지 않는다.</p>
+  <span class="kicker">SCMPRO ARCHITECTURE · §8</span>
+  <h1>디렉터리 지도</h1>
+  <p>어디를 열어야 하는지. 네 갈래뿐이고, 갈래마다 규칙이 다르다.</p>
 </div>
 
-<div class="actor" id="REQ" style="left:60px; top:399px; width:170px">
-  <div class="ic"><svg><use href="#i-user"/></svg></div>
-  <div class="t">요청</div>
-  <div class="d">브라우저</div>
+<!-- ── web/ ────────────────────────────────────────────────────── -->
+<div class="zone z-blue" id="ZWEB" style="left:60px; top:215px; width:440px; height:765px">
+  <div class="zl"><svg><use href="#i-monitor"/></svg>web/</div>
 </div>
-
-<!-- ── 관문 4개 ────────────────────────────────────────────────── -->
-<div class="zone z-blue" id="ZGATE" style="left:275px; top:245px; width:1585px; height:360px">
-  <div class="zl"><svg><use href="#i-shield"/></svg>요청이 통과하는 관문</div>
+<div class="node a-blue" id="W1" style="left:85px; top:275px; width:390px; height:175px">
+  <div class="ic"><svg><use href="#i-grid"/></svg></div>
+  <div class="body"><div class="t">라우트</div><div class="d mono">app/(app)/*</div><div class="d">서버 컴포넌트<br>+ *Panel / *Form (클라이언트)<br>+ actions.ts (서버 액션)</div></div>
 </div>
-
-<div class="node hl" id="G1" style="left:300px; top:300px; width:360px; height:300px">
-  <div class="num">1</div>
-  <div class="ic"><svg><use href="#i-key"/></svg></div>
-  <div class="body">
-    <div class="t">인증</div>
-    <div class="d">Supabase Auth 이메일 · 비밀번호<br><br>매 요청 세션 갱신<br>미로그인 → <span class="d mono" style="display:inline">/login</span><br><br>가입 트리거가 <span class="d mono" style="display:inline">app.profiles.role</span> 7종 생성</div>
-    <span class="tag">item_manager · scm_lead · admin</span>
-    <span class="tag">sales · marketing · service · biz_enable</span>
-    <span class="tag">web/proxy.ts</span>
-  </div>
+<div class="node a-blue" id="W2" style="left:85px; top:470px; width:390px; height:155px">
+  <div class="ic"><svg><use href="#i-search"/></svg></div>
+  <div class="body"><div class="t">읽기 쿼리 · 계산</div><div class="d mono">lib/queries/*<br>lib/order/calc.ts (R-OQ)</div></div>
 </div>
-
-<div class="node hl" id="G2" style="left:695px; top:300px; width:360px; height:300px">
-  <div class="num">2</div>
-  <div class="ic"><svg><use href="#i-list"/></svg></div>
-  <div class="body">
-    <div class="t">화면 접근</div>
-    <div class="d">역할별 메뉴 구성<br><br>각 page 가 역할을 다시 검사<br>불일치 시 redirect</div>
-    <span class="tag">web/lib/auth/roles.ts</span>
-  </div>
-</div>
-
-<div class="node hl" id="G3" style="left:1090px; top:300px; width:360px; height:300px">
-  <div class="num">3</div>
-  <div class="ic"><svg><use href="#i-lock"/></svg></div>
-  <div class="body">
-    <div class="t">데이터 — RLS</div>
-    <div class="d"><span class="d mono" style="display:inline">raw</span> 폐쇄<br><span class="d mono" style="display:inline">core · analytics</span> 로그인 사용자 읽기<br><span class="d mono" style="display:inline">app</span> 테이블별 정책<br>본인 대화 · 본인 승인 · 단가는 관리 역할만</div>
-    <span class="tag">Row Level Security</span>
-  </div>
-</div>
-
-<div class="node hl" id="G4" style="left:1485px; top:300px; width:350px; height:300px">
-  <div class="num">4</div>
-  <div class="ic"><svg><use href="#i-swap"/></svg></div>
-  <div class="body">
-    <div class="t">쓰기 — RPC</div>
-    <div class="d">쓰기는 대부분 RPC 로만<br><br>security definer 함수 안에서<br>역할을 다시 검사한다</div>
-    <span class="tag">app.fn_* · RPC 43</span>
-  </div>
-</div>
-
-<!-- ── 예외와 보조 규칙 ────────────────────────────────────────── -->
-<div class="note" style="left:60px; top:660px; width:900px"><b>관문 밖의 규칙 — 비밀값은 저장소 밖에, 예외 권한은 함수 안에서 다시 검사한다</b></div>
-
-<div class="node a-orange" id="X1" style="left:1290px; top:705px; width:570px; height:170px">
-  <div class="ic"><svg><use href="#i-server"/></svg></div>
-  <div class="body">
-    <div class="t">service_role — 서버 전용</div>
-    <div class="d">admin 클라이언트는 <b>두 가지에만</b> 쓴다.<br>대량 저장(발주 라인 청크) · 물리화 뷰 refresh<br>호출자를 <span class="d mono" style="display:inline">p_user</span> 로 넘겨 함수 안에서 역할 검사</div>
-    <span class="tag">D-022</span>
-  </div>
-</div>
-
-<div class="node a-blue" id="X2" style="left:675px; top:705px; width:580px; height:170px">
+<div class="node a-blue" id="W3" style="left:85px; top:645px; width:390px; height:155px">
   <div class="ic"><svg><use href="#i-bot"/></svg></div>
-  <div class="body">
-    <div class="t">AI 도구 — 사용자 세션으로 실행</div>
-    <div class="d">도구는 관리자 권한이 아니라 <b>그 사용자</b> 의 세션 클라이언트로 실행한다.<br>사용자가 못 보는 데이터는 AI 도 못 본다.</div>
-    <span class="tag">R-AI-05</span>
-  </div>
+  <div class="body"><div class="t">AI · 설정 스펙</div><div class="d mono">lib/ai/{tools,chat}.ts<br>lib/settings/registry.ts</div></div>
+</div>
+<div class="node a-blue" id="W4" style="left:85px; top:820px; width:390px; height:140px">
+  <div class="ic"><svg><use href="#i-box"/></svg></div>
+  <div class="body"><div class="t">공통 위젯</div><div class="d mono">components/{cards,charts,<br>tables,ai,upload,layout}</div></div>
 </div>
 
-<div class="node dim" id="X3" style="left:60px; top:705px; width:580px; height:170px">
-  <div class="ic"><svg><use href="#i-key"/></svg></div>
-  <div class="body">
-    <div class="t">비밀값</div>
-    <div class="d mono">web/.env.local · engine/.env → git 제외<br>.env.example 은 빈 값<br>OpenAI API 키는 서버 env 에만</div>
-  </div>
+<!-- ── engine/ ─────────────────────────────────────────────────── -->
+<div class="zone z-violet" id="ZENG" style="left:540px; top:215px; width:440px; height:765px">
+  <div class="zl"><svg><use href="#i-terminal"/></svg>engine/</div>
+</div>
+<div class="node a-violet" id="E1" style="left:565px; top:275px; width:390px; height:290px">
+  <div class="ic"><svg><use href="#i-trend"/></svg></div>
+  <div class="body"><div class="t">예측</div><div class="d mono">scm_engine/forecast/<br>classify · metrics<br>backtest · runner<br>store · ai_tuning · registry<br><br>methods/<br>simple · ets · intermittent<br>stat · ml · mc</div></div>
+</div>
+<div class="node a-violet" id="E2" style="left:565px; top:585px; width:390px; height:215px">
+  <div class="ic"><svg><use href="#i-wrench"/></svg></div>
+  <div class="body"><div class="t">적재 · 검증 · 시드 · 타입 · 알림</div><div class="d mono">export_raw · verify<br>seed_app · gen_types<br>notify · loaders · cli</div></div>
+</div>
+<div class="node dim" id="E3" style="left:565px; top:820px; width:390px; height:140px">
+  <div class="ic"><svg><use href="#i-plug"/></svg></div>
+  <div class="body"><div class="t">공통</div><div class="d mono">db/{base,postgres,sqlite}<br>config · fiscal</div></div>
 </div>
 
-<div class="legend" style="left:60px; top:945px">
-  <div class="li"><span class="box hl"></span>모든 요청이 지나는 관문</div>
-  <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>권한을 넘겨받는 예외</div>
-  <div class="li"><span class="box" style="border-style:dashed"></span>저장소 밖 비밀값</div>
+<!-- ── supabase/ ───────────────────────────────────────────────── -->
+<div class="zone z-green" id="ZSB" style="left:1020px; top:215px; width:440px; height:765px">
+  <div class="zl"><svg><use href="#i-db"/></svg>supabase/migrations/</div>
 </div>
-<div class="foot">docs/07-architecture.md §4 · 2026-09-13</div>
+<div class="node a-green" id="M1" style="left:1045px; top:275px; width:390px; height:290px">
+  <div class="ic"><svg><use href="#i-layers"/></svg></div>
+  <div class="body"><div class="t">기반 — 먼저 적용</div><div class="d mono">raw_schema<br>core_views<br>analytics_views<br>app_schema<br>app_functions<br>app_views<br>rls</div></div>
+</div>
+<div class="node a-green" id="M2" style="left:1045px; top:585px; width:390px; height:215px">
+  <div class="ic"><svg><use href="#i-box"/></svg></div>
+  <div class="body"><div class="t">기능별</div><div class="d mono">forecast · order<br>allocation · schedule · ai</div><div class="d">파일명 순서가 곧 적용 순서다</div></div>
+</div>
+<div class="node hl" id="M3" style="left:1045px; top:820px; width:390px; height:140px">
+  <div class="ic"><svg><use href="#i-lock"/></svg></div>
+  <div class="body"><div class="t">권한 — 항상 마지막</div><div class="d mono">grants</div></div>
+</div>
+
+<!-- ── docs/ ───────────────────────────────────────────────────── -->
+<div class="zone z-amber" id="ZDOC" style="left:1500px; top:215px; width:360px; height:765px">
+  <div class="zl"><svg><use href="#i-book"/></svg>docs/</div>
+</div>
+<div class="node a-amber" id="D1" style="left:1525px; top:275px; width:310px; height:290px">
+  <div class="ic"><svg><use href="#i-list"/></svg></div>
+  <div class="body"><div class="t">번호 문서</div><div class="d mono">00 용어<br>01 업무절차<br>02 규칙 R-*<br>03 결정 D-*<br>04 미확인<br>05 데이터 카탈로그<br>06 데이터 검증<br>07 아키텍처</div></div>
+</div>
+<div class="node a-amber" id="D2" style="left:1525px; top:585px; width:310px; height:215px">
+  <div class="ic"><svg><use href="#i-pen"/></svg></div>
+  <div class="body"><div class="t">작업 문서</div><div class="d mono">specs/<br>plans/<br>reports/</div></div>
+</div>
+<div class="node dim" id="D3" style="left:1525px; top:820px; width:310px; height:140px">
+  <div class="ic"><svg><use href="#i-git"/></svg></div>
+  <div class="body"><div class="t">규칙은 ID 로</div><div class="d">근거를 반복하지 않고 <span class="d mono" style="display:inline">R-*</span> · <span class="d mono" style="display:inline">D-*</span> 로만 가리킨다</div></div>
+</div>
+
+<div class="foot">docs/07-architecture.md §8 · 2026-09-13</div>
 
 <script>
-window.EDGES = [
-  { from:'REQ', to:'G1', ts:'left', ta:0.5 },
-  { from:'G1', to:'G2', fs:'right', ts:'left', ta:0.5, label:'세션' },
-  { from:'G2', to:'G3', fs:'right', ts:'left', ta:0.5, label:'역할' },
-  { from:'G3', to:'G4', fs:'right', ts:'left', ta:0.5, label:'정책' },
-  { from:'X1', to:'G4', fs:'top', fa:0.5, ts:'bottom', ta:0.5, cls:'orange', dash:true, label:'p_user 전달' },
-  { from:'X2', to:'G3', fs:'top', fa:0.5, ts:'bottom', ta:0.5, dash:true, label:'같은 RLS 적용' },
-];
+window.EDGES = [];
 </script>
 </div>
 </div>

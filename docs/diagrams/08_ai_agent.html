@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>권한 · 보안 — 요청이 통과하는 층</title>
+<title>AI Agent — SP6</title>
 <style>
 /* ── 16:9 다이어그램 공통 스타일 (skill: diagram) ─────────────────── */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
@@ -244,108 +244,104 @@ svg.edges .lbl.mono text { font-family: ui-monospace, Menlo, monospace; font-siz
 <div class="wrap">
 <div class="stage">
 <div class="title">
-  <span class="kicker">SCMPRO ARCHITECTURE · §4</span>
-  <h1>권한 · 보안</h1>
-  <p>한 요청은 네 개의 관문을 차례로 지난다. 어느 하나가 막으면 그 뒤는 실행되지 않는다.</p>
+  <span class="kicker">SCMPRO ARCHITECTURE · §5.4</span>
+  <h1>AI Agent</h1>
+  <p>모델은 DB 를 직접 보지 않는다. 도구가 사용자 세션으로 대신 조회하고, 모델은 그 결과만 받는다.</p>
 </div>
 
-<div class="actor" id="REQ" style="left:60px; top:399px; width:170px">
+<div class="actor" id="USR" style="left:70px; top:288px; width:180px">
   <div class="ic"><svg><use href="#i-user"/></svg></div>
-  <div class="t">요청</div>
-  <div class="d">브라우저</div>
+  <div class="t">사용자</div>
+  <div class="d">아무 화면에서나</div>
 </div>
 
-<!-- ── 관문 4개 ────────────────────────────────────────────────── -->
-<div class="zone z-blue" id="ZGATE" style="left:275px; top:245px; width:1585px; height:360px">
-  <div class="zl"><svg><use href="#i-shield"/></svg>요청이 통과하는 관문</div>
-</div>
-
-<div class="node hl" id="G1" style="left:300px; top:300px; width:360px; height:300px">
-  <div class="num">1</div>
-  <div class="ic"><svg><use href="#i-key"/></svg></div>
+<!-- ── 진입 ────────────────────────────────────────────────────── -->
+<div class="node a-blue" id="ENTRY" style="left:310px; top:258px; width:320px; height:190px">
+  <div class="ic"><svg><use href="#i-chat"/></svg></div>
   <div class="body">
-    <div class="t">인증</div>
-    <div class="d">Supabase Auth 이메일 · 비밀번호<br><br>매 요청 세션 갱신<br>미로그인 → <span class="d mono" style="display:inline">/login</span><br><br>가입 트리거가 <span class="d mono" style="display:inline">app.profiles.role</span> 7종 생성</div>
-    <span class="tag">item_manager · scm_lead · admin</span>
-    <span class="tag">sales · marketing · service · biz_enable</span>
-    <span class="tag">web/proxy.ts</span>
+    <div class="t">Topbar 버튼 → 우측 패널</div>
+    <div class="d">폭을 끌어 조절하는 리사이즈 패널</div>
+    <span class="tag">components/ai/AiPanel</span>
   </div>
 </div>
 
-<div class="node hl" id="G2" style="left:695px; top:300px; width:360px; height:300px">
-  <div class="num">2</div>
-  <div class="ic"><svg><use href="#i-list"/></svg></div>
-  <div class="body">
-    <div class="t">화면 접근</div>
-    <div class="d">역할별 메뉴 구성<br><br>각 page 가 역할을 다시 검사<br>불일치 시 redirect</div>
-    <span class="tag">web/lib/auth/roles.ts</span>
-  </div>
-</div>
-
-<div class="node hl" id="G3" style="left:1090px; top:300px; width:360px; height:300px">
-  <div class="num">3</div>
-  <div class="ic"><svg><use href="#i-lock"/></svg></div>
-  <div class="body">
-    <div class="t">데이터 — RLS</div>
-    <div class="d"><span class="d mono" style="display:inline">raw</span> 폐쇄<br><span class="d mono" style="display:inline">core · analytics</span> 로그인 사용자 읽기<br><span class="d mono" style="display:inline">app</span> 테이블별 정책<br>본인 대화 · 본인 승인 · 단가는 관리 역할만</div>
-    <span class="tag">Row Level Security</span>
-  </div>
-</div>
-
-<div class="node hl" id="G4" style="left:1485px; top:300px; width:350px; height:300px">
-  <div class="num">4</div>
-  <div class="ic"><svg><use href="#i-swap"/></svg></div>
-  <div class="body">
-    <div class="t">쓰기 — RPC</div>
-    <div class="d">쓰기는 대부분 RPC 로만<br><br>security definer 함수 안에서<br>역할을 다시 검사한다</div>
-    <span class="tag">app.fn_* · RPC 43</span>
-  </div>
-</div>
-
-<!-- ── 예외와 보조 규칙 ────────────────────────────────────────── -->
-<div class="note" style="left:60px; top:660px; width:900px"><b>관문 밖의 규칙 — 비밀값은 저장소 밖에, 예외 권한은 함수 안에서 다시 검사한다</b></div>
-
-<div class="node a-orange" id="X1" style="left:1290px; top:705px; width:570px; height:170px">
-  <div class="ic"><svg><use href="#i-server"/></svg></div>
-  <div class="body">
-    <div class="t">service_role — 서버 전용</div>
-    <div class="d">admin 클라이언트는 <b>두 가지에만</b> 쓴다.<br>대량 저장(발주 라인 청크) · 물리화 뷰 refresh<br>호출자를 <span class="d mono" style="display:inline">p_user</span> 로 넘겨 함수 안에서 역할 검사</div>
-    <span class="tag">D-022</span>
-  </div>
-</div>
-
-<div class="node a-blue" id="X2" style="left:675px; top:705px; width:580px; height:170px">
+<div class="node hl" id="API" style="left:700px; top:258px; width:340px; height:190px">
   <div class="ic"><svg><use href="#i-bot"/></svg></div>
   <div class="body">
-    <div class="t">AI 도구 — 사용자 세션으로 실행</div>
-    <div class="d">도구는 관리자 권한이 아니라 <b>그 사용자</b> 의 세션 클라이언트로 실행한다.<br>사용자가 못 보는 데이터는 AI 도 못 본다.</div>
-    <span class="tag">R-AI-05</span>
+    <div class="t">POST /api/ai/chat</div>
+    <div class="d mono">conversation_id<br>message<br>page_context</div>
   </div>
 </div>
 
-<div class="node dim" id="X3" style="left:60px; top:705px; width:580px; height:170px">
-  <div class="ic"><svg><use href="#i-key"/></svg></div>
+<div class="node a-blue" id="CTX" style="left:1110px; top:258px; width:320px; height:190px">
+  <div class="ic"><svg><use href="#i-book"/></svg></div>
   <div class="body">
-    <div class="t">비밀값</div>
-    <div class="d mono">web/.env.local · engine/.env → git 제외<br>.env.example 은 빈 값<br>OpenAI API 키는 서버 env 에만</div>
+    <div class="t">문맥 구성</div>
+    <div class="d">최근 20턴 + 이전 요약<br>현재 보고 있는 화면 정보</div>
   </div>
 </div>
 
-<div class="legend" style="left:60px; top:945px">
-  <div class="li"><span class="box hl"></span>모든 요청이 지나는 관문</div>
-  <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>권한을 넘겨받는 예외</div>
-  <div class="li"><span class="box" style="border-style:dashed"></span>저장소 밖 비밀값</div>
+<!-- ── 모델 ⇄ 도구 루프 ───────────────────────────────────────── -->
+<div class="zone z-orange" id="ZLOOP" style="left:1030px; top:518px; width:830px; height:270px">
+  <div class="zl" style="left:auto; right:18px"><svg><use href="#i-swap"/></svg>최대 5라운드</div>
 </div>
-<div class="foot">docs/07-architecture.md §4 · 2026-09-13</div>
+<div class="node ext" id="LLM" style="left:1060px; top:578px; width:340px; height:170px">
+  <div class="ic"><svg><use href="#i-cloud"/></svg></div>
+  <div class="body">
+    <div class="t">OpenAI — gpt-5-nano</div>
+    <div class="d">tools 스펙을 받고<br>어떤 도구를 부를지 고른다</div>
+  </div>
+</div>
+<div class="node hl" id="TOOLS" style="left:1490px; top:578px; width:340px; height:170px">
+  <div class="ic"><svg><use href="#i-wrench"/></svg></div>
+  <div class="body">
+    <div class="t">도구 9종 실행</div>
+    <div class="d"><b>사용자 세션</b> 클라이언트로 조회<br>사용자가 못 보는 건 AI 도 못 본다</div>
+    <span class="tag">lib/ai/tools.ts · R-AI-05</span>
+  </div>
+</div>
+
+<!-- ── 마무리 ──────────────────────────────────────────────────── -->
+<div class="node a-green" id="SAVE" style="left:620px; top:578px; width:320px; height:170px">
+  <div class="ic"><svg><use href="#i-box"/></svg></div>
+  <div class="body">
+    <div class="t">답변 · 도구 이력 저장</div>
+    <div class="d mono">ai_conversation<br>ai_message</div>
+  </div>
+</div>
+<div class="node a-green" id="POST" style="left:210px; top:578px; width:320px; height:170px">
+  <div class="ic"><svg><use href="#i-sparkles"/></svg></div>
+  <div class="body">
+    <div class="t">사후 처리</div>
+    <div class="d">주제 분류<br>메시지 30개를 넘으면 요약으로 접는다</div>
+  </div>
+</div>
+
+<div class="node a-gray" id="STATS" style="left:210px; top:838px; width:730px">
+  <div class="ic"><svg><use href="#i-chart"/></svg></div>
+  <div class="body">
+    <div class="t">관리자 — 사용 통계</div>
+    <div class="d mono">/admin/ai-stats · fn_ai_stats · v_ai_stats_daily · v_ai_message_log</div>
+  </div>
+</div>
+
+<div class="legend" style="left:1030px; top:853px">
+  <div class="li"><span class="box hl"></span>사용자 권한 그대로 실행</div>
+  <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>외부 모델</div>
+</div>
+<div class="foot">docs/07-architecture.md §5.4 · 2026-09-13</div>
 
 <script>
 window.EDGES = [
-  { from:'REQ', to:'G1', ts:'left', ta:0.5 },
-  { from:'G1', to:'G2', fs:'right', ts:'left', ta:0.5, label:'세션' },
-  { from:'G2', to:'G3', fs:'right', ts:'left', ta:0.5, label:'역할' },
-  { from:'G3', to:'G4', fs:'right', ts:'left', ta:0.5, label:'정책' },
-  { from:'X1', to:'G4', fs:'top', fa:0.5, ts:'bottom', ta:0.5, cls:'orange', dash:true, label:'p_user 전달' },
-  { from:'X2', to:'G3', fs:'top', fa:0.5, ts:'bottom', ta:0.5, dash:true, label:'같은 RLS 적용' },
+  { from:'USR', to:'ENTRY', ts:'left', ta:0.5 },
+  { from:'ENTRY', to:'API', fs:'right', ts:'left', ta:0.5 },
+  { from:'API', to:'CTX', fs:'right', ts:'left', ta:0.5 },
+  { from:'CTX', to:'LLM', fs:'bottom', fa:0.5, ts:'top', ta:0.35, label:'프롬프트 + tools' },
+  { from:'LLM', to:'TOOLS', fs:'right', ts:'left', ta:0.5, both:true, cls:'orange', label:'호출 ⇄ 결과', loff:[0,-108] },
+  { from:'LLM', to:'SAVE', fs:'left', ts:'right', ta:0.5, cls:'green', label:'최종 답변' },
+  { from:'SAVE', to:'POST', fs:'left', ts:'right', ta:0.5 },
+  { from:'POST', to:'STATS', fs:'bottom', fa:0.3, ts:'top', ta:0.2, dash:true, thin:true },
+  { from:'POST', to:'ENTRY', fs:'top', fa:0.5, ts:'bottom', ta:0.5, cls:'blue', label:'패널에 렌더' },
 ];
 </script>
 </div>

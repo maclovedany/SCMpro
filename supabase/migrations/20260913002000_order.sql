@@ -226,10 +226,10 @@ begin
     a.target_pk || coalesce(' — ' || p_comment, ''), jsonb_build_object('approval_id', p_id, 'decision', p_decision));
 end $$;
 
-create or replace view analytics.v_order_plan_summary as
+create or replace view analytics.v_order_plan_summary as   -- summary jsonb(finalize/override 시 갱신) 사용: 라인 재집계 없이 즉시
 select p.id, p.plan_ym, p.status, p.created_at, p.approved_at, p.summary,
-       (select count(*) from app.order_plan_line l where l.plan_id = p.id) as n_lines,
-       (select coalesce(sum(coalesce(l.override_qty, l.final_qty) * coalesce(l.unit_price, 0)), 0) from app.order_plan_line l where l.plan_id = p.id) as amount
+       coalesce((p.summary->>'lines')::bigint, 0) as n_lines,
+       coalesce((p.summary->>'amount')::numeric, 0) as amount
 from app.order_plan p;
 
 -- 대시보드에 발주 카드
