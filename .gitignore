@@ -10,3 +10,5 @@ __pycache__/
 supabase/.temp/
 docs/reports/*.tmp
 data/export/
+test-results/
+playwright-report/
