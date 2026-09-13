@@ -4,20 +4,20 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtInt, fmtYm } from "@/lib/format";
 export type TreeRow = { id: string; label: string; level: number; values: Record<string, number | null>; editable?: boolean; children?: TreeRow[]; className?: string };
-type Props = { months: string[]; rows: TreeRow[]; pastUntil: string; onCellEdit?: (rowId: string, ym: string, value: number | null) => void; firstColLabel?: string };
+type Props = { months: string[]; rows: TreeRow[]; pastUntil: string; onCellEdit?: (rowId: string, ym: string, value: number | null) => void; firstColLabel?: string; expandLevel?: number; maxHeight?: number };
 function flatten(rows: TreeRow[], expanded: Set<string>, out: TreeRow[] = []): TreeRow[] {
   for (const r of rows) { out.push(r); if (r.children?.length && expanded.has(r.id)) flatten(r.children, expanded, out); }
   return out;
 }
-function allIds(rows: TreeRow[], acc: string[] = []): string[] { for (const r of rows) { acc.push(r.id); if (r.children) allIds(r.children, acc); } return acc; }
+function allIds(rows: TreeRow[], acc: string[] = [], maxLevel = 99): string[] { for (const r of rows) { if (r.level <= maxLevel) acc.push(r.id); if (r.children) allIds(r.children, acc, maxLevel); } return acc; }
 /** WBS형 재고전개 그리드 (R-UI-04): 트리 접기/펼치기, 과거/미래 열 구분, 셀 편집 */
-export function TreeGrid({ months, rows, pastUntil, onCellEdit, firstColLabel = "항목" }: Props) {
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(allIds(rows)));
+export function TreeGrid({ months, rows, pastUntil, onCellEdit, firstColLabel = "항목", expandLevel = 99, maxHeight = 640 }: Props) {
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(allIds(rows, [], expandLevel)));
   const [editing, setEditing] = useState<{ id: string; ym: string } | null>(null);
   const flat = useMemo(() => flatten(rows, expanded), [rows, expanded]);
   const toggle = (id: string) => setExpanded(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   return (
-    <div className="overflow-auto rounded-md border">
+    <div className="overflow-auto rounded-md border" style={{ maxHeight }}>
       <table className="w-full text-sm">
         <thead className="sticky top-0 z-10 bg-background">
           <tr>

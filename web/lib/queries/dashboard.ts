@@ -3,7 +3,7 @@ import type { Database } from "@/lib/types/database";
 import { drillHref } from "@/lib/drill";
 import { fmtInt, fmtPct, fmtDate } from "@/lib/format";
 export type DashboardSummary = { items_by_category: Record<string, number>; dummy_ratio: number | null; pending_approvals: number;
-  last_upload: { file_name: string; uploaded_at: string; ok_count: number; error_count: number } | null; snapshot_date: string | null; missing_target_dos: number };
+  last_upload: { file_name: string; uploaded_at: string; ok_count: number; error_count: number } | null; snapshot_date: string | null; missing_target_dos: number; order?: { id: string; plan_ym: string; status: string; summary: Record<string, number> | null; amount: number } | null };
 export async function fetchDashboardSummary(sb: SupabaseClient<Database>): Promise<DashboardSummary> {
   const { data, error } = await sb.schema("app").rpc("fn_dashboard_summary");
   if (error) throw error;
@@ -22,5 +22,6 @@ export function cardsFromSummary(s: DashboardSummary): CardSpec[] {
     { label: "최근 업로드", value: s.last_upload ? `${fmtInt(s.last_upload.ok_count)}건` : "-", hint: s.last_upload ? `${s.last_upload.file_name} · 오류 ${s.last_upload.error_count}` : "업로드 이력 없음", href: drillHref("/upload", { tab: "log" }), tone: (s.last_upload?.error_count ?? 0) > 0 ? "warn" : "default" },
     { label: "재고 스냅샷 기준일", value: fmtDate(s.snapshot_date), hint: isFinite(staleDays) ? `${staleDays}일 전` : "스냅샷 없음", href: drillHref("/items", { sort: "snap_date.desc" }), tone: staleDays > 30 ? "warn" : "default" },
     { label: "목표 DoS 미설정", value: fmtInt(s.missing_target_dos), hint: "발주 확정 차단 대상 (R-OQ-03)", href: drillHref("/items", { target_dos: "missing" }), tone: s.missing_target_dos > 0 ? "danger" : "default" },
+    ...(s.order ? [{ label: `발주 계획 ${s.order.plan_ym}`, value: ({ draft: "초안", confirmed: "승인 대기", approved: "승인", rejected: "반려" } as Record<string, string>)[s.order.status] ?? s.order.status, hint: `₩${fmtInt(s.order.amount)} · 품절위험 ${fmtInt(s.order.summary?.stockout ?? 0)}`, href: `/orders/${s.order.id}`, tone: (s.order.summary?.stockout ?? 0) > 0 ? "warn" as const : "default" as const }] : []),
   ];
 }

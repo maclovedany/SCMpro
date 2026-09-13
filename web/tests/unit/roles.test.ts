@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { menuForRole } from "@/lib/auth/roles";
 describe("menuForRole", () => {
   it("sales sees only common menus", () => {
-    expect(menuForRole("sales").map(m => m.href)).toEqual(["/dashboard", "/items", "/forecast", "/notifications"]);
+    expect(menuForRole("sales").map(m => m.href)).toEqual(["/dashboard", "/items", "/forecast", "/orders", "/extra-demand", "/notifications"]);
   });
   it("admin sees admin menus", () => {
     const hrefs = menuForRole("admin").map(m => m.href);

@@ -151,6 +151,54 @@ export type Database = {
         }
         Relationships: []
       }
+      extra_demand: {
+        Row: {
+          id: string
+          kind: Database["app"]["Enums"]["extra_kind"]
+          item_code: string
+          need_ym: string
+          qty: number
+          order_no: string | null
+          customer: string | null
+          model_base: string | null
+          reason: string | null
+          status: Database["app"]["Enums"]["extra_status"]
+          approval_id: string | null
+          created_by: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          kind?: Database["app"]["Enums"]["extra_kind"]
+          item_code?: string
+          need_ym?: string
+          qty?: number
+          order_no?: string | null
+          customer?: string | null
+          model_base?: string | null
+          reason?: string | null
+          status?: Database["app"]["Enums"]["extra_status"]
+          approval_id?: string | null
+          created_by?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          kind?: Database["app"]["Enums"]["extra_kind"]
+          item_code?: string
+          need_ym?: string
+          qty?: number
+          order_no?: string | null
+          customer?: string | null
+          model_base?: string | null
+          reason?: string | null
+          status?: Database["app"]["Enums"]["extra_status"]
+          approval_id?: string | null
+          created_by?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
       forecast_accuracy: {
         Row: {
           id: number
@@ -567,6 +615,7 @@ export type Database = {
           is_dummy: boolean
           updated_by: string | null
           updated_at: string | null
+          supplier_id: number | null
         }
         Insert: {
           item_code?: string
@@ -584,6 +633,7 @@ export type Database = {
           is_dummy?: boolean
           updated_by?: string | null
           updated_at?: string | null
+          supplier_id?: number | null
         }
         Update: {
           item_code?: string
@@ -601,6 +651,7 @@ export type Database = {
           is_dummy?: boolean
           updated_by?: string | null
           updated_at?: string | null
+          supplier_id?: number | null
         }
         Relationships: []
       }
@@ -643,6 +694,195 @@ export type Database = {
           sent_at?: string | null
           read_at?: string | null
           result?: string | null
+        }
+        Relationships: []
+      }
+      ol_submission: {
+        Row: {
+          id: number
+          plan_id: string | null
+          item_code: string
+          target_ym: string
+          qty: number
+          submitted_at: string | null
+        }
+        Insert: {
+          id?: number
+          plan_id?: string | null
+          item_code?: string
+          target_ym?: string
+          qty?: number
+          submitted_at?: string | null
+        }
+        Update: {
+          id?: number
+          plan_id?: string | null
+          item_code?: string
+          target_ym?: string
+          qty?: number
+          submitted_at?: string | null
+        }
+        Relationships: []
+      }
+      order_plan: {
+        Row: {
+          id: string
+          plan_ym: string
+          status: Database["app"]["Enums"]["plan_status"]
+          note: string | null
+          summary: Json | null
+          approval_id: string | null
+          created_by: string | null
+          created_at: string | null
+          confirmed_by: string | null
+          confirmed_at: string | null
+          approved_by: string | null
+          approved_at: string | null
+        }
+        Insert: {
+          id?: string
+          plan_ym?: string
+          status?: Database["app"]["Enums"]["plan_status"]
+          note?: string | null
+          summary?: Json | null
+          approval_id?: string | null
+          created_by?: string | null
+          created_at?: string | null
+          confirmed_by?: string | null
+          confirmed_at?: string | null
+          approved_by?: string | null
+          approved_at?: string | null
+        }
+        Update: {
+          id?: string
+          plan_ym?: string
+          status?: Database["app"]["Enums"]["plan_status"]
+          note?: string | null
+          summary?: Json | null
+          approval_id?: string | null
+          created_by?: string | null
+          created_at?: string | null
+          confirmed_by?: string | null
+          confirmed_at?: string | null
+          approved_by?: string | null
+          approved_at?: string | null
+        }
+        Relationships: []
+      }
+      order_plan_line: {
+        Row: {
+          id: number
+          plan_id: string
+          key_code: string
+          category: string | null
+          supplier_id: number | null
+          need_ym: string
+          lead_months: number | null
+          forecast_need: number | null
+          extras_need: number | null
+          on_hand: number | null
+          inbound_until_need: number | null
+          start_need: number | null
+          target_stock: number | null
+          avg_6m: number | null
+          target_dos_days: number | null
+          required_qty: number | null
+          flex_base: number | null
+          flex_pct: number | null
+          flex_min: number | null
+          flex_max: number | null
+          flex_hit: boolean | null
+          chosen_qty: number | null
+          moq: number | null
+          final_qty: number | null
+          override_qty: number | null
+          override_reason: string | null
+          override_by: string | null
+          override_at: string | null
+          end_after: number | null
+          dos_after: number | null
+          stockout_risk: boolean | null
+          blocked: boolean | null
+          unit_price: number | null
+          amount: number | null
+          rationale: Json | null
+          projection: Json | null
+        }
+        Insert: {
+          id?: number
+          plan_id?: string
+          key_code?: string
+          category?: string | null
+          supplier_id?: number | null
+          need_ym?: string
+          lead_months?: number | null
+          forecast_need?: number | null
+          extras_need?: number | null
+          on_hand?: number | null
+          inbound_until_need?: number | null
+          start_need?: number | null
+          target_stock?: number | null
+          avg_6m?: number | null
+          target_dos_days?: number | null
+          required_qty?: number | null
+          flex_base?: number | null
+          flex_pct?: number | null
+          flex_min?: number | null
+          flex_max?: number | null
+          flex_hit?: boolean | null
+          chosen_qty?: number | null
+          moq?: number | null
+          final_qty?: number | null
+          override_qty?: number | null
+          override_reason?: string | null
+          override_by?: string | null
+          override_at?: string | null
+          end_after?: number | null
+          dos_after?: number | null
+          stockout_risk?: boolean | null
+          blocked?: boolean | null
+          unit_price?: number | null
+          amount?: number | null
+          rationale?: Json | null
+          projection?: Json | null
+        }
+        Update: {
+          id?: number
+          plan_id?: string
+          key_code?: string
+          category?: string | null
+          supplier_id?: number | null
+          need_ym?: string
+          lead_months?: number | null
+          forecast_need?: number | null
+          extras_need?: number | null
+          on_hand?: number | null
+          inbound_until_need?: number | null
+          start_need?: number | null
+          target_stock?: number | null
+          avg_6m?: number | null
+          target_dos_days?: number | null
+          required_qty?: number | null
+          flex_base?: number | null
+          flex_pct?: number | null
+          flex_min?: number | null
+          flex_max?: number | null
+          flex_hit?: boolean | null
+          chosen_qty?: number | null
+          moq?: number | null
+          final_qty?: number | null
+          override_qty?: number | null
+          override_reason?: string | null
+          override_by?: string | null
+          override_at?: string | null
+          end_after?: number | null
+          dos_after?: number | null
+          stockout_risk?: boolean | null
+          blocked?: boolean | null
+          unit_price?: number | null
+          amount?: number | null
+          rationale?: Json | null
+          projection?: Json | null
         }
         Relationships: []
       }
@@ -862,16 +1102,24 @@ export type Database = {
     }
     Functions: {
       current_role: { Args: Record<string, never>; Returns: unknown }
+      fn_add_extra_demand: { Args: { p_kind: string; p_item: string; p_need_ym: unknown; p_qty: unknown; p_order_no: string; p_customer: string; p_model: string; p_reason: string }; Returns: string }
+      fn_append_plan_lines: { Args: { p_plan_id: string; p_lines: Json }; Returns: number }
       fn_apply_tuning: { Args: { p_approval: unknown; p_decision: string }; Returns: undefined }
       fn_apply_upload: { Args: { p_target: string; p_rows: Json; p_mode: string; p_file_name: string }; Returns: Json }
       fn_audit: { Args: Record<string, never>; Returns: unknown }
+      fn_confirm_order_plan: { Args: { p_plan_id: string; p_reason: string }; Returns: string }
       fn_dashboard_summary: { Args: Record<string, never>; Returns: Json }
       fn_decide_approval: { Args: { p_id: string; p_decision: string; p_comment: string }; Returns: undefined }
+      fn_finalize_order_plan: { Args: { p_plan_id: string }; Returns: Json }
       fn_mark_read: { Args: { p_ids: number[] }; Returns: undefined }
+      fn_order_inputs: { Args: { p_plan_ym: unknown }; Returns: Json }
+      fn_override_line: { Args: { p_line_id: unknown; p_qty: unknown; p_reason: string }; Returns: undefined }
+      fn_plan_cat_projection: { Args: { p_plan_id: string }; Returns: Json }
       fn_refresh_matviews: { Args: Record<string, never>; Returns: undefined }
       fn_request_approval: { Args: { p_kind: string; p_target_table: string; p_target_pk: string; p_payload: Json; p_reason: string }; Returns: string }
       fn_request_forecast_run: { Args: { p_run_type: string; p_eval_fy: number; p_horizon: number }; Returns: string }
       fn_request_tuning_approval: { Args: { p_proposal_id: string; p_reason: string }; Returns: string }
+      fn_save_order_plan: { Args: { p_plan_ym: unknown; p_note: string; p_user: string }; Returns: string }
       fn_unread_count: { Args: Record<string, never>; Returns: number }
       handle_new_user: { Args: Record<string, never>; Returns: unknown }
       notify_role: { Args: { p_role: unknown; p_kind: string; p_title: string; p_body: string; p_payload: Json }; Returns: undefined }
@@ -881,8 +1129,11 @@ export type Database = {
       allocation_mode: "auto" | "manual"
       approval_kind: "item_setting" | "target_dos" | "allocation_mode" | "order_plan" | "priority_alloc" | "bulkdeal" | "forecast_tuning"
       approval_status: "pending" | "approved" | "rejected"
+      extra_kind: "confirmed_order" | "meeting_approval" | "bulkdeal"
+      extra_status: "pending" | "approved" | "rejected"
       inbound_status: "ordered" | "shipped" | "received"
       notify_channel: "system" | "email"
+      plan_status: "draft" | "confirmed" | "approved" | "rejected"
       role: "item_manager" | "scm_lead" | "sales" | "marketing" | "service" | "biz_enable" | "admin"
       run_status: "requested" | "running" | "done" | "failed"
       run_type: "backtest" | "production"
@@ -1098,6 +1349,19 @@ export type Database = {
           scm_wape: number | null
           sales_bias: number | null
           scm_bias: number | null
+        }
+        Relationships: []
+      }
+      v_order_plan_summary: {
+        Row: {
+          id: string | null
+          plan_ym: string | null
+          status: Database["app"]["Enums"]["plan_status"] | null
+          created_at: string | null
+          approved_at: string | null
+          summary: Json | null
+          n_lines: number | null
+          amount: number | null
         }
         Relationships: []
       }
