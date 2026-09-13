@@ -114,7 +114,7 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 영향: R-FC-40~42 (신설), SP2 spec
 
 ## D-017 (2026-09-13) AI Agent — OpenAI gpt-5-nano, 전 화면 상단 버튼, 사용자별 대화 저장·맥락 유지, 관리자 질문 통계
-- 결정: (1) LLM 은 OpenAI Chat API, 모델 `gpt-5-nano` (설정값 `ai_model`). (2) 모든 화면 최상단 "AI Agent" 버튼 → ChatGPT 형 채팅 화면. (3) 사용자별 대화(conversation)·메시지 저장, 이전 맥락을 요청에 포함(최근 N 턴 + 요약). (4) 관리자: 질문 로그 조회, 주제 분류·빈도 통계. (5) 에이전트는 시스템 데이터(예측·재고·발주 근거)를 도구로 조회해 답변
+- 결정: (1) LLM 은 OpenAI Chat API, 모델 `gpt-5-nano` (설정값 `ai_model`). (2) 모든 화면 최상단 "AI Agent" 버튼 → 화면 우측 사이드 패널로 열리는 ChatGPT 형 채팅. 패널 너비는 마우스 드래그로 조절, 사용자별 기억. (3) 사용자별 대화(conversation)·메시지 저장, 이전 맥락을 요청에 포함(최근 N 턴 + 요약). (4) 관리자: 질문 로그 조회, 주제 분류·빈도 통계. (5) 에이전트는 시스템 데이터(예측·재고·발주 근거)를 도구로 조회해 답변
 - 출처: 사용자 지시
 - 영향: R-AI-01~06 (신설, 02-domain-rules/ai-agent.md), 서브프로젝트 SP6 추가, 환경변수 OPENAI_API_KEY
 
