@@ -139,5 +139,6 @@ insert into app.system_settings(key, value, description) values
  ('submit_deadline_rule', '"last_day-1"', '수요자료 제출 마감 (R-SCH-20)'),
  ('reminder_interval_min', '10', '반복 알림 간격 (R-SCH-21, R-AL-17)'),
  ('projection_past_months', '12', '재고전개 과거 열 수 (R-UI-04)'),
- ('projection_future_months', '6', '재고전개 미래 열 수 (R-UI-04)')
+ ('projection_future_months', '6', '재고전개 미래 열 수 (R-UI-04)'),
+ ('fiscal_year_start_month', '4', '회계연도 시작월. FY25 = 2025-04 ~ 2026-03 (D-015, R-FC-08)')
 on conflict (key) do nothing;

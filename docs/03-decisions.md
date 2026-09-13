@@ -100,3 +100,9 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 결정: `analytics.mv_item_stats`(출고 통계만 물리화) + `analytics.v_item_master`(일반 뷰, 설정·재고·입고 조인). 목록 200행 조회 약 230ms 로 R-UI-02 충족. refresh 는 출고 데이터 변경(업로드 shipment_extra, 엔진 실행) 시에만
 - 출처: 구현 중 검증
 - 영향: spec §3.3, 05-data-catalog
+
+## D-015 (2026-09-13) 회계연도 = 4월 1일 시작 — 모든 연 단위 시계열 집계는 FY 기준
+- 배경: 사용자 지시. MC_OL_vs_ACT 파일도 FY23/FY24/FY25 시트로 이미 FY 구조
+- 결정: `app.system_settings.fiscal_year_start_month = 4`. 1년 = 4/1 ~ 익년 3/31 (FY25 = 2025-04~2026-03). 연간 집계·전년동월·FY별 정확도·화면 연도 필터 전부 FY 기준. 헬퍼: web `fyOf(ym)`, `fyLabel(ym)`, `fyRange(fy)`; engine `fiscal.py`
+- 출처: 사용자 지시
+- 영향: R-FC-08 (신설), SP2 예측 엔진(계절성 주기·백테스트 구간), 대시보드 연도 필터
