@@ -25,4 +25,4 @@ CAP 코드 (주문·수요가 들어오는 단위, 판매 구성)
 | R-BOM-08 | BOM 활성(`bridge_bom.active` O/X/△)과 start/end date 는 GC-BOM 만 채워짐. DT BOM 은 전부 활성으로 간주. |
 | R-BOM-09 | 기종 조인은 `model_key` 가 아니라 **`model_base`** 로. `dim_model` 중 model_base 가 빈 8행은 Option MAP 헤더이므로 `core.v_model` 만 사용. |
 | R-BOM-10 | 옵션 출고 트렌드 파일은 이미 수출·폐각 제외 상태 (시트명 `출고 Trend(수출,폐각 제외)`). 다시 제외하지 않는다. |
-| R-BOM-11 | SW 라이선스 옵션(family LIKE 'LICENSE%' 또는 '1DAY CODE')은 예측·발주 대상에서 제외, 카테고리 `SW`. 옵션↔기종 연결은 bridge_option_model 우선, 없으면 dim_item.family 의 MDLnnn 토큰 파싱 (D-009). |
+| R-BOM-11 | SW 라이선스 옵션(family LIKE 'LICENSE%' 또는 '1DAY CODE')은 예측·발주 대상에서 제외, 카테고리 `SW`. 옵션↔기종 연결은 bridge_option_model 우선, 없으면 dim_item.family 의 MDLnnn 토큰 파싱 (D-009). 구현: `core.v_option_model_link` (link_source bridge/parsed/none, Common 옵션은 기종 수만큼 행). |
