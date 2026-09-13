@@ -166,3 +166,8 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 결정: Bulkdeal 주문번호 선택 입력. 수주확정 등록 시 같은 품목·필요월의 승인 Bulkdeal 존재 시 경고(등록은 허용). 회사 규칙이 다르면 필수로 전환(한 줄)
 - 출처: 사용자 질문 + 문서 해석
 - 영향: R-OQ-26, /extra-demand 폼·목록, fn_add_extra_demand 반환값
+
+## D-027 (2026-09-13) 파라미터 SQL 함수는 plan_cache_mode=force_custom_plan
+- 배경: `/orders` 계획 생성에서 "canceling statement due to statement timeout"(PostgREST 8s). `fn_order_inputs` 가 순수 SQL 176ms 인데 함수 호출은 5.3초 — 파라미터(p_category) 로 인한 generic plan
+- 결정: 큰 집계를 하는 파라미터 함수(fn_order_inputs, fn_plan_cat_projection, fn_ai_stats)에 `set plan_cache_mode = force_custom_plan`. 결과 0.7초. 입력 조회는 카테고리별 3회, 라인 저장 청크 500 으로 8초 여유 확보
+- 규칙: 앞으로 파라미터가 있는 집계 RPC 를 만들면 같은 설정을 붙이고 `\timing` 으로 8초 내 확인

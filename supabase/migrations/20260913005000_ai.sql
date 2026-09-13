@@ -39,3 +39,4 @@ language sql stable security definer set search_path = app, analytics, public as
     'daily', coalesce((select jsonb_agg(jsonb_build_object('day', day, 'n', n) order by day) from (select day, sum(n) n from analytics.v_ai_stats_daily where day > current_date - p_days group by 1) d), '[]'::jsonb),
     'top_users', coalesce((select jsonb_agg(jsonb_build_object('name', name, 'n', n) order by n desc) from (select p.name, count(*) n from app.ai_message m join app.ai_conversation c on c.id = m.conversation_id left join app.profiles p on p.user_id = c.user_id where m.role = 'user' and m.created_at > now() - (p_days || ' days')::interval group by 1 order by 2 desc limit 10) u), '[]'::jsonb)
   ) $$;
+alter function app.fn_ai_stats(int) set plan_cache_mode = force_custom_plan;

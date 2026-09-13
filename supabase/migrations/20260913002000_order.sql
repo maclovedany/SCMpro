@@ -82,6 +82,9 @@ select jsonb_build_object(
     where m.category <> 'SW' and (p_category is null or m.category = p_category)), '[]'::jsonb)
 ) $$;
 
+-- 파라미터로 인한 일반화 계획(generic plan) 이 5초 이상 걸리는 문제 → 항상 맞춤 계획 (0.7초)
+alter function app.fn_order_inputs(char, text) set plan_cache_mode = force_custom_plan;
+
 -- 계획 저장 (draft 생성/교체). 서버(service role)에서 호출하므로 p_user 로 호출자 전달. 라인은 fn_append_plan_lines 로 청크 저장 (authenticated 8s 제한 회피)
 create or replace function app.fn_save_order_plan(p_plan_ym char(7), p_note text, p_user uuid) returns uuid
 language plpgsql security definer set search_path = app, public as $$
@@ -256,3 +259,4 @@ language sql stable security definer set search_path = app, public as $$
   select coalesce(jsonb_object_agg(category, m), '{}'::jsonb) from (
     select coalesce(category, '기타') category, jsonb_object_agg(ym, jsonb_build_object('forecast', round(sf, 1), 'inbound', si, 'extras', se, 'end', round(sen, 1), 'order', so, 'final', sfo, 'n', n)) m
     from (select category, ym, sum(f) sf, sum(i) si, sum(e) se, sum(en) sen, sum(o) so, sum(fo) sfo, count(*) n from x group by 1, 2) y group by category) z $$;
+alter function app.fn_plan_cat_projection(uuid) set plan_cache_mode = force_custom_plan;
