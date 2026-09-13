@@ -7,14 +7,14 @@
 
 | 파일 | 시트/구조 | 내용 | 기간 | 정제 규칙 | 적재 테이블 |
 |---|---|---|---|---|---|
-| `MC_OL_vs_ACT.xlsx` | Summary, FY23, FY24, FY25, FY26-to202606 | 기종별 월 Sales OL / SCM OL / ACT | FY23 ~ 2026-06 | model_base 로 정규화. Bias = SUM(ol−act)/SUM(act) | `raw.fact_mc_plan_actual` (2,765행) |
-| `TOTAL_BOM_LIST__CAP.xlsx` | `MC CAP BOM` + 기종별 15시트 (MDL222, MDL116, … MDL218), Sheet3 | DT/PRT 기종 BOM, CAP 부번, 필수옵션, 연관 소모품 | — | 15시트 통합. bom_group(STANDARD/FAX KIT/단품Option/소모품 KIT…) 보존 | `raw.bridge_bom`, `raw.bridge_mc_cap`, `raw.bridge_cap_option` |
-| `GC-BOM_item_Manage_sheet.xlsx` | `Option MAP`, 기종별 13시트, `SCC` | GC 기종 BOM, 옵션↔기종 MAP, SCC 교체 구성 | — | `SCC` 시트만 6열 구조라 별도 테이블. Option MAP 헤더 행이 dim_model 에 8행 섞임 → `core.v_model` 로 제외. `(업데이트필요)`/`(영업종료)` 시트 처리 Q-011 | `raw.bridge_bom`, `raw.bridge_scc_config`(88), `raw.bridge_option_model`(972) |
-| `옵션_출고_Trend.xlsx` | `출고 Trend(수출,폐각 제외)` | 옵션 월별 출고 | 2020-01 ~ 2026-07 | **이미 수출·폐각 제외됨** (R-BOM-10) | `raw.fact_shipment` (item_type=OPTION) |
-| `소모품_출고_트렌드.xlsx` | `Historical` | 소모품 월별 출고 | 3년 | 재수출·기타출고 제외 여부 확인 필요 (Q-006). 드물게 HOC 존재 (R-XCN-06) | `raw.fact_shipment` (item_type=SUPPLY) |
-| `부품_Part_Tool_3년사용량.csv` | 컬럼: Item, HOC, Description, Family, 07-2026 … 04-2023 (와이드) | 부품 월별 출고 | 2023-04 ~ 2026-07 | 와이드→롱. 0 인 달 미저장. HOC 열은 bridge_xcn 보다 오래됐을 수 있음 (R-XCN-07) | `raw.fact_shipment` (item_type=PART), `raw.dim_item` |
-| `부품_XCN.xlsx` | Sheet1, 정의, `XCN list` | 설계변경 코드 연계 (related_item → hoc_item) | — | 출고·재고는 hoc_item 합산, 발주는 hoc_item (R-XCN) | `raw.bridge_xcn` (20,760) |
-| `scm.db` | SQLite | 벤더가 준 원본 DB (위 파일들의 SQLite 적재본) | — | Supabase 이관 시 참고용. 앱은 쓰지 않음 | — |
+| `data/raw/MC_OL_vs_ACT.xlsx` | Summary, FY23, FY24, FY25, FY26-to202606 | 기종별 월 Sales OL / SCM OL / ACT | FY23 ~ 2026-06 | model_base 로 정규화. Bias = SUM(ol−act)/SUM(act) | `raw.fact_mc_plan_actual` (2,765행) |
+| `data/raw/TOTAL_BOM_LIST__CAP.xlsx` | `MC CAP BOM` + 기종별 15시트 (MDL222, MDL116, … MDL218), Sheet3 | DT/PRT 기종 BOM, CAP 부번, 필수옵션, 연관 소모품 | — | 15시트 통합. bom_group(STANDARD/FAX KIT/단품Option/소모품 KIT…) 보존 | `raw.bridge_bom`, `raw.bridge_mc_cap`, `raw.bridge_cap_option` |
+| `data/raw/GC-BOM_item_Manage_sheet.xlsx` | `Option MAP`, 기종별 13시트, `SCC` | GC 기종 BOM, 옵션↔기종 MAP, SCC 교체 구성 | — | `SCC` 시트만 6열 구조라 별도 테이블. Option MAP 헤더 행이 dim_model 에 8행 섞임 → `core.v_model` 로 제외. `(업데이트필요)`/`(영업종료)` 시트 처리 Q-011 | `raw.bridge_bom`, `raw.bridge_scc_config`(88), `raw.bridge_option_model`(972) |
+| `data/raw/옵션_출고_Trend.xlsx` | `출고 Trend(수출,폐각 제외)` | 옵션 월별 출고 | 2020-01 ~ 2026-07 | **이미 수출·폐각 제외됨** (R-BOM-10) | `raw.fact_shipment` (item_type=OPTION) |
+| `data/raw/소모품_출고_트렌드.xlsx` | `Historical` | 소모품 월별 출고 | 3년 | 재수출·기타출고 제외 여부 확인 필요 (Q-006). 드물게 HOC 존재 (R-XCN-06) | `raw.fact_shipment` (item_type=SUPPLY) |
+| `data/raw/부품_Part_Tool_3년사용량.csv` | 컬럼: Item, HOC, Description, Family, 07-2026 … 04-2023 (와이드) | 부품 월별 출고 | 2023-04 ~ 2026-07 | 와이드→롱. 0 인 달 미저장. HOC 열은 bridge_xcn 보다 오래됐을 수 있음 (R-XCN-07) | `raw.fact_shipment` (item_type=PART), `raw.dim_item` |
+| `data/raw/부품_XCN.xlsx` | Sheet1, 정의, `XCN list` | 설계변경 코드 연계 (related_item → hoc_item) | — | 출고·재고는 hoc_item 합산, 발주는 hoc_item (R-XCN) | `raw.bridge_xcn` (20,760) |
+| `data/raw/scm.db` | SQLite | 벤더가 준 원본 DB (위 파일들의 SQLite 적재본) | — | Supabase 이관 시 참고용. 앱은 쓰지 않음 | — |
 | `데이터 설명.docx` | 텍스트 + 표 | 용어, 특수 고려사항, 카테고리별 산출 방식, 월간 절차 | — | 원본, 수정 금지 | → `00-glossary.md`, `01-business-process.md` |
 | `회의록.docx` | 녹취 | 킥오프 미팅 | 2026-09-01 파일 | 원본, 수정 금지 | → `meetings/2026-09-01-kickoff.md` |
 | `stage1.md` | md | 1단계 문제 정의 인터뷰 | 2026-09-10 | 원본, 수정 금지 | → `02-domain-rules/*` |
@@ -30,17 +30,22 @@
 | EOL/EOS 일정 | 수명주기 예측 조정 | Q-008 |
 | 공휴일 캘린더 | 영업일 보정 | Q-009 |
 
-## 2. Supabase 스키마 (SQL 파일 실행 순서)
+## 2. Supabase 스키마 (migrations 실행 순서)
+
+`supabase/scripts/migrate.sh` 가 `supabase/migrations/*.sql` 을 파일명 순으로 psql 적용한다. 각 파일은 재실행 가능.
 
 | 파일 | 만드는 것 |
 |---|---|
-| `01-schema.sql` | `raw` 스키마 테이블 10개 (아래). RLS 켜고 정책 없음 → 앱에서 직접 못 읽음 |
-| `02-data-01 ~ 25.sql` | INSERT 데이터 (03-verify 주석은 09까지라고 돼 있으나 실제 25개 파일) |
-| `03-verify.sql` | 행수 검증 |
-| `04-core-views.sql` | `core` 스키마: 정제 규칙 1회 적용 |
-| `05-analytics-views.sql` | `analytics` 스키마: 화면·Tool 이 읽는 뷰 |
-| `06-grants-and-lockdown.sql` | 권한. **항상 마지막, 앞 파일 재실행 시 다시 실행** |
-| `07-deprecate-and-agent.sql` | 5회차 더미 뷰 폐기 표시 + AI agent 대화 저장 테이블 |
+| `20260913000100_raw_schema.sql` | `raw` 테이블 10개 (구 01-schema). RLS 켜고 정책 없음 → 앱에서 직접 못 읽음 |
+| `20260913000200_core_views.sql` | `core` 정제 뷰 (구 04) + R-XCN-08 `v_part_linkage`, R-BOM-11 `v_option_model_link` |
+| `20260913000300_analytics_views.sql` | `analytics` 뷰 (구 05) |
+| `20260913000400_app_schema.sql` | `app` enum + 테이블 |
+| `20260913000500_app_functions.sql` | 감사 트리거, 승인/업로드/대시보드 RPC |
+| `20260913000600_app_views.sql` | `analytics` 물리화 뷰, `app` 뷰 |
+| `20260913000700_rls.sql` | RLS 정책 |
+| `20260913000900_grants.sql` | 권한. **항상 마지막** |
+
+raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `supabase/scripts/load-raw.sh` (\copy). 구 `02-data-*.sql`, `03-verify.sql`, `07-*.sql` 은 `supabase/legacy/` 참고용.
 
 ### raw 테이블
 
