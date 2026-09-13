@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import { drillHref } from "@/lib/drill";
 import type { TsSeries } from "@/components/charts/chartOption";
+import { withRetry } from "@/lib/supabase/retry";
 type SB = SupabaseClient<Database>;
 export const METHOD_LABEL: Record<string, string> = { champion: "시스템 기준예측", sales_ol: "Sales OL", scm_ol: "SCM OL", baseline6: "6M 평균", ma3: "이동평균 3M", ma12: "이동평균 12M", snaive: "전년동월×추세",
   ses: "SES", holt: "Holt", hw: "Holt-Winters", croston: "Croston", sba: "SBA", arima: "AutoARIMA", prophet: "Prophet", lgbm: "LightGBM", ol_bias: "OL 편향보정" };
@@ -123,3 +124,57 @@ export async function fetchItemBacktest(sb: SB, code: string) {
   return { run: { id: run.id!, eval_fy: run.eval_fy, train_from: run.train_from, train_to: run.train_to }, months, actual, byMethod, champion, metrics };
 }
 export type ItemBacktest = NonNullable<Awaited<ReturnType<typeof fetchItemBacktest>>>;
+
+/** 예측 화면 개요 (D-034): RPC fn_forecast_overview 한 번 — 매트릭스(재고·DoS 포함)·등급별 재고·12개월 카테고리 추이·챔피언 분포 */
+export type ForecastOverview = {
+  matrix: { abc: string; xyz: string; n_items: number; value_share: number | null; stock_value: number | null; avg_dos: number | null }[];
+  grade: { abc: string; n_items: number; stock_value: number | null; avg_dos: number | null; target_dos: number | null; excess: number; stockout: number }[];
+  trend: { ym: string; category: string; qty: number }[];
+  champion: { method: string; n: number }[];
+  last_ym: string | null;
+};
+export async function fetchForecastOverview(sb: SB): Promise<ForecastOverview> {
+  const { data, error } = await withRetry(() => sb.schema("app").rpc("fn_forecast_overview"));
+  if (error) throw error;
+  const d = (data ?? {}) as Partial<ForecastOverview>;
+  return { matrix: d.matrix ?? [], grade: d.grade ?? [], trend: d.trend ?? [], champion: d.champion ?? [], last_ym: d.last_ym ?? null };
+}
+export const XYZ_LABEL: Record<string, string> = { X: "X 안정", Y: "Y 변동", Z: "Z 불규칙" };
+/** ABC-XYZ 셀별 관리 지침 (R-FC-35 운영 해석) — 한 줄 */
+export const GRADE_GUIDE: Record<string, { policy: string; tip: string }> = {
+  AX: { policy: "자동 보충 · 시계열 예측", tip: "안전재고 낮게, 발주 주기 짧게" },
+  AY: { policy: "예측 + 중간 안전재고", tip: "월별 리뷰, Bias 추적" },
+  AZ: { policy: "수동 검토 · 영업 정보 결합", tip: "안전재고 높게 또는 주문 기반" },
+  BX: { policy: "자동 보충 · 예측 기반", tip: "표준 안전재고" },
+  BY: { policy: "예측 + 표준 안전재고", tip: "분기 리뷰" },
+  BZ: { policy: "예외 관리 · 최소 재고", tip: "간헐 기법(Croston/SBA)" },
+  CX: { policy: "min-max 규칙", tip: "묶음 발주로 빈도 낮춤" },
+  CY: { policy: "min-max · 낮은 빈도", tip: "재고 상한 관리" },
+  CZ: { policy: "주문 시 조달 · 단종 검토", tip: "재고 최소화, EOL 후보" },
+};
+/** 화면용 차트 데이터로 변환 (순수 함수 — 테스트 가능) */
+export function overviewCharts(o: ForecastOverview) {
+  const xs = ["X", "Y", "Z"], ys = ["A", "B", "C"];
+  const cells = ys.flatMap((abc, y) => xs.map((xyz, x) => { const r = o.matrix.find(m => m.abc === abc && m.xyz === xyz);
+    return { x, y, value: Number(r?.value_share ?? 0), label: `${(r?.n_items ?? 0).toLocaleString("ko-KR")}개 · 금액 ${Math.round(Number(r?.value_share ?? 0) * 1000) / 10}%` }; }));
+  const top = [...o.matrix].sort((a, b) => Number(b.value_share ?? 0) - Number(a.value_share ?? 0))[0];
+  const grade = ys.map(abc => o.grade.find(g => g.abc === abc) ?? { abc, n_items: 0, stock_value: 0, avg_dos: null, target_dos: null, excess: 0, stockout: 0 });
+  const months = Array.from(new Set(o.trend.map(t => t.ym))).sort();
+  const cats = ["PART", "SUPPLY", "OPTION"];
+  const trend = { x: months, series: cats.map(c => ({ name: c, data: months.map(m => o.trend.find(t => t.ym === m && t.category === c)?.qty ?? 0) })) };
+  const mom = cats.map(c => { const d = trend.series.find(x => x.name === c)!.data; const r3 = d.slice(-3), p9 = d.slice(0, -3);
+    const a = r3.length ? r3.reduce((x, y) => x + y, 0) / r3.length : 0, b = p9.length ? p9.reduce((x, y) => x + y, 0) / p9.length : 0; return { c, r: b ? (a - b) / b : 0 }; })
+    .sort((a, b) => Math.abs(b.r) - Math.abs(a.r))[0];
+  const champTotal = o.champion.reduce((a, c) => a + c.n, 0);
+  return {
+    heat: { xs: xs.map(x => XYZ_LABEL[x]), ys, cells, insight: top ? `${top.abc}${top.xyz} 셀이 금액의 ${Math.round(Number(top.value_share ?? 0) * 1000) / 10}% (${top.n_items.toLocaleString("ko-KR")}개) — 예측 정밀도가 가장 중요한 구간` : "분류 결과 없음" },
+    grade,
+    gradeValue: { labels: grade.map(g => `${g.abc} 등급`), values: grade.map(g => Number(g.stock_value ?? 0)), insight: `A 등급 ${grade[0].n_items.toLocaleString("ko-KR")}개가 재고 금액의 ${Math.round(100 * Number(grade[0].stock_value ?? 0) / Math.max(1, grade.reduce((a, g) => a + Number(g.stock_value ?? 0), 0)))}% 차지` },
+    gradeDos: { categories: grade.map(g => `${g.abc} 등급`), series: [{ name: "평균 DoS", data: grade.map(g => g.avg_dos == null ? null : Number(g.avg_dos)) }, { name: "목표 DoS", data: grade.map(g => g.target_dos == null ? null : Number(g.target_dos)) }],
+      insight: (() => { const over = grade.filter(g => g.avg_dos != null && g.target_dos != null && Number(g.avg_dos) > Number(g.target_dos)).map(g => g.abc); return over.length ? `${over.join("·")} 등급 평균 DoS 가 목표를 초과 — 과잉 후보 ${grade.reduce((a, g) => a + g.excess, 0).toLocaleString("ko-KR")}개` : "모든 등급이 목표 DoS 이내"; })() },
+    trend: { ...trend, insight: months.length >= 6 ? `최근 3개월 평균이 직전 9개월 대비 ${mom.c} ${mom.r >= 0 ? "+" : ""}${Math.round(mom.r * 100)}% — 변동이 가장 큰 카테고리` : "출고 이력 부족" },
+    champion: { labels: o.champion.map(c => METHOD_LABEL[c.method] ?? c.method), keys: o.champion.map(c => c.method), values: o.champion.map(c => c.n),
+      insight: o.champion[0] ? `${METHOD_LABEL[o.champion[0].method] ?? o.champion[0].method} 이 품목 ${Math.round(100 * o.champion[0].n / Math.max(1, champTotal))}% 에서 최적` : "백테스트 결과 없음" },
+  };
+}
+export type OverviewCharts = ReturnType<typeof overviewCharts>;

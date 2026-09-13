@@ -22,6 +22,8 @@ export default async function ItemsPage({ searchParams }: { searchParams: Promis
   if (f.xyz) active.push({ k: "xyz", label: `XYZ ${f.xyz}` });
   if (f.pattern) active.push({ k: "pattern", label: `패턴 ${f.pattern}` });
   if (f.champion) active.push({ k: "champion", label: `챔피언 ${f.champion}` });
+  if (f.stock === "zero") active.push({ k: "stock", label: "재고 0" });
+  if (f.excess) active.push({ k: "excess", label: "과잉 (DoS ≥ 목표 2배)" });
   const without = (k: string) => drillHref("/items", { ...sp, [k]: undefined, page: undefined });
   return (
     <div className="space-y-4">

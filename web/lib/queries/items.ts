@@ -1,13 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 export type ItemMasterRow = Database["analytics"]["Views"]["v_item_master"]["Row"];
-export type ItemFilters = { category?: string; q?: string; dummy?: boolean; target_dos?: "missing"; sort?: string; page?: number; abc?: string; xyz?: string; pattern?: string; champion?: string };
+export type ItemFilters = { category?: string; q?: string; dummy?: boolean; target_dos?: "missing"; sort?: string; page?: number; abc?: string; xyz?: string; pattern?: string; champion?: string; stock?: "zero"; excess?: boolean };
 export const PAGE = 200;
 export const CATEGORIES = ["PART", "SUPPLY", "OPTION", "SW"] as const;
 export function parseItemFilters(sp: Record<string, string | undefined>): ItemFilters {
   return { category: sp.category || undefined, q: sp.q || undefined, dummy: sp.dummy === "true" ? true : undefined,
     target_dos: sp.target_dos === "missing" ? "missing" : undefined, sort: sp.sort || undefined, page: sp.page ? Number(sp.page) : undefined,
-    abc: sp.abc || undefined, xyz: sp.xyz || undefined, pattern: sp.pattern || undefined, champion: sp.champion || undefined };
+    abc: sp.abc || undefined, xyz: sp.xyz || undefined, pattern: sp.pattern || undefined, champion: sp.champion || undefined, stock: sp.stock === "zero" ? "zero" : undefined, excess: sp.excess === "true" ? true : undefined };
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function applyItemFilters(q: any, f: ItemFilters) {
@@ -19,6 +19,8 @@ export function applyItemFilters(q: any, f: ItemFilters) {
   if (f.xyz) q = q.eq("xyz", f.xyz);
   if (f.pattern) q = q.eq("pattern", f.pattern);
   if (f.champion) q = q.eq("champion_method", f.champion);
+  if (f.stock === "zero") q = q.or("on_hand.lte.0,on_hand.is.null");   // 재고 0 (스냅샷 없음 포함)
+  if (f.excess) q = q.eq("is_excess", true);                            // DoS ≥ 목표 2배 (D-034)
   return q;
 }
 export async function fetchItems(sb: SupabaseClient<Database>, f: ItemFilters): Promise<{ rows: ItemMasterRow[]; count: number }> {

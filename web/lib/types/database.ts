@@ -1381,6 +1381,7 @@ export type Database = {
       fn_dashboard_v2: { Args: Record<string, never>; Returns: Json }
       fn_decide_approval: { Args: { p_id: string; p_decision: string; p_comment: string }; Returns: undefined }
       fn_finalize_order_plan: { Args: { p_plan_id: string }; Returns: Json }
+      fn_forecast_overview: { Args: Record<string, never>; Returns: Json }
       fn_manual_allocate: { Args: { p_order: string; p_qty: unknown; p_reason: string }; Returns: Json }
       fn_mark_read: { Args: { p_ids: number[] }; Returns: undefined }
       fn_notification_email_copy: { Args: Record<string, never>; Returns: unknown }
@@ -1637,6 +1638,7 @@ export type Database = {
           abc: string | null
           xyz: string | null
           champion_method: string | null
+          is_excess: boolean | null
         }
         Relationships: []
       }

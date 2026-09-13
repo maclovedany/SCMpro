@@ -214,3 +214,13 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
   - 호버: 액센트색 outer glow(`0 0 0 3px acc@18%` + `0 8px 28px acc@28%`), 테두리 액센트 45%, translateY(-1px).
   - warn/danger: `data-tone` 속성으로 노랑/빨강 액센트 치환(별도 배경색 클래스 제거).
 - 규칙 반영: R-UI-13 카드 표면 항목.
+
+## D-034 (2026-09-14) 예측 화면 비주얼 재설계 — ABC-XYZ 히트맵 · 등급별 재고 · 12개월 추이
+- 배경: 대시보드(D-032)와 같은 디자인 언어로 예측 화면을 재구성(사용자 순서 ③). 참고 스크린샷의 ABC-XYZ 히트맵·등급별 재고 금액/DoS·카테고리 추이·등급별 지침 패널을 SCM 관점으로 옮김.
+- 결정:
+  - RPC `app.fn_forecast_overview()` 하나로 매트릭스(품목 수·금액 비중·재고 금액·평균 DoS), 등급별(품목 수·재고 금액·평균/목표 DoS·과잉·재고 0), 최근 12개월 카테고리 출고, 챔피언 분포를 반환(약 0.9s, security definer — 단가 마스킹 무관한 집계만).
+  - 화면: KPI 4 → 정확도 3차트(기법별·카테고리별·패턴별 WAPE, 가로 막대 하나의 축 — 기존 이중축 `AccuracyChart` 제거) → 히트맵 + 관리 지침 9셀(링크) → 등급별 카드 3 + 재고 금액·DoS 차트 → 추이 라인(카테고리 고정색) + 챔피언 분포.
+  - SCM OL·Sales OL 정확도는 `forecast_accuracy` 행이 아니라 런 summary(`scm_ol_wape` 등)에 있으므로 화면에서 보강 표시.
+  - `analytics.v_item_master` 에 `is_excess`(DoS ≥ 목표 2배) 컬럼 append; 품목 목록 필터 `stock=zero`(스냅샷 없음 포함) · `excess=true` 추가 → 카드 드릴다운이 정확히 그 품목에 도달.
+  - 추이 해석은 "최근 3개월 평균 vs 직전 9개월 평균"(마지막 달이 부분 집계일 때 왜곡 방지).
+- 규칙 반영: R-UI-13(화면 공통 구조·Heatmap), R-FC-35(셀별 운영 지침).

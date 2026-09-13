@@ -41,3 +41,16 @@ export function Lines({ x, series, height = 220, pct = false, colors }: Common &
     series: series.map((s, i) => ({ ...lineSpec, name: s.name, data: s.data, lineStyle: { width: 2, color: (colors ?? [...SERIES_LIGHT])[i] }, itemStyle: { ...lineSpec.itemStyle, color: (colors ?? [...SERIES_LIGHT])[i] }, areaStyle: { color: (colors ?? [...SERIES_LIGHT])[i], opacity: 0.1 } })) };
   return <ReactECharts option={opt} style={{ height }} notMerge />;
 }
+/** 히트맵 (예: ABC × XYZ). 셀 값 = 색(순차 램프), 라벨 = 품목 수·금액 비중. 클릭 → (x,y) */
+export function Heatmap({ xs, ys, cells, height = 236, colors, onCell }: { xs: string[]; ys: string[]; cells: { x: number; y: number; value: number; label: string }[]; height?: number; colors?: string[]; onCell?: (xi: number, yi: number) => void }) {
+  const max = Math.max(1e-9, ...cells.map(c => c.value));
+  const opt: EChartsOption = { ...base, legend: undefined, grid: { left: 8, right: 8, top: 8, bottom: 8, containLabel: true },
+    tooltip: { trigger: "item", backgroundColor: "#fff", borderColor: GRID, textStyle: { color: TEXT.primary, fontSize: 12 }, formatter: (p: unknown) => { const d = (p as { data: { name?: string } }).data; return d?.name ?? ""; } },
+    xAxis: { type: "category", data: xs, position: "top", axisLine: { show: false }, axisTick: { show: false }, splitArea: { show: false }, axisLabel: { color: TEXT.secondary, fontSize: 11 } },
+    yAxis: { type: "category", data: ys, inverse: true, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: TEXT.secondary, fontSize: 12, fontWeight: 600 } },
+    visualMap: { show: false, min: 0, max, inRange: { color: colors ?? ["#e8f1fb", "#9ec5f4", "#3987e5", "#184f95"] } },
+    series: [{ type: "heatmap", data: cells.map(c => ({ value: [c.x, c.y, c.value], name: c.label, label: { color: c.value / max > 0.45 ? "#fff" : TEXT.primary } })),
+      label: { show: true, fontSize: 11, lineHeight: 15, formatter: (p: unknown) => String((p as { name: string }).name).replace(" · ", "\n") },
+      itemStyle: { borderColor: "#fff", borderWidth: 3, borderRadius: 6 }, emphasis: { itemStyle: { shadowBlur: 8, shadowColor: "rgba(0,0,0,0.15)" } } }] };
+  return <ReactECharts option={opt} style={{ height }} notMerge onEvents={{ click: (e: { value: number[] }) => onCell?.(e.value[0], e.value[1]) }} />;
+}

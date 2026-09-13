@@ -106,7 +106,7 @@ raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `
 |---|---|
 | `analytics.v_item_monthly` (MV) | 품목(HOC)×월 출고, 0 채움, SW 는 category='SW', shipment_extra 포함. **SP2 예측 입력** |
 | `analytics.mv_item_stats` (MV) | 품목 출고 통계: 카테고리·설명·6M평균·12M합·최근출고월. 출고 데이터 변경 시 refresh |
-| `analytics.v_item_master` (뷰) | 품목 목록·상세 소스 = mv_item_stats + 설정·현재고·입고예정·DoS **실시간 조인** (승인·업로드 즉시 반영). PART 5,964 / SUPPLY 634 / OPTION 3,074 / SW 522 |
+| `analytics.v_item_master` (뷰) | 품목 목록·상세 소스 = mv_item_stats + 설정·현재고·입고예정·DoS·`is_excess`(DoS ≥ 목표 2배, D-034) **실시간 조인** (승인·업로드 즉시 반영). PART 5,964 / SUPPLY 634 / OPTION 3,074 / SW 522 |
 | `core.v_option_model_link` | 옵션↔기종 (bridge/parsed/none), is_sw |
 | `app.v_item_setting` | 단가 마스킹 뷰 (관리 역할만 단가) |
 | `app.v_available_stock` | 가용재고 = 현재고 − 배정 (SP4 전 배정 0) |
@@ -142,7 +142,7 @@ Project Settings → Data API → **Exposed schemas**: `public, graphql_public, 
 ### 일정·알림 (SP5, migration 004000)
 `app.demand_submission` · `supplier.sailing_rule` · RPC `fn_business_day`, `fn_sailing_dates`, `fn_order_calendar`, `fn_submission_deadline/status`, `fn_submit_demand`, `fn_submission_reminder_tick`, `fn_tick`(pg_cron `scm-tick` */10) · 이메일 복제 트리거 `trg_email_copy` · 뷰 `analytics.v_inbound_gap(_summary)`.
 ### AI Agent (SP6, migration 005000)
-`app.ai_conversation` · `app.ai_message` · 뷰 `analytics.v_ai_stats_daily`, `v_ai_message_log` · RPC `fn_ai_stats`(force_custom_plan), `fn_sidebar_badges`(미읽음·승인 대기 배지, D-028), `fn_dashboard_v2`(SCM 대시보드 5묶음 + 데이터 준비 + charts 집계: stock_by_cat·risk_by_cat_abc·plan_history·alloc_mix·accuracy_rounds, migration 006000, D-031/D-032; 구 `fn_dashboard_summary` 는 유지).
+`app.ai_conversation` · `app.ai_message` · 뷰 `analytics.v_ai_stats_daily`, `v_ai_message_log` · RPC `fn_ai_stats`(force_custom_plan), `fn_sidebar_badges`(미읽음·승인 대기 배지, D-028), `fn_forecast_overview`(예측 화면 개요: ABC-XYZ 매트릭스(재고·DoS 포함)·등급별 재고·최근 12개월 카테고리 추이·챔피언 분포, migration 007000, D-034), `fn_dashboard_v2`(SCM 대시보드 5묶음 + 데이터 준비 + charts 집계: stock_by_cat·risk_by_cat_abc·plan_history·alloc_mix·accuracy_rounds, migration 006000, D-031/D-032; 구 `fn_dashboard_summary` 는 유지).
 
 ### 향후 확장 후보
 | 영역 | 후보 테이블 | 규칙 |
