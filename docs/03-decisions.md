@@ -183,3 +183,8 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
   6. 성능: `v_order_plan_summary` 를 summary jsonb 기반으로(라인 재집계 제거), `/orders` 전환 803→187ms(dev)
 - 출처: 사용자 피드백
 - 영향: 08-user-guide, 07-architecture §2/§6, 05-data-catalog RPC 목록
+
+## D-029 (2026-09-13) 이메일 채널 확정 — 네이버 SMTP(insightdany), launchd 10분 발송
+- 결정: `engine/.env` SMTP_HOST=smtp.naver.com:587(STARTTLS), 발신 insightdany@naver.com(애플리케이션 비밀번호). 발송 주체는 이 Mac 의 launchd `com.scmpro.tick`(10분). 운영 이관 시 동일 env 를 서버 크론으로 옮기면 됨
+- 검증: 테스트 알림 발송 `{'sent': 1}` → 수신 확인 (사용자). Q-019 종결
+- 출처: 사용자 확인

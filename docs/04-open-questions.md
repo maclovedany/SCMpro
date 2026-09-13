@@ -18,4 +18,3 @@
 | Q-016 | MC 31개 기종 중 CAP 매핑(bridge_mc_cap)이 9개뿐. MDL214/207/218/219/221/202 는 TOTAL_BOM 시트에 있는데 추출 누락인지, 원본 `MC CAP BOM` 시트에 없는 건지 | 미확인 | 필수옵션 전개 범위 (R-BOM-02) | 매핑 없는 기종은 옵션 전개 생략, 경고 표시 |
 | Q-017 | FY24 시트 68행이 model_base NULL (합계행?) | 미확인 | OL 정확도 집계 | 제외 |
 | Q-018 | XCN 다중 HOC 454건의 올바른 대표코드 (D-010 임시 규칙 확인 요청) | 회사 확인 필요 | R-XCN-08 | 최다 출고 HOC |
-| Q-019 | 이메일 발송 SMTP 계정 — `engine/.env` SMTP_* 5개 값. launchd 10분 tick 은 준비됨 | 사용자 입력 대기 | R-SCH-30, R-AL-13/17 | skipped:no_smtp |
