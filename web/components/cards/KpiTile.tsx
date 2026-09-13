@@ -8,7 +8,7 @@ export function KpiTile({ label, value, sub, delta, progress, href, accent, icon
   const a = ACCENT[accent]; const Icon = (Icons as unknown as Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>>)[icon] ?? Icons.Circle;
   const deltaColor = delta ? (delta.dir === "flat" ? "text-muted-foreground" : delta.good ? "text-[#0ca30c]" : "text-[#d03b3b]") : "";
   return (
-    <Link href={href} prefetch aria-label={`${label} 상세 보기`} className={cn("group flex h-full min-h-[6.5rem] items-stretch gap-3 rounded-xl border bg-background p-3 transition hover:shadow-md", tone === "danger" && "border-[#d03b3b]/50", tone === "warn" && "border-[#fab219]/60")}>
+    <Link href={href} prefetch aria-label={`${label} 상세 보기`} className="scm-card group flex h-full min-h-[6.5rem] items-stretch gap-3 rounded-xl p-3" data-tone={tone} style={tone === "default" ? ({ "--acc": a.hex, "--acc-soft": a.soft } as React.CSSProperties) : undefined}>
       <div className="flex w-12 shrink-0 items-center justify-center rounded-lg" style={{ background: a.soft }}><Icon className="h-6 w-6" style={{ color: a.hex }} /></div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-xs text-muted-foreground">{label}</div>

@@ -206,3 +206,11 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 결정: (1) 디자인 언어를 먼저 정의(R-UI-13) — dataviz 스킬로 팔레트 검증(light/dark 모두 통과), ECharts 마크 스펙 통일. (2) 상단 KPI 스트립 5개(월말 재고금액·품절 위험·발주 금액·WAPE·승인/미제출) — 아이콘 타일, 전월/직전 라운드 대비, 목표 진행바. (3) 5묶음 각각 카드 3개(세로, compact) + 차트 1개: 카테고리별 재고 금액 묶음 막대 / 품절 위험 카테고리×ABC 스택 / 월별 발주 금액 추이 / WAPE 비교 가로 막대 / 배정 구성 도넛. 차트 카드에 한 줄 해석 자동 생성. (4) `fn_dashboard_v2` 에 charts 집계 5종 추가(호출 0.5초)
 - 다음: 같은 언어로 예측(ABC-XYZ 히트맵·등급별 재고·12개월 추이) → 발주 계획 → 배정·일정 순 (③~⑤)
 - 출처: 사용자 요청. 스크린샷 /tmp/scmpro/dash-v3.png 로 확인
+
+## D-033 (2026-09-14) 카드 표면 스타일 통일 — 액센트 띠 제거, 그림자·글로우·그라데이션
+- 배경: 왼쪽에만 색 띠를 두는 DrillCard 스타일이 "AI 스러운" 인상이라는 사용자 피드백.
+- 결정: KpiTile·DrillCard·ChartCard 모두 `.scm-card` (globals.css) 한 클래스로 표면 통일. CSS 변수 `--acc/--acc-soft` 를 카드가 인라인으로 주입(액센트·톤별).
+  - 평상시: `linear-gradient(135deg, soft 0%, #fff 55%)` 배경 + 이중 drop shadow(1px/4px).
+  - 호버: 액센트색 outer glow(`0 0 0 3px acc@18%` + `0 8px 28px acc@28%`), 테두리 액센트 45%, translateY(-1px).
+  - warn/danger: `data-tone` 속성으로 노랑/빨강 액센트 치환(별도 배경색 클래스 제거).
+- 규칙 반영: R-UI-13 카드 표면 항목.

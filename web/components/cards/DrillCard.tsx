@@ -9,7 +9,7 @@ export function DrillCard({ label, value, hint, href, tone = "default", icon, ac
   const a = accent ? ACCENT[accent] : null;
   return (
     <Link href={href} prefetch className="group block h-full" aria-label={`${label} 상세 보기`}>
-      <Card className={cn("flex h-full flex-col gap-1 transition hover:border-primary hover:shadow-md", compact ? "min-h-[5.5rem] p-3" : "min-h-[7.5rem] p-4", tone === "danger" && "border-[#d03b3b]/50 bg-[#fdf1f1]", tone === "warn" && "border-[#fab219]/60 bg-[#fffaea]", a && tone === "default" && "border-l-4")} style={a && tone === "default" ? { borderLeftColor: a.hex } : undefined}>
+      <Card className={cn("scm-card flex h-full flex-col gap-1 rounded-xl", compact ? "min-h-[5.5rem] p-3" : "min-h-[7.5rem] p-4")} data-tone={tone} style={a && tone === "default" ? ({ "--acc": a.hex, "--acc-soft": a.soft } as React.CSSProperties) : undefined}>
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span className="flex items-center gap-1">{icon}{label}</span>
           <ArrowUpRight className="h-4 w-4 opacity-0 transition group-hover:opacity-100" />
