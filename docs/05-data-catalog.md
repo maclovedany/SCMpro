@@ -78,15 +78,50 @@ raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `
 `v_shipment_trend`, `v_item_demand_profile`, `v_item_demand_kpi`, `v_ol_accuracy`, `v_ol_accuracy_fy`, `v_bom_requirement`, `v_bom_requirement_x`, `v_part_linkage`, `v_realdata_kpi`
 (5회차 더미 뷰 `v_stockout_risk`, `v_stockout_kpi`, `v_leadtime_gap` 은 폐기 예정 — 07 파일 참조)
 
-## 3. 앞으로 추가될 테이블 (설계 예정, 규칙 ID 참조)
+## 3. `app` 스키마 (SP1 구현, migrations 000400~000700)
 
+공통 컬럼(마스터): `source`(upload/manual/seed/parsed) · `is_dummy` · `updated_by` · `updated_at`. 감사 트리거 `trg_audit` 부착 테이블은 ★.
+
+| 테이블 | 용도 | 규칙 |
+|---|---|---|
+| `app.profiles` | 사용자·역할(enum `app.role` 7종). auth.users 가입 트리거로 생성 | 01-business-process §4 |
+| `app.system_settings` ★ | key/value(jsonb): ol_lead_months, flex_ranges, dos_avg_months, ship_lead_days, submit_deadline_rule, reminder_interval_min, projection_past/future_months | R-OQ-10/11, R-SCH-05/20/21, R-UI-04 |
+| `app.supplier` ★ | 공급처 5곳: prep_days, lead_time_days, sailing_rule(SP5) | R-SCH-02/06 |
+| `app.item_setting` ★ | 목표 DoS, MOQ, pack_unit·min_order_amount(미사용), 단가, 배정방식, 승인상태 | R-OQ-02/30~33, R-AL-10 |
+| `app.inventory_snapshot` ★ | 품목·기준일·수량·재고구분(normal/inspection/defect/service_center/partner/in_transit) | R-INV-01/08 |
+| `app.inbound` ★ | 입고예정: 공급처, PO, 수량, 계획일/실제일, 상태(ordered/shipped/received) | R-INV-02, R-SCH-10 |
+| `app.attach_rate` ★ | 기종×옵션 장착률, 적용월 | R-BOM-04/05 |
+| `app.eol_eos` ★ | 기종 출시/EOL/EOS | R-FC-07 |
+| `app.holiday` ★ | 공휴일 | R-SCH-04 |
+| `app.shipment_extra` | raw 수정 금지 원칙에 따른 추가월 출고 (v_item_monthly UNION) | — |
+| `app.upload_log` | 업로드 이력·오류 행 | D-007 |
+| `app.audit_log` | 전 테이블 before/after/actor 이력 | 이력 요구 전부 |
+| `app.approval` ★ | 범용 승인함 kind(item_setting/target_dos/allocation_mode/order_plan/priority_alloc/bulkdeal) | R-OQ-40, R-AL-15 |
+| `app.notification` | 수신자·채널(system/email)·읽음·발송결과 | R-SCH-30 |
+
+### 뷰·물리화 뷰
+
+| 객체 | 내용 |
+|---|---|
+| `analytics.v_item_monthly` (MV) | 품목(HOC)×월 출고, 0 채움, SW 는 category='SW', shipment_extra 포함. **SP2 예측 입력** |
+| `analytics.v_item_master` (MV) | 품목 목록: 카테고리·6M평균·12M합·최근출고월·설정값·현재고·입고예정·DoS. PART 5,964 / SUPPLY 634 / OPTION 3,074 / SW 522 |
+| `core.v_option_model_link` | 옵션↔기종 (bridge/parsed/none), is_sw |
+| `app.v_item_setting` | 단가 마스킹 뷰 (관리 역할만 단가) |
+| `app.v_available_stock` | 가용재고 = 현재고 − 배정 (SP4 전 배정 0) |
+| `app.v_my_approvals` | 승인함 (요청자 본인 또는 팀장/관리자) |
+
+### RPC (security definer)
+
+`app.current_role()`, `app.fn_request_approval(kind, target_table, target_pk, payload, reason)`, `app.fn_decide_approval(id, decision, comment)`, `app.fn_apply_upload(target, rows, mode, file_name)`, `app.fn_dashboard_summary()`, `app.fn_refresh_matviews()`, `app.fn_mark_read(ids)`, `app.fn_unread_count()`, `app.notify_role/notify_user`
+
+### Supabase 대시보드 수동 설정
+Project Settings → Data API → **Exposed schemas**: `public, graphql_public, app, analytics, core`. 없으면 supabase-js `.schema('app')` 조회가 빈 배열/오류.
+
+### 아직 없는 테이블 (SP2~SP5)
 | 영역 | 후보 테이블 | 규칙 |
 |---|---|---|
-| 설정 | supplier, supplier_sailing_schedule, system_settings(ol_lead_months 등), item_setting(target_dos, moq, allocation_mode, pack_unit, min_order_amount) | R-OQ-02/11/30/32, R-SCH-02 |
 | 예측 | forecast_run(version), forecast_result(item, ym, method, value), forecast_accuracy | R-FC-11/21 |
-| 발주 | order_plan, order_plan_line(근거 컬럼 포함), approval_log | R-OQ-40/41 |
+| 발주 | order_plan, order_plan_line(근거 컬럼 포함) | R-OQ-40/41 |
 | 추가수요 | confirmed_order, meeting_approval, bulkdeal | R-OQ-20~25 |
-| 재고 | inventory_snapshot(category 구분), inbound(planned/actual date) | R-INV, R-SCH-10 |
-| 배정 | sales_order, allocation, allocation_priority, notification_log | R-AL |
-| 업로드 | attach_rate(장착률), eol_eos_schedule, holiday | D-004, Q-008, Q-009 |
-| 공통 | 위 설정·마스터 테이블 전부 `source`(upload/manual/seed) + `is_dummy` + `updated_by/at` 컬럼. 업로드 이력 테이블 upload_log | D-007 |
+| 배정 | sales_order, allocation, allocation_priority | R-AL |
+| 일정 | supplier_sailing, order_calendar | R-SCH |
