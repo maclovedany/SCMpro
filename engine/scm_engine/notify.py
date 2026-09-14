@@ -7,6 +7,11 @@ from .db.postgres import PostgresDB
 def send_pending(db: PostgresDB, limit: int = 200, dry_run: bool = False) -> dict:
     rows = db.read_df("""select n.id, n.title, n.body, p.email from app.notification n join app.profiles p on p.user_id = n.recipient
         where n.channel = 'email' and n.sent_at is null order by n.created_at limit %s""", (limit,))
+    # 이메일 발송 off (D-046): 대기 행은 '건너뜀' 으로 마감해 다시 켰을 때 과거 알림이 몰려 나가지 않게
+    en = db.read_df("select coalesce((select value::text from app.system_settings where key = 'notify_email_enabled'), 'true') as v")
+    if not rows.empty and str(en.iloc[0, 0]).strip('"') == "false":
+        db.execute("update app.notification set sent_at = now(), result = 'skipped:disabled' where id = any(%s)", (list(int(i) for i in rows.id),))
+        return {"sent": 0, "skipped": int(len(rows)), "failed": 0}
     host = os.environ.get("SMTP_HOST")
     sent = skipped = failed = 0
     if rows.empty:

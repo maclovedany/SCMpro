@@ -1,6 +1,6 @@
 # 규칙: 발주 시점 · 일정 · 알림 (R-SCH)
 
-최종 갱신: 2026-09-13 · 출처: stage1.md §3 §8, D-007, D-024 · 구현: migrations/20260913004000_schedule.sql (fn_business_day·fn_order_calendar·fn_submission_*·fn_tick·pg_cron), engine tick/notify, 화면 /schedule, /admin/suppliers
+최종 갱신: 2026-09-14 · 출처: stage1.md §3 §8, D-007, D-024 · 구현: migrations/20260913004000_schedule.sql (fn_business_day·fn_order_calendar·fn_submission_*·fn_tick·pg_cron), engine tick/notify, 화면 /schedule, /admin/suppliers
 
 ## 발주일
 
@@ -32,3 +32,4 @@
 | ID | 규칙 |
 |---|---|
 | R-SCH-30 | 모든 알림은 시스템 알림 + 이메일. 발송 대상·시각·확인 여부·발송 결과 이력 보관. |
+| R-SCH-31 | **알림 on/off (D-046)**: 시스템 설정 `notify_enabled`(전체 — false 면 시스템 알림 insert 자체를 트리거가 차단), `notify_email_enabled`(false 면 이메일 복제·발송 안 함, 대기분은 skipped:disabled 로 마감), `notify_reminders_enabled`(false 면 만료 예고·승인 독촉·미제출 독촉을 tick 이 건너뜀). 배정 만료 처리 등 업무 동작은 설정과 무관하게 계속된다. |

@@ -2,8 +2,10 @@ import pandas as pd
 from scm_engine import notify
 
 class FakeDB:
-    def __init__(self, rows): self.rows = rows; self.execs = []
-    def read_df(self, sql, params=()): return pd.DataFrame(self.rows)
+    def __init__(self, rows, email_enabled="true"): self.rows = rows; self.execs = []; self.email_enabled = email_enabled
+    def read_df(self, sql, params=()):
+        if "notify_email_enabled" in sql: return pd.DataFrame([{"v": self.email_enabled}])
+        return pd.DataFrame(self.rows)
     def execute(self, sql, params=()): self.execs.append((sql, params))
 
 def test_skipped_without_smtp(monkeypatch):
@@ -15,3 +17,9 @@ def test_skipped_without_smtp(monkeypatch):
 
 def test_empty():
     assert notify.send_pending(FakeDB([])) == {"sent": 0, "skipped": 0, "failed": 0}
+
+def test_email_disabled_marks_skipped(monkeypatch):
+    monkeypatch.setenv("SMTP_HOST", "smtp.example")
+    db = FakeDB([{"id": 1, "title": "t", "body": "b", "email": "a@b"}], email_enabled="false")
+    assert notify.send_pending(db) == {"sent": 0, "skipped": 1, "failed": 0}
+    assert "skipped:disabled" in db.execs[0][0]

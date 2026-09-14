@@ -29,3 +29,8 @@ it("AI 감시 설정 (D-042)", () => {
   expect(encodeSetting("agent_dos_ratio", "5").ok).toBe(false);
   expect(describeSetting("agent_mode", "dryrun")).toContain("드라이런");
 });
+it("알림 on/off 설정 (D-046)", () => {
+  expect(encodeSetting("notify_enabled", "false")).toEqual({ ok: true, json: "false" });
+  expect(encodeSetting("notify_email_enabled", true)).toEqual({ ok: true, json: "true" });
+  expect(describeSetting("notify_reminders_enabled", false)).toContain("끔");
+});

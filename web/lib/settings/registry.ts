@@ -22,6 +22,9 @@ export const SETTINGS: Record<string, SettingSpec> = {
   submission_depts: { kind: "dept-multi", label: "수요자료 제출 부서", help: "마감 후 미제출이면 반복 알림을 받는 부서" },
   projection_past_months: { kind: "int", label: "재고전개 과거 표시", unit: "개월", min: 1, max: 36, help: "재고전개 그리드에서 과거 몇 개월을 보여줄지" },
   projection_future_months: { kind: "int", label: "재고전개 미래 표시 (예측 지평선)", unit: "개월", min: 1, max: 24, help: "프로덕션 예측·발주 계획이 앞으로 몇 개월을 다룰지" },
+  notify_enabled: { kind: "select", label: "알림 (전체)", options: [{ value: true, label: "켬 — 시스템 알림 생성" }, { value: false, label: "끔 — 어떤 알림도 만들지 않음 (배정 만료 처리 등 동작은 계속)" }], help: "끄면 화면 알림·이메일이 모두 멈춥니다. 점검·테스트 중에만 끄세요 (D-046)" },
+  notify_email_enabled: { kind: "select", label: "이메일 발송", options: [{ value: true, label: "켬 — 알림을 이메일로도 보냄" }, { value: false, label: "끔 — 화면 알림만" }], help: "10분 주기 작업이 발송. 끄면 그동안의 알림은 이메일로 나가지 않습니다" },
+  notify_reminders_enabled: { kind: "select", label: "반복 알림 (독촉)", options: [{ value: true, label: "켬 — 승인 대기·미제출 부서·임시배정 만료 예고를 반복" }, { value: false, label: "끔 — 1회성 알림만" }], help: "우선배정 승인 독촉(10분), 수요자료 미제출 독촉(10분), 임시배정 만료 N일 전 예고" },
   auto_run_enabled: { kind: "select", label: "예측 자동 실행", options: [{ value: true, label: "켬 — 매월 자동으로 백테스트·프로덕션 예측" }, { value: false, label: "끔 — 예측 › 런 에서 수동 요청" }], help: "켜면 지정한 날·시각 이후 첫 주기 작업(10분)에서 실행하고 결과를 SCM팀장·품목담당자에게 알립니다 (D-041)" },
   auto_run_day: { kind: "int", label: "자동 실행일", unit: "일 (매월)", min: 1, max: 28, help: "출고 실적이 정리된 뒤가 좋습니다 (예: 5일)" },
   auto_run_hour: { kind: "int", label: "자동 실행 시각", unit: "시 (KST)", min: 0, max: 23, help: "업무 시간 전 새벽 권장 (예: 2시)" },
@@ -37,7 +40,7 @@ export const SETTINGS: Record<string, SettingSpec> = {
   engine_n_jobs: { kind: "int", label: "엔진 병렬 프로세스", unit: "개", min: 1, max: 8, help: "백테스트 병렬도. DB 가 작으면 2~3 (D-045)" },
   auto_run_tune: { kind: "select", label: "자동 실행 후 AI 오차 분석", options: [{ value: true, label: "생성 — 조정 제안을 결재함에 올림" }, { value: false, label: "생성 안 함" }], help: "제안은 팀장 승인 전까지 적용되지 않습니다 (D-021)" },
 };
-export const SETTING_ORDER = ["fiscal_year_start_month", "ol_lead_months", "flex_ranges", "dos_avg_months", "default_lead_time_days", "ship_lead_days", "temp_alloc_days", "expiry_reminder_days", "reminder_interval_min", "submit_deadline_rule", "submission_depts", "projection_past_months", "projection_future_months", "auto_run_enabled", "auto_run_day", "auto_run_hour", "auto_run_backtest", "auto_run_tune", "ai_model"];
+export const SETTING_ORDER = ["fiscal_year_start_month", "ol_lead_months", "flex_ranges", "dos_avg_months", "default_lead_time_days", "ship_lead_days", "temp_alloc_days", "expiry_reminder_days", "reminder_interval_min", "submit_deadline_rule", "submission_depts", "projection_past_months", "projection_future_months", "notify_enabled", "notify_email_enabled", "notify_reminders_enabled", "auto_run_enabled", "auto_run_day", "auto_run_hour", "auto_run_backtest", "auto_run_tune", "ai_model"];
 export type Flex = { offset: number; pct: number };
 /** 화면 값 → 저장 JSON 문자열. 오류면 메시지 */
 export function encodeSetting(key: string, value: unknown): { ok: true; json: string } | { ok: false; error: string } {

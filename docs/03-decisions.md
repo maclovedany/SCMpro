@@ -299,3 +299,8 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 장애: 09:22 백테스트 중 Postgres 크래시 루프(`pg_wal: No space left on device`). Free/nano 디스크 2GB 에 DB 1.2GB + WAL 576MB. 원인은 런 결과 무제한 누적(`forecast_result` 591MB, 12런), 라인 단위 감사 로그(`audit_log` 264MB), 같은 발주월의 계획 중복(212MB). Pro 조직 이전 + Micro 로 디스크 8GB 확장 후 복구(13:41). 정리 후 287MB.
 - 결정: 설정 `run_retention`(기본 3, 종류별 최근 N런만 결과 보관), `audit_retention_days`(90), `engine_n_jobs`(3). `fn_prune_runs` 를 런 종료 시·tick 에서 호출. 대량 테이블(`order_plan_line`, `forecast_result`, `forecast_accuracy`)은 감사 트리거 제외(계획·런 단위 이력으로 충분). AI 제안 프롬프트 원문은 20KB 까지만 보관. CLI 기본 병렬도 6→3. 런·물리화 뷰 refresh·e2e 동시 실행 금지(10-operations).
 - 이번 정리에서 삭제한 것: 완료 런 결과(최신 백테스트·프로덕션 1개씩만 유지), 2026-09 중복 계획 9개(최신 승인 1개 유지, 제출 OL 은 최신 계획분 유지), 3일 이전 감사 로그.
+
+## D-046 (2026-09-14) 알림 on/off 를 시스템 설정으로
+- 배경: 10분 반복 알림·이메일을 관리자가 화면에서 끄고 켤 수 있어야 한다(사용자 요청).
+- 결정: 설정 3개 — `notify_enabled`(전체, before-insert 트리거 `trg_notify_gate`), `notify_email_enabled`(이메일 복제 트리거 + `notify.send_pending` 이 대기분 skipped:disabled 처리), `notify_reminders_enabled`(`fn_allocation_tick` 예고·독촉 루프와 `fn_tick` 의 제출 독촉 가드). 기본 전부 켬. 시스템 설정 화면 최상단 그룹.
+- 규칙 반영: schedule.md 신규 규칙(R-SCH 마지막 번호), 가이드 6-2.
