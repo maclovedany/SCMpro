@@ -76,5 +76,7 @@ E2E 는 `E2E_BASE_URL=http://localhost:3001` 로 기존 dev 서버에 붙여 실
 | 7 | 운영 이관 문서 (D-043) | `09-integration-plan.md`, `10-operations.md` |
 | 8 | 물류 구간 분석 | Q-020 등록(데이터 대기) |
 | — | 디스크 장애 대응 (D-045): 런·계획·감사로그 정리 1.2GB→287MB, `fn_prune_runs`, 보존 설정 3개, 감사 트리거 축소, 병렬도 3 | Pro/Micro 8GB 이전 후 복구; 정리 후 3런 보관 상태 454MB |
-| — | 전체 회귀 | pytest 46 · vitest 67 · lint 0 error · e2e 16 spec 직렬 통과 (아래 로그) |
+| — | 알림 on/off 설정 (D-046): 전체·이메일·반복 독촉 | DB 게이트 검증(전체 off → 0건, 이메일 off → system 만), tick 정상, admin e2e, pytest notify |
+| — | 차트 반응형 (D-047): 도넛 측정 기반 배치, 4열은 1400px 이상 | 1100/1300/1500px 스크린샷, orders·dashboard·allocation·schedule e2e |
+| — | 전체 회귀 | pytest 46 · vitest 67 · lint 0 error · e2e 16 spec 직렬 통과 |
 스크린샷: /tmp/scmpro/{agent,runs,item-ol,scorecard,settings-agent}.png

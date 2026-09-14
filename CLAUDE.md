@@ -70,13 +70,14 @@ E2E_BASE_URL=http://localhost:3001 npm run test:e2e   # 이미 떠 있는 dev �
 cd engine && uv run pytest
 ```
 - Supabase 대시보드: Data API → Exposed schemas 에 `app, analytics, core` 필요.
-- 상태: **SP1~SP6 전부 완료** (2026-09-13, docs/reports/final-verification.md). 남은 것은 실데이터 수령(장착률·EOL·재고·MOQ·단가·공급처)과 운영 이관(SMTP, 배포). 서브프로젝트 목록: docs/01-business-process.md §7.
+- 상태: **SP1~SP6 + 확장 A~D 완료** (2026-09-14, docs/reports/final-verification.md): 디자인 언어, OL 시계열·자동 런·발주 피드백 루프, 자율 모드 AI 감시(기본 off), 운영 문서(09/10)·보존 정책·알림 스위치. 남은 것은 실데이터 수령(장착률·EOL·재고·MOQ·단가·공급처·물류 로그 Q-020)과 운영 이관(배포·ERP 연동). Supabase 는 Pro/Micro 8GB (2026-09-14 디스크 장애 후 이전, D-045). 서브프로젝트 목록: docs/01-business-process.md §7.
 - LLM: OpenAI `gpt-5-nano` (D-017, R-AI). `OPENAI_API_KEY` 는 engine/.env, web/.env.local 에.
 
 ## E2E 반복 실행 전 정리 (DB 상태를 바꾸는 테스트)
 `tests/e2e/global-setup.ts` 가 매 실행 전 E2E 주문·배정 취소 + 더미 입고(556K59129 seed) 재개방을 자동 수행한다(engine/.env DB URL + psql 필요, D-036). 배지 숫자 때문에 스펙은 직렬(`--workers=1`)로 돌리는 것이 안전. 전체 초기화가 필요하면 아래 SQL:
 ```sql
 delete from app.order_plan where status='draft'; delete from app.allocation; delete from app.sales_order;
-update app.inbound set status='ordered', actual_date=null where po_no='PO-E2E-ALLOC'; delete from app.demand_submission;
+update app.inbound set status='ordered', actual_date=null where item_code='556K59129' and is_dummy; delete from app.demand_submission;
+delete from app.agent_event; update app.approval set status='rejected', comment='cleanup', decided_at=now() where status='pending' and kind='agent_order';
 update app.approval set status='rejected', comment='cleanup', decided_at=now() where status='pending' and kind in ('bulkdeal','priority_alloc');
 ```
