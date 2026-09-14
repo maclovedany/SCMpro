@@ -37,7 +37,7 @@ export default async function ItemsPage({ searchParams }: { searchParams: Promis
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {["", ...CATEGORIES].map(c => (
-          <Link key={c || "all"} href={drillHref("/items", { ...sp, category: c || undefined, page: undefined })}
+          <Link scroll={false} key={c || "all"} href={drillHref("/items", { ...sp, category: c || undefined, page: undefined })}
             className={cn("rounded-full border px-3 py-1 text-sm", (f.category ?? "") === c ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{c || "전체"}</Link>
         ))}
         {active.map(a => <Link key={a.k} href={without(a.k)}><Badge variant="secondary">{a.label} ✕</Badge></Link>)}
@@ -45,8 +45,8 @@ export default async function ItemsPage({ searchParams }: { searchParams: Promis
       <ItemsTable rows={rows} />
       <div className="flex items-center justify-end gap-2 text-sm">
         <span>{page} / {pages}</span>
-        <Link href={drillHref("/items", { ...sp, page: Math.max(1, page - 1) })} aria-disabled={page <= 1}><Button variant="outline" size="sm" disabled={page <= 1}>이전</Button></Link>
-        <Link href={drillHref("/items", { ...sp, page: Math.min(pages, page + 1) })}><Button variant="outline" size="sm" disabled={page >= pages}>다음</Button></Link>
+        <Link scroll={false} href={drillHref("/items", { ...sp, page: Math.max(1, page - 1) })} aria-disabled={page <= 1}><Button variant="outline" size="sm" disabled={page <= 1}>이전</Button></Link>
+        <Link scroll={false} href={drillHref("/items", { ...sp, page: Math.min(pages, page + 1) })}><Button variant="outline" size="sm" disabled={page >= pages}>다음</Button></Link>
       </div>
     </div>
   );

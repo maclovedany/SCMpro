@@ -53,10 +53,10 @@ export function PlanDetail({ plan, lines, treeRows, months, filters, canEdit, to
       <div className="flex flex-wrap items-center gap-2 text-sm">
         {[["전체", {}], ["품절 위험", { risk: true }], ["차단", { blocked: true }], ["Flex 도달", { flex: true }]].map(([label, f]) => {
           const active = JSON.stringify(f) === JSON.stringify(Object.fromEntries(Object.entries(filters).filter(([k, v]) => v && k !== "q")));
-          return <Link key={label as string} href={drillHref(base, f as Record<string, boolean>)} className={cn("rounded-full border px-3 py-1", active ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{label as string}</Link>; })}
+          return <Link scroll={false} key={label as string} href={drillHref(base, f as Record<string, boolean>)} className={cn("rounded-full border px-3 py-1", active ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{label as string}</Link>; })}
         <span className="text-muted-foreground">{fmtInt(lines.length)} / {fmtInt(total)} 라인 (페이지 {page}/{Math.max(1, Math.ceil(total / pageSize))})</span>
-        <Link href={drillHref(base, { ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)), page: Math.max(1, page - 1) })} className="rounded border px-2 py-0.5">이전</Link>
-        <Link href={drillHref(base, { ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)), page: page + 1 })} className="rounded border px-2 py-0.5">다음</Link>
+        <Link scroll={false} href={drillHref(base, { ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)), page: Math.max(1, page - 1) })} className="rounded border px-2 py-0.5">이전</Link>
+        <Link scroll={false} href={drillHref(base, { ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)), page: page + 1 })} className="rounded border px-2 py-0.5">다음</Link>
         {canEdit && <Button size="sm" className="ml-auto" onClick={() => setConfirmOpen(true)} disabled={pending}>확정 → 팀장 승인 요청</Button>}
       </div>
       <section className="rounded-md border p-3">

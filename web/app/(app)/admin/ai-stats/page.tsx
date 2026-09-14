@@ -22,7 +22,7 @@ export default async function AiStatsPage({ searchParams }: { searchParams: Prom
   return (
     <div className="space-y-4">
       <div><h1 className="text-xl font-semibold">AI 질문 통계</h1><p className="text-sm text-muted-foreground">사용자들이 주로 무엇을 묻는지 — 주제·일별·사용자별 (R-AI-06). 카드 클릭 시 해당 질문 목록.</p></div>
-      <div className="flex gap-2 text-sm">{[7, 30, 90].map(d => <Link key={d} href={drillHref(base, { days: d, topic: sp.topic })} className={cn("rounded-full border px-3 py-1", d === days ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{d}일</Link>)}</div>
+      <div className="flex gap-2 text-sm">{[7, 30, 90].map(d => <Link scroll={false} key={d} href={drillHref(base, { days: d, topic: sp.topic })} className={cn("rounded-full border px-3 py-1", d === days ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{d}일</Link>)}</div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <DrillCard label={`질문 (${days}일)`} value={fmtInt(s.total)} hint={`오늘 ${fmtInt(s.today)}`} href={drillHref(base, { days })} />
         <DrillCard label="활성 사용자" value={fmtInt(s.users)} hint={s.top_users[0] ? `최다 ${s.top_users[0].name} ${s.top_users[0].n}건` : ""} href={drillHref(base, { days })} />

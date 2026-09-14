@@ -16,8 +16,8 @@ export default async function UploadPage({ searchParams }: { searchParams: Promi
     <div className="space-y-4">
       <div><h1 className="text-xl font-semibold">데이터 업로드</h1><p className="text-sm text-muted-foreground">파일 → 컬럼 매핑 → 검증 → 반영. 오류 행은 건너뛰고 이력에 기록됩니다 (D-007). 관리자 화면에서 개별 입력도 가능합니다.</p></div>
       <div className="flex gap-2">
-        <Link href={drillHref("/upload", {})} className={cn("rounded-full border px-3 py-1 text-sm", tab !== "log" ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>업로드</Link>
-        <Link href={drillHref("/upload", { tab: "log" })} className={cn("rounded-full border px-3 py-1 text-sm", tab === "log" ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>이력</Link>
+        <Link scroll={false} href={drillHref("/upload", {})} className={cn("rounded-full border px-3 py-1 text-sm", tab !== "log" ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>업로드</Link>
+        <Link scroll={false} href={drillHref("/upload", { tab: "log" })} className={cn("rounded-full border px-3 py-1 text-sm", tab === "log" ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>이력</Link>
       </div>
       {tab === "log" ? <UploadLog rows={logs} /> : <UploadWizard initialTarget={target} />}
     </div>

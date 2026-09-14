@@ -29,9 +29,9 @@ export default async function AgentPage({ searchParams }: { searchParams: Promis
       <div><h1 className="text-xl font-semibold">AI 감시</h1><p className="text-sm text-muted-foreground">시스템이 스스로 재고 부족·품절 위험·입고 지연·발주일 임박·수요 급증을 감지하고 판단해 알림·발주 제안을 만듭니다. 발주 반영은 항상 팀장 승인 뒤 (R-AI-10~15). 유용/불필요 피드백은 임계값 조정에 씁니다.</p></div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" data-testid="agent-kpi">{kpis.map(k => <KpiTile key={k.label} {...k} />)}</div>
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        {tabs.map(([v, l]) => <Link key={v} href={drillHref("/agent", { status: v || undefined, signal: sp.signal })} className={cn("rounded-full border px-3 py-1", (status === v || (!v && !sp.status)) && status !== "active" || (v === "active" && status === "active") ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{l}</Link>)}
+        {tabs.map(([v, l]) => <Link scroll={false} key={v} href={drillHref("/agent", { status: v || undefined, signal: sp.signal })} className={cn("rounded-full border px-3 py-1", (status === v || (!v && !sp.status)) && status !== "active" || (v === "active" && status === "active") ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{l}</Link>)}
         <span className="mx-2 text-muted-foreground">|</span>
-        {stats.by_signal.map(s => <Link key={s.signal} href={drillHref("/agent", { status: sp.status, signal: sp.signal === s.signal ? undefined : s.signal })} className={cn("rounded-full border px-3 py-1", sp.signal === s.signal ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{SIGNAL_LABEL[s.signal] ?? s.signal} {s.n}</Link>)}
+        {stats.by_signal.map(s => <Link scroll={false} key={s.signal} href={drillHref("/agent", { status: sp.status, signal: sp.signal === s.signal ? undefined : s.signal })} className={cn("rounded-full border px-3 py-1", sp.signal === s.signal ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{SIGNAL_LABEL[s.signal] ?? s.signal} {s.n}</Link>)}
       </div>
       <div className="scm-card rounded-xl p-3" style={{ "--acc": "#1baf7a", "--acc-soft": "#e6f6ef" } as React.CSSProperties}><AgentTable rows={rows} /></div>
     </div>

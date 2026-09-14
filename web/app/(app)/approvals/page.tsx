@@ -15,7 +15,7 @@ export default async function ApprovalsPage({ searchParams }: { searchParams: Pr
   return (
     <div className="space-y-4">
       <div><h1 className="text-xl font-semibold">승인함</h1><p className="text-sm text-muted-foreground">품목 설정·발주 계획·우선 배정 등 SCM팀장 결재. 승인 시 대상에 즉시 반영되고 요청자에게 알림이 갑니다.</p></div>
-      <div className="flex gap-2">{TABS.map(t => <Link key={t.s} href={drillHref("/approvals", { status: t.s })} className={cn("rounded-full border px-3 py-1 text-sm", st === t.s ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{t.label}</Link>)}</div>
+      <div className="flex gap-2">{TABS.map(t => <Link scroll={false} key={t.s} href={drillHref("/approvals", { status: t.s })} className={cn("rounded-full border px-3 py-1 text-sm", st === t.s ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{t.label}</Link>)}</div>
       <ApprovalList rows={rows} canDecide={canApprove(p.role)} />
     </div>
   );
