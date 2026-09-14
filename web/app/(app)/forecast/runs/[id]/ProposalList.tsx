@@ -11,7 +11,7 @@ import { describeProposal, humanize, PROPOSAL_STATUS } from "@/lib/forecast/tuni
 type Proposal = { id: string; model: string; status: string; created_at: string | null; response: unknown; comment: string | null };
 type Resp = { diagnosis?: { area: string; finding: string; evidence: string }[]; proposals?: { method_key: string; param_patch: Record<string, unknown>; enabled: boolean | null; scope: string; rationale: string; expected_effect: string }[]; data_issues?: string[]; dos_adjustments?: { scope: string; key: string; target_dos_days: number; rationale: string }[] };
 /** AI 오차 분석·조정 제안 — 사람 말로 (D-052). methods: 기법 키 → 현재 params (현재 → 제안 표시용) */
-export function ProposalList({ runId, proposals, methods, canRequest }: { runId: string; proposals: Proposal[]; methods: Record<string, Record<string, unknown>>; canRequest: boolean }) {
+export function ProposalList({ runId, proposals, methods, canRequest }: { runId: string; proposals: Proposal[]; methods: Record<string, { params: Record<string, unknown>; enabled: boolean | null }>; canRequest: boolean }) {
   const router = useRouter();
   const [reason, setReason] = useState<Record<string, string>>({});
   const [pending, start] = useTransition();

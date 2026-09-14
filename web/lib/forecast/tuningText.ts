@@ -17,12 +17,14 @@ export function describePatch(patch: Record<string, unknown> | null | undefined,
   return Object.entries(patch).map(([k, v]) => { const m = PARAM_LABEL[k] ?? { label: k }; const cur = current?.[k];
     return cur != null && cur !== v ? `${m.label} ${fmtVal(cur, m.unit)} → ${fmtVal(v, m.unit)}` : `${m.label} ${fmtVal(v, m.unit)}`; }).join(", ");
 }
-/** 제안 한 줄: "이동평균 12M: 평균 기간 9개월 → 12개월 (전체)" */
-export function describeProposal(p: { method_key: string; param_patch?: Record<string, unknown> | null; enabled?: boolean | null; scope?: string }, current?: Record<string, unknown> | null): string {
+const SCOPE_LABEL: Record<string, string> = { item: "품목 레벨", model: "기종 레벨", intermittent: "간헐 패턴", lumpy: "간헐·변동 패턴", smooth: "안정 패턴", erratic: "불규칙 패턴", A: "A 등급", B: "B 등급", C: "C 등급" };
+/** 제안 한 줄: "이동평균 12M: 평균 기간 9개월 → 12개월 (품목 레벨)". 현재 상태와 같은 켬/끔은 생략, 전체 범위(system-wide/global/all)는 생략 */
+export function describeProposal(p: { method_key: string; param_patch?: Record<string, unknown> | null; enabled?: boolean | null; scope?: string }, current?: { params?: Record<string, unknown> | null; enabled?: boolean | null } | Record<string, unknown> | null): string {
+  const cur = current && ("params" in (current as object) || "enabled" in (current as object)) ? (current as { params?: Record<string, unknown> | null; enabled?: boolean | null }) : { params: current as Record<string, unknown> | null };
   const parts: string[] = [];
-  const patch = describePatch(p.param_patch, current); if (patch) parts.push(patch);
-  if (p.enabled != null) parts.push(p.enabled ? "기법 켬" : "기법 끔");
-  const scope = p.scope && !["global", "all", "전체"].includes(p.scope) ? ` (${p.scope})` : "";
+  const patch = describePatch(p.param_patch, cur.params); if (patch) parts.push(patch);
+  if (p.enabled != null && (cur.enabled == null || cur.enabled !== p.enabled)) parts.push(p.enabled ? "기법 켬" : "기법 끔");
+  const sc = (p.scope ?? "").trim(); const scope = sc && !/^(global|all|system[- ]?wide|전체)$/i.test(sc) ? ` (${SCOPE_LABEL[sc] ?? sc})` : "";
   return `${METHOD_LABEL[p.method_key] ?? p.method_key}: ${parts.join(" · ") || "변경 없음"}${scope}`;
 }
 /** LLM 이 남긴 키 이름·소수를 사람 말로: scm_ol_bias → SCM OL Bias, 0.3644 → 36.4% (0~1 사이 소수만), `(key: v, key2: v)` 괄호 블록 정리 */

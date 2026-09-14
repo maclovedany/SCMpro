@@ -23,7 +23,7 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
   const sb = await createServerSupabase();
   const [{ run, acc, proposals }, { methods }, profile] = await Promise.all([fetchRunDetail(sb, id), fetchMethods(sb), getProfile()]);
   if (!run) notFound();
-  const methodParams = Object.fromEntries(methods.map(m => [m.key, (m.params ?? {}) as Record<string, unknown>]));
+  const methodParams = Object.fromEntries(methods.map(m => [m.key, { params: (m.params ?? {}) as Record<string, unknown>, enabled: m.enabled }]));
   const s = (run.summary ?? {}) as Record<string, unknown>;
   const lvl = (l: string, k?: string) => acc.filter(r => r.level === l && (k ? r.key === k : true));
   const num = (k: string) => (s[k] == null ? null : Number(s[k]));

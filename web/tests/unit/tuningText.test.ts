@@ -6,6 +6,8 @@ describe("AI 제안 사람 말 (D-052)", () => {
     expect(describePatch({ lags: 18, n_estimators: 900, learning_rate: 0.03 }, { lags: 12, n_estimators: 600, learning_rate: 0.04 })).toBe("과거 참조 기간 12개월 → 18개월, 트리 수 600 → 900, 학습률 0.04 → 0.03");
     expect(describeProposal({ method_key: "ma12", param_patch: { window: 12 }, enabled: null, scope: "global" }, { window: 9 })).toBe("이동평균 12M: 평균 기간 9개월 → 12개월");
     expect(describeProposal({ method_key: "prophet", param_patch: {}, enabled: false, scope: "all" })).toBe("Prophet: 기법 끔");
+    expect(describeProposal({ method_key: "lgbm", param_patch: { lags: 18 }, enabled: true, scope: "system-wide" }, { params: { lags: 12 }, enabled: true })).toBe("LightGBM: 과거 참조 기간 12개월 → 18개월");   // 이미 켜짐 → 생략
+    expect(describeProposal({ method_key: "sba", param_patch: { alpha: 0.3 }, enabled: true, scope: "intermittent" }, { params: { alpha: 0.2 }, enabled: false })).toBe("SBA: 평활 계수 0.2 → 0.3 · 기법 켬 (간헐 패턴)");
   });
   it("근거 문장의 키·소수를 사람 말로", () => {
     expect(humanize("SCM OL 편향(scm_ol_bias) 0.3645 (scm_ol_bias: 0.36449574058807366, scm_ol_wape: 0.4824402308326463, item_scm_ol_n: 0)"))
