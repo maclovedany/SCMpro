@@ -7,7 +7,7 @@
 ## 문서 지도
 | 문서 | 언제 보나 |
 |---|---|
-| `docs/11-system-overview.md` | **처음 보는 사람용 한 장 요약** — 목적·기능 맵·구성도·데이터 흐름·업무 흐름·역할별 사용법 |
+| `docs/11-system-overview.md` | **시스템 전체 요약 설명** — 목적·기능 맵·구성도·데이터 흐름·업무 흐름·역할별 사용법 |
 | `docs/00-glossary.md` | 용어(OL, DoS, HOC, CAP, Flex …)가 나올 때 |
 | `docs/01-business-process.md` | 월간 발주 사이클·카테고리별 산출 방식을 알아야 할 때 |
 | `docs/02-domain-rules/*.md` | **구현 규칙. 코드·SQL·테스트는 규칙 ID(`R-XX-nn`)를 주석으로 참조** |
