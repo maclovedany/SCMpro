@@ -62,7 +62,7 @@ uv --directory engine run engine forecast pending                   # 웹에서 
 uv --directory engine run engine tick                               # pg_cron 대안: 배정 만료·알림·제출 알림·이메일 발송 + 월 1회 자동 런(auto_run_* 설정, D-041) + AI 감시(agent_mode 설정, D-042)
 uv --directory engine run engine agent --mode dryrun --no-llm   # AI 감시 1회 수동 실행 (규칙 판단만)
 uv --directory engine run engine notify                             # 이메일 큐 발송 (SMTP 미설정 시 skipped)
-# 이 Mac 에 launchd 잡 com.scmpro.tick 이 10분마다 `engine tick` 실행 (~/Library/LaunchAgents/com.scmpro.tick.plist, 로그 /tmp/scmpro/tick.log). 운영은 Railway Cron(engine/Dockerfile, railway.json, D-049) — 둘 다 켜 두면 중복
+# 주기 실행은 **Railway Cron**(engine/Dockerfile + railway.json, `*/10 * * * *`, D-049). 이 Mac 의 launchd `com.scmpro.tick` 은 중복이라 중지 상태 — 둘 다 켜면 알림·이메일이 두 번 나간다 (로컬만 쓰려면 `launchctl load ~/Library/LaunchAgents/com.scmpro.tick.plist`, 로그 /tmp/scmpro/tick.log)
 # Web
 cd web && npm run dev            # http://localhost:3000  (계정: scripts/seed-users.mts — admin insightdany@naver.com, scm_lead upflash@naver.com, sales insightcha0624@gmail.com, biz_enable pro-worker@daum.net, marketing alltest@nate.com, service imagineworld@kakao.com · 초기 비밀번호 1q2w3e)
 npm test · npm run lint · npx tsc --noEmit
@@ -71,7 +71,7 @@ E2E_BASE_URL=http://localhost:3001 npm run test:e2e   # 이미 떠 있는 dev �
 cd engine && uv run pytest
 ```
 - Supabase 대시보드: Data API → Exposed schemas 에 `app, analytics, core` 필요.
-- 상태: **SP1~SP6 + 확장 A~D 완료** (2026-09-14, docs/reports/final-verification.md): 디자인 언어, OL 시계열·자동 런·발주 피드백 루프, 자율 모드 AI 감시(기본 off), 운영 문서(09/10)·보존 정책·알림 스위치. 남은 것은 실데이터 수령(장착률·EOL·재고·MOQ·단가·공급처·물류 로그 Q-020)과 운영 이관(배포·ERP 연동). Supabase 는 Pro/Micro 8GB (2026-09-14 디스크 장애 후 이전, D-045). 서브프로젝트 목록: docs/01-business-process.md §7.
+- 상태: **SP1~SP6 + 확장 A~D 완료** (2026-09-14, docs/reports/final-verification.md): 디자인 언어, OL 시계열·자동 런·발주 피드백 루프, 자율 모드 AI 감시(기본 off), 운영 문서(09/10)·보존 정책·알림 스위치. **배포 완료(2026-09-14)**: Web = Vercel `https://sc-mpro.vercel.app`(Root `web`, Framework Preset 반드시 Next.js, D-048) · Engine = Railway Cron(Root `engine`, 10분, D-049) · DB = Supabase Pro/Micro 8GB(디스크 장애 후 이전, D-045). 남은 것은 실데이터 수령(장착률·EOL·재고·MOQ·단가·공급처·물류 로그 Q-020)과 사내 이관(도메인·계정 정책·ERP 연동). 서브프로젝트 목록: docs/01-business-process.md §7.
 - LLM: OpenAI `gpt-5-nano` (D-017, R-AI). `OPENAI_API_KEY` 는 engine/.env, web/.env.local 에.
 
 ## E2E 반복 실행 전 정리 (DB 상태를 바꾸는 테스트)
