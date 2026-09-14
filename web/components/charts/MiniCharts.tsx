@@ -1,5 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
 import type { EChartsOption } from "echarts";
 import { base, axisCat, axisVal, barSpec, hbarSpec, lineSpec, compact, gridFor, TEXT, GRID } from "./theme";
 import { SERIES_LIGHT } from "@/lib/design/palette";
@@ -26,13 +27,22 @@ export function HBars({ labels, values, height = 220, color = SERIES_LIGHT[0], m
     series: [{ ...hbarSpec, data: values, itemStyle: { ...hbarSpec.itemStyle, color }, label: { show: true, position: "right", color: TEXT.secondary, fontSize: 11, formatter: (p: unknown) => { const v = Number((p as { value: unknown }).value); return money ? compact(v) : v.toLocaleString("ko-KR"); } } }] };
   return <ReactECharts option={opt} style={{ height }} notMerge onEvents={ev(onClick)} />;
 }
-/** 도넛 — 가운데 합계, 범례 우측, 세그먼트 2px 표면 간격 */
+/** 도넛 — 가운데 합계, 세그먼트 2px 표면 간격. 카드 폭을 측정해 좁으면(< 340px) 범례를 아래로 내리고 링을 가운데에 (R-UI-07 반응형) */
 export function Donut({ data, height = 200, centerLabel, colors, money = false, onClick }: Common & { data: { name: string; value: number }[]; centerLabel?: string; colors?: string[]; money?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null); const [w, setW] = useState(0);
+  useEffect(() => { const el = ref.current; if (!el) return; const ro = new ResizeObserver(e => setW(Math.round(e[0].contentRect.width))); ro.observe(el); return () => ro.disconnect(); }, []);
   const total = data.reduce((a, d) => a + d.value, 0); const fmt = (n: number) => (money ? compact(n) : n.toLocaleString("ko-KR"));
-  const opt: EChartsOption = { ...base, tooltip: { trigger: "item", valueFormatter: (v) => fmt(Number(v)) }, legend: { orient: "vertical", left: "62%", top: "middle", icon: "circle", itemWidth: 10, itemHeight: 10, textStyle: { color: TEXT.secondary, fontSize: 11 } },
-    series: [{ type: "pie", radius: ["54%", "78%"], center: ["30%", "50%"], data: data.map((d, i) => ({ ...d, itemStyle: { color: (colors ?? [...SERIES_LIGHT])[i], borderColor: "#fff", borderWidth: 2 } })), label: { show: false }, emphasis: { scale: false } }],
-    graphic: [{ type: "text", left: "30%", top: "middle", style: { text: `${centerLabel ?? "합계"}\n${fmt(total)}`, align: "center", fill: TEXT.primary, fontSize: 13, fontWeight: 600, lineHeight: 18 } }] };
-  return <ReactECharts option={opt} style={{ height }} notMerge onEvents={ev(onClick)} />;
+  const narrow = w > 0 && w < 340;
+  const legendRows = narrow ? Math.ceil(data.length / 2) : 0; const h = narrow ? height + legendRows * 18 : height;
+  // 링 반지름을 픽셀로: 좌측 영역(넓을 때 폭의 58%) 또는 전체 높이 중 작은 쪽 기준
+  const area = narrow ? Math.min(w, height) : Math.min(w * 0.58, height); const rOut = Math.max(40, area / 2 - 8); const rIn = rOut * 0.68;
+  const cx = narrow ? "50%" : `${Math.round(w * 0.29)}px`; const cy = narrow ? `${Math.round(height / 2)}px` : "50%";
+  const opt: EChartsOption = { ...base, tooltip: { trigger: "item", valueFormatter: (v) => fmt(Number(v)) },
+    legend: narrow ? { bottom: 0, left: "center", icon: "circle", itemWidth: 10, itemHeight: 10, textStyle: { color: TEXT.secondary, fontSize: 11 } }
+                   : { orient: "vertical", left: `${Math.round(w * 0.62)}px`, top: "middle", icon: "circle", itemWidth: 10, itemHeight: 10, textStyle: { color: TEXT.secondary, fontSize: 11 } },
+    series: [{ type: "pie", radius: [rIn, rOut], center: [cx, cy], data: data.map((d, i) => ({ ...d, itemStyle: { color: (colors ?? [...SERIES_LIGHT])[i], borderColor: "#fff", borderWidth: 2 } })), label: { show: false }, emphasis: { scale: false } }],
+    graphic: [{ type: "text", left: narrow ? "center" : `${Math.round(w * 0.29) - 40}px`, top: narrow ? `${Math.round(height / 2) - 16}px` : "middle", style: { text: `${centerLabel ?? "합계"}\n${fmt(total)}`, align: "center", width: 80, fill: TEXT.primary, fontSize: 13, fontWeight: 600, lineHeight: 18 } }] };
+  return <div ref={ref} className="w-full"><ReactECharts option={w ? opt : { ...base, series: [] }} style={{ height: h }} notMerge onEvents={ev(onClick)} /></div>;
 }
 /** 라인 (추이). 2px, 마커 8px, 영역 10% */
 export function Lines({ x, series, height = 220, pct = false, colors }: Common & { x: string[]; series: { name: string; data: (number | null)[] }[]; pct?: boolean; colors?: string[] }) {

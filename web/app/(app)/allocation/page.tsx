@@ -26,7 +26,7 @@ export default async function AllocationPage() {
     <div className="space-y-6">
       <div><h1 className="text-xl font-semibold">재고 배정</h1><p className="text-sm text-muted-foreground">대기 주문 큐(우선순위 → 검토요청 순), 입고 처리(자동/수동 배정), 수동 우선배정(팀장 승인), 만료·알림 처리 (R-AL-10~17, R-AL-30). 카드·차트를 누르면 해당 목록으로 이동합니다.</p></div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" data-testid="al-kpi">{kpis.map(k => <KpiTile key={k.label} {...k} />)}</div>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4" data-testid="al-charts">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 charts-4" data-testid="al-charts">
         <AllocationCharts kind="mix" c={c} /><AllocationCharts kind="queue" c={c} /><AllocationCharts kind="expiring" c={c} /><AllocationCharts kind="inbound" c={c} />
       </div>
       <AllocationPanel queue={queue} inbound={inbound as never} pending={pending} />

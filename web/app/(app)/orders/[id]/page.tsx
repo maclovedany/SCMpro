@@ -37,7 +37,7 @@ export default async function PlanPage({ params, searchParams }: { params: Promi
     <div className="space-y-4">
       <div className="flex items-center gap-2"><h1 className="text-xl font-semibold">발주 계획 {plan.plan_ym}</h1><Badge variant={plan.status === "approved" ? "default" : "outline"}>{STATUS[plan.status] ?? plan.status}</Badge><Link className="text-sm underline" href={`${base}/report`}>보고서</Link></div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5" data-testid="plan-kpi">{kpis.map(k => <KpiTile key={k.label} {...k} />)}</div>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4" data-testid="plan-charts">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 charts-4" data-testid="plan-charts">
         <OrderCharts kind="category" c={c} base={base} /><OrderCharts kind="needYm" c={c} base={base} /><OrderCharts kind="topItems" c={c} base={base} /><OrderCharts kind="risk" c={c} base={base} />
       </div>
       {plan.status === "approved" && <section className="scm-card rounded-xl p-3" data-testid="plan-scorecard" style={{ "--acc": "#1baf7a", "--acc-soft": "#e6f6ef" } as React.CSSProperties}>

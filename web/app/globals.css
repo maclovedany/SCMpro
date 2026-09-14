@@ -154,3 +154,6 @@ main table th:first-child, main table td:first-child { padding-left: 0.25rem; }
 }
 .scm-card[data-tone="warn"] { --acc: #fab219; --acc-soft: #fff3d1; }
 .scm-card[data-tone="danger"] { --acc: #d03b3b; --acc-soft: #fbdede; }
+
+/* 차트 4열 그리드: 1400px 이상에서만 4열 (그 아래는 md:grid-cols-2). 도넛 범례 겹침·차트 잘림 방지 (R-UI-07, D-047) */
+@media (min-width: 1400px) { .charts-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

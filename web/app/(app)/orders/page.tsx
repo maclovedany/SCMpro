@@ -37,7 +37,7 @@ export default async function OrdersPage() {
       {c && (
         <section data-testid="op-latest">
           <h2 className="mb-2 text-sm font-semibold text-muted-foreground">최신 계획 구성 — {latest!.plan_ym}</h2>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 charts-4">
             <OrderCharts kind="category" c={c} base={base} /><OrderCharts kind="needYm" c={c} base={base} /><OrderCharts kind="supplier" c={c} base={base} /><OrderCharts kind="risk" c={c} base={base} />
           </div>
         </section>)}

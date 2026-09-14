@@ -304,3 +304,8 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 배경: 10분 반복 알림·이메일을 관리자가 화면에서 끄고 켤 수 있어야 한다(사용자 요청).
 - 결정: 설정 3개 — `notify_enabled`(전체, before-insert 트리거 `trg_notify_gate`), `notify_email_enabled`(이메일 복제 트리거 + `notify.send_pending` 이 대기분 skipped:disabled 처리), `notify_reminders_enabled`(`fn_allocation_tick` 예고·독촉 루프와 `fn_tick` 의 제출 독촉 가드). 기본 전부 켬. 시스템 설정 화면 최상단 그룹.
 - 규칙 반영: schedule.md 신규 규칙(R-SCH 마지막 번호), 가이드 6-2.
+
+## D-047 (2026-09-14) 차트 반응형 — 도넛 범례 겹침·잘림 수정
+- 배경: 발주 계획 화면을 1300px 정도로 줄이면 4열 차트 카드가 ~245px 가 되어 도넛이 잘리고 범례가 링 위에 겹침(사용자 보고).
+- 결정: `Donut` 이 ResizeObserver 로 폭을 측정해 좁으면 범례 하단·링 중앙, 넓으면 링 좌측(폭 29%)·범례 우측(62%), 반지름은 픽셀로 계산. 4열 차트 그리드는 Tailwind 임의 브레이크포인트가 컴파일되지 않아 전역 CSS `.charts-4`(min-width 1400px) 로 통일(발주 목록·상세·재고 배정·일정). 1100/1300/1500px 스크린샷 검증.
+- 규칙 반영: R-UI-13 차트 반응형 항목.

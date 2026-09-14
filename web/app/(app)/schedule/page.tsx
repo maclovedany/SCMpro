@@ -28,7 +28,7 @@ export default async function SchedulePage() {
     <div className="space-y-6">
       <div><h1 className="text-xl font-semibold">발주 일정 · 제출 · 입고</h1><p className="text-sm text-muted-foreground">공급처 출항일 → 발주일(−준비기간)·입고예정(+선적 7일), 주말·공휴일은 이전 영업일 (R-SCH-01~05). 수요자료 마감 = 전월 말일−1, 미제출 부서 10분 반복 알림 (R-SCH-20/21). pg_cron 10분 tick.</p></div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" data-testid="sc-kpi">{kpis.map(k => <KpiTile key={k.label} {...k} />)}</div>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4" data-testid="sc-charts">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 charts-4" data-testid="sc-charts">
         <ScheduleCharts kind="rounds" c={c} /><ScheduleCharts kind="submission" c={c} depts={sub.depts ?? []} target={target} /><ScheduleCharts kind="gap" c={c} /><ScheduleCharts kind="dist" c={c} />
       </div>
       <SchedulePanel cal={cal} sub={sub} gap={gap} role={p?.role ?? "sales"} target={target} />
