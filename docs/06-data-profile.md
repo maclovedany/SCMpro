@@ -1,6 +1,7 @@
 # 데이터 검증 결과
 
-최종 갱신: 2026-09-13 · 대상: `scm.db` (SQLite, Supabase 적재본과 동일 원본) · 방법: 직접 SQL 집계
+최종 갱신: 2026-09-14(주석만) · 대상: `scm.db` (SQLite, Supabase 적재본과 동일 원본) · 방법: 직접 SQL 집계
+**이 문서는 2026-09-13 시점의 1회성 검증 스냅샷이다.** 수치는 그때 값 그대로 두고, 이후 확정된 결론만 D-/Q- 로 가리킨다. 현재 적재 행수는 `05-data-catalog.md` 를 본다.
 목적: 예측 기법 선택 근거, 마스터 매핑 갭, 정제 규칙 확인. 발견 사항의 결정은 `03-decisions.md`, 질문은 `04-open-questions.md`.
 
 ## 1. 출고 사실 (fact_shipment)
@@ -69,7 +70,7 @@
 
 ## 6. 적재 행수 차이
 
-`scm.db` 는 03-verify.sql 기대값과 약간 다름: dim_item 93,881 (기대 93,868), dim_model 156 (145), bridge_bom 7,170 (7,157). SQLite 원본이 이후 갱신된 것으로 보임. Supabase 적재 시 재검증 필요.
+`scm.db` 는 03-verify.sql 기대값과 약간 다름: dim_item 93,881 (기대 93,868), dim_model 156 (145), bridge_bom 7,170 (7,157). SQLite 원본이 이후 갱신된 것. **Supabase 적재 후 확인 결과 SQLite 값(93,881 / 156 / 7,170)이 맞았고, 05-data-catalog 의 행수를 이 값으로 맞췄다.**
 
 ## 7. 결론 → 결정·질문으로 이관
 

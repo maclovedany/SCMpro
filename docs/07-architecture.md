@@ -1,6 +1,6 @@
 # 시스템 아키텍처
 
-최종 갱신: 2026-09-13 · 근거: D-011(A안), D-013~D-026 · 상세 설계는 `docs/specs/*`, 규칙은 `docs/02-domain-rules/*`
+최종 갱신: 2026-09-14 · 근거: D-011(A안), D-013~D-049 · 상세 설계는 `docs/specs/*`, 규칙은 `docs/02-domain-rules/*`
 이 문서는 "어떤 구성 요소가 어떻게 연결되어 있는가"를 한 장에 담는다. 규칙·결정의 근거는 여기 반복하지 않고 ID 로 가리킨다.
 
 ## 1. 한 장 요약
@@ -12,8 +12,8 @@ flowchart LR
     U2[영업 · 마케팅 · 서비스 · 사업강화]
     U3[관리자]
   end
-  subgraph Web["Web — Next.js 16 (App Router)"]
-    P[화면 27 라우트<br/>서버 컴포넌트 + 클라이언트 위젯]
+  subgraph Web["Web — Next.js 16 (App Router) · Vercel"]
+    P[화면 28 라우트<br/>서버 컴포넌트 + 클라이언트 위젯]
     SA[서버 액션 / API<br/>(권한 검사 → RPC 호출)]
     AI[/api/ai/chat<br/>gpt-5-nano + 도구 9종/]
     PX[proxy.ts<br/>세션 갱신·미로그인 리다이렉트]
@@ -21,15 +21,17 @@ flowchart LR
   subgraph SB["Supabase (PostgreSQL 17)"]
     AUTH[Auth<br/>이메일/비밀번호]
     RAW[(raw<br/>원본 10 테이블<br/>앱 접근 차단)]
-    CORE[(core<br/>정제 뷰 7)]
-    AN[(analytics<br/>화면용 뷰·물리화 뷰 22)]
-    APP[(app<br/>업무 30 테이블 · RPC 43)]
-    CRON[pg_cron<br/>scm-tick */10분]
+    CORE[(core<br/>정제 뷰 8)]
+    AN[(analytics<br/>뷰 23 + 물리화 뷰 2)]
+    APP[(app<br/>업무 33 테이블 · 함수 59)]
+    CRON[pg_cron<br/>scm-tick */10분<br/>scm-refresh 매분]
   end
-  subgraph Eng["Engine — Python (uv)"]
+  subgraph Eng["Engine — Python (uv) · Railway Cron */10분"]
     CLI[engine CLI]
     FC[forecast: 분류·기법 13·백테스트·프로덕션]
-    TUNE[ai_tuning: 오차 분석 → 제안]
+    TUNE[ai_tuning: 오차 분석 → 제안·DoS 보정]
+    AUTO[auto_run: 월 1회 자동 런]
+    AGENT[agent: 감지→판단→알림·발주 제안]
     TICK[tick / notify: 배정 만료·알림·이메일]
   end
   OAI[(OpenAI API<br/>gpt-5-nano)]
@@ -46,7 +48,7 @@ flowchart LR
   RAW --> CORE --> AN
   APP --> AN
   CRON -->|fn_tick| APP
-  CLI --> FC & TUNE & TICK
+  CLI --> FC & TUNE & AUTO & AGENT & TICK
   FC -->|읽기: analytics · 쓰기: app.forecast_*| SB
   TUNE --> OAI
   TICK --> SMTP
@@ -56,11 +58,11 @@ flowchart LR
 
 | 구성 요소 | 기술 | 역할 | 위치 |
 |---|---|---|---|
-| Web | Next.js 16 App Router, TypeScript, Tailwind v4 + shadcn(base-ui), TanStack Query/Table/Virtual, ECharts, react-markdown | 화면·워크플로(확정/승인/배정/업로드), 발주량 산출 계산(`lib/order/calc.ts`), AI Agent 오케스트레이션 | `web/` |
+| Web | Next.js 16 App Router, TypeScript, Tailwind v4 + shadcn(base-ui), TanStack Query/Table/Virtual, ECharts, react-markdown | 화면·워크플로(확정/승인/배정/업로드), 발주량 산출 계산(`lib/order/calc.ts`), AI Agent 오케스트레이션 | `web/` → **Vercel** (D-048) |
 | Supabase | PostgreSQL 17, Auth, RLS, pg_cron | 단일 데이터 저장소 + **업무 로직의 트랜잭션 부분**(배정 상태머신, 승인 적용, 업로드 반영)은 security-definer RPC | `supabase/migrations/` |
-| Engine | Python 3.12, pandas, statsmodels, statsforecast, prophet, lightgbm, openai, psycopg | 무거운 배치: 예측 백테스트·프로덕션, AI 오차 분석, 주기 작업 대안, 데이터 적재/검증/타입 생성 | `engine/` |
+| Engine | Python 3.12, pandas, statsmodels, statsforecast, prophet, lightgbm, openai, psycopg | 무거운 배치: 예측 백테스트·프로덕션, 자동 런, AI 오차 분석, AI 감시, 주기 작업·이메일, 데이터 적재/검증/타입 생성 | `engine/` → **Railway Cron** (D-049) |
 | OpenAI | gpt-5-nano (설정 `ai_model`) | AI Agent 답변·주제 분류·요약, 예측 조정안 | 외부 |
-| SMTP | 선택 (환경변수) | 이메일 채널 발송. 미설정 시 `skipped:no_smtp` | 외부 |
+| SMTP | 네이버 SMTP (환경변수, D-029) | 이메일 채널 발송. 설정 `notify_email_enabled` 로 on/off, 미설정 시 `skipped:no_smtp` (D-046) | 외부 |
 
 **책임 분리 원칙 (D-011, D-022)**
 - 즉시 반응이 필요한 계산(발주량 DoS/Flex/MOQ, 재고전개 what-if)은 **TS 단일 구현** — 서버 액션과 화면이 같은 함수를 쓴다.
@@ -73,9 +75,9 @@ flowchart LR
 raw        원본 그대로(CSV 적재). 앱 역할은 USAGE 없음(fail-closed). 수정 금지.
   └─ core      정제 규칙 1회 적용: XCN 합산(v_shipment_by_hoc), 다중 HOC 귀속, 옵션↔기종 연결(v_option_model_link), 기종 마스터 정리
        └─ analytics  화면·엔진이 읽는 뷰. 물리화: v_item_monthly(품목×월 0채움), mv_item_stats. 일반 뷰: v_item_master(설정·재고 실시간 조인), v_mc_compare, v_forecast_*, v_order_plan_summary, v_inbound_gap, v_ai_*
-app        업무 데이터 30 테이블: 설정/마스터(system_settings, supplier, item_setting, inventory_snapshot, inbound, attach_rate, eol_eos, holiday),
-           공통 메커니즘(profiles, approval, notification, audit_log, upload_log), 예측(forecast_method/policy/run/result/accuracy, item_class, tuning_proposal),
-           발주(extra_demand, order_plan(_line), ol_submission), 배정(sales_order, allocation), 일정(demand_submission), AI(ai_conversation, ai_message)
+app        업무 데이터 33 테이블: 설정/마스터(system_settings, supplier, item_setting, inventory_snapshot, inbound, attach_rate, eol_eos, holiday, mc_plan_extra),
+           공통 메커니즘(profiles, approval, notification, audit_log, upload_log), 예측(forecast_method/policy/run/result/accuracy, item_class, tuning_proposal, auto_run_log),
+           발주(extra_demand, order_plan(_line), ol_submission), 배정(sales_order, allocation), 일정(demand_submission), AI(ai_conversation, ai_message, agent_event)
 ```
 - 모든 app 마스터 테이블: `source(upload/manual/seed/parsed)`, `is_dummy`, `updated_by/at` (D-007). 감사 트리거 `trg_audit` → `audit_log`.
 - 물리화 뷰 갱신: 출고 데이터가 바뀔 때만(`fn_refresh_matviews`). 설정·재고는 실시간 뷰로 조인해 승인·업로드가 즉시 반영 (D-014).
@@ -135,17 +137,18 @@ Topbar 버튼 → 우측 리사이즈 패널 → POST /api/ai/chat {conversation
 | 작업 | 실행 주체 | 주기 |
 |---|---|---|
 | `app.fn_tick()` (배정 만료·예고·승인 반복 알림·미제출 알림 — 반복 알림은 `notify_reminders_enabled`, D-046) | pg_cron `scm-tick` | 10분 |
-| `engine tick` = fn_tick + **자동 런**(월 1회, `auto_run_*`, D-041) + **AI 감시**(`agent_mode`, D-042) + 이메일 발송(`notify_email_enabled`) + 런 결과 정리(`fn_prune_runs`, D-045) | 현재 이 Mac 의 launchd `com.scmpro.tick`(10분, 로그 /tmp/scmpro/tick.log); 운영은 systemd timer (10-operations) | 10분 |
+| `engine tick` = fn_tick + **자동 런**(월 1회, `auto_run_*`, D-041) + **AI 감시**(`agent_mode`, D-042) + 이메일 발송(`notify_email_enabled`) + 런 결과 정리(`fn_prune_runs`, D-045) | **Railway Cron 서비스**(`engine/Dockerfile`+`railway.json`, D-049). 개발 Mac 의 launchd `com.scmpro.tick` 은 중복이라 중지 — 둘 중 하나만 | 10분 |
 | 예측 백테스트·프로덕션 | 자동 런(설정 켜면 매월 지정일) 또는 `engine forecast backtest/run`·웹 요청 후 `engine forecast pending` | 월 1회 + 수동 |
 | 물리화 뷰 refresh | 출고 업로드 시 `fn_request_refresh` 플래그 → pg_cron `scm-refresh`(매분) 가 `fn_refresh_matviews` 실행 (8초 제한 회피, D-030) | 1분 |
 
 ## 7. 환경·배포
 
+- **운영(2026-09-14 배포됨)**: Web = Vercel(Root `web`, 리전 icn1, `maxDuration=60`) · Engine = Railway Cron(Root `engine`, `*/10 * * * *`) · DB = Supabase **Pro / Micro / 디스크 8GB**. 절차는 `10-operations.md`.
 - 로컬: `web` dev 서버(3000/3001), `engine` uv, Supabase 클라우드 프로젝트 직결(psql/psycopg/supabase-js).
-- 마이그레이션: `supabase/scripts/migrate.sh` 가 파일명 순 psql 적용(재실행 안전, grants 가 항상 마지막). **엔진 런 중 실행 금지**(물리화 뷰 재생성).
+- 마이그레이션: `supabase/scripts/migrate.sh` 가 파일명 순 psql 적용(재실행 안전). **grants 는 파일명과 무관하게 스크립트가 마지막에 따로 실행**하지만, 새 마이그레이션은 자기 객체에 직접 `grant` 를 쓴다(파일명이 grants 보다 뒤인 경우 대비). **엔진 런 중 실행 금지**(물리화 뷰 재생성).
 - 타입: `engine gen-types` → `web/lib/types/database.ts` (supabase CLI 는 Docker 필요해 자체 생성기).
 - Supabase PostgREST 는 요청당 `statement_timeout` 8s — 파라미터 집계 RPC 는 `plan_cache_mode=force_custom_plan`, 대량 저장은 청크 (D-027).
-- 운영 이관 시 결정할 것: Web 호스팅(Vercel 등), Engine 실행 서버(cron — 지금은 개발 Mac 의 launchd), SMTP, OpenAI 키 관리, Supabase 요금제 → 상세는 `10-operations.md`, ERP/MES 연동은 `09-integration-plan.md`.
+- 남은 운영 과제: 사내 도메인·계정 정책, ERP/MES 연동, 백업 주기 확정, 디스크 사용률 모니터링(D-045) → 상세는 `10-operations.md`, ERP/MES 연동은 `09-integration-plan.md`.
 
 ## 8. 디렉터리 지도
 
@@ -157,10 +160,11 @@ web/lib/auth/roles.ts      역할·사이드바 6그룹 정의(MENU_GROUPS, R-UI
 web/components/{cards,charts,tables,ai,upload,layout}  공통 위젯(KpiTile·DrillCard·ChartCard·MiniCharts(묶음/스택/가로 막대·도넛·라인·히트맵)·TimeSeriesChart·DataGrid·TreeGrid·AiPanel)
 web/lib/design/palette.ts  디자인 토큰(시리즈·상태·액센트·카테고리·ABC 색, R-UI-13) · web/components/charts/theme.ts ECharts 마크 스펙 · globals.css `.scm-card` 카드 표면(D-037)
 web/lib/queries/{dashboard,forecast,orders,allocation,schedule}.ts  화면 개요 RPC 호출 + 차트 데이터 순수 함수(*Charts, vitest 대상)
-web/tests/e2e/global-setup.ts  e2e 실행 전 픽스처 리셋(E2E 주문·더미 입고, D-036)
+web/tests/e2e/global-setup.ts  e2e 실행 전 픽스처 리셋(E2E 주문·더미 입고·AI 감시 이벤트, D-036/042)
+web/vercel.json · engine/{Dockerfile,railway.json}  배포 설정 (D-048, D-049)
 engine/scm_engine/forecast/{classify,metrics,backtest,runner,store,ai_tuning}.py + methods/*  예측
 engine/scm_engine/{export_raw,verify,seed_app,gen_types,notify,cli}.py                      적재·검증·시드·타입·알림
 engine/scm_engine/agent.py  자율 모드 감시 파이프라인(D-042) · forecast/auto_run.py 월 1회 자동 런(D-041) — 둘 다 `engine tick` 에서 실행
 supabase/migrations/0001~0007 기반 · 0010 예측 · 0020 발주 · 0030 배정 · 0040 일정 · 0050 AI · 0060 대시보드 RPC · 0070/0071/0072 예측·발주·배정 화면 개요 RPC · 0080 OL 시계열(D-040) · 0081 자동 런(D-041) · 0082 AI 감시(D-042) · 0083 발주 피드백(D-044) · 0084 보존 정책(D-045) · 0085 알림 스위치(D-046) · 9999 권한
-docs/                      00 용어 · 01 업무절차 · 02 규칙(R-*) · 03 결정(D-*) · 04 미확인 · 05 데이터 카탈로그 · 06 데이터 검증 · 07 아키텍처 · specs · plans · reports
+docs/                      00 용어 · 01 업무절차 · 02 규칙(R-*) · 03 결정(D-*) · 04 미확인 · 05 데이터 카탈로그 · 06 데이터 검증 · 07 아키텍처 · 08 사용자 가이드 · 09 ERP 연동 계획 · 10 운영 · 11 전체 요약 · specs · plans · reports
 ```

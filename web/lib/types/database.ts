@@ -1519,6 +1519,7 @@ export type Database = {
       fn_manual_allocate: { Args: { p_order: string; p_qty: unknown; p_reason: string }; Returns: Json }
       fn_mark_read: { Args: { p_ids: number[] }; Returns: undefined }
       fn_notification_email_copy: { Args: Record<string, never>; Returns: unknown }
+      fn_notification_gate: { Args: Record<string, never>; Returns: unknown }
       fn_order_calendar: { Args: { p_from: unknown; p_months: number }; Returns: unknown }
       fn_order_inputs: { Args: { p_plan_ym: unknown; p_category: string }; Returns: Json }
       fn_override_line: { Args: { p_line_id: unknown; p_qty: unknown; p_reason: string }; Returns: undefined }
@@ -1526,6 +1527,7 @@ export type Database = {
       fn_plan_cat_projection: { Args: { p_plan_id: string }; Returns: Json }
       fn_plan_overview: { Args: { p_plan_id: string }; Returns: Json }
       fn_plan_scorecard: { Args: { p_plan_id: string }; Returns: Json }
+      fn_prune_runs: { Args: { p_keep: number }; Returns: Json }
       fn_receive_inbound: { Args: { p_inbound_id: unknown; p_actual: unknown }; Returns: Json }
       fn_recent_scorecards: { Args: { p_months: number }; Returns: Json }
       fn_refresh_if_requested: { Args: Record<string, never>; Returns: unknown }

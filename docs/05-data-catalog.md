@@ -1,6 +1,6 @@
 # 데이터 카탈로그
 
-최종 갱신: 2026-09-13 · 출처: 데이터 설명.docx, 01-schema.sql, 03-verify.sql, 04/05-views.sql, 파일 직접 확인
+최종 갱신: 2026-09-14 · 출처: 데이터 설명.docx, `supabase/migrations/*`, 적재 후 실제 행수 확인
 새 파일이 들어오면 **먼저 여기에 등록**하고 정제 규칙을 적는다.
 
 ## 1. 원본 파일
@@ -44,7 +44,21 @@
 | `20260913000600_app_views.sql` | `analytics` 물리화 뷰, `app` 뷰 |
 | `20260913000700_rls.sql` | RLS 정책 |
 | `20260913001000_forecast.sql` | SP2 예측: 기법 레지스트리·정책·런·결과·정확도·분류·AI 제안, 뷰 |
-| `20260913999900_grants.sql` | 권한. **항상 마지막** |
+| `20260913002000_order.sql` | SP3 발주: 추가수요·계획·라인·제출 OL·산출 RPC |
+| `20260913003000_allocation.sql` | SP4 주문·배정 상태머신 |
+| `20260913004000_schedule.sql` | SP5 일정·제출·입고 차이·이메일 복제·`fn_tick` |
+| `20260913005000_ai.sql` | SP6 AI 대화·통계·사이드바 배지 |
+| `20260913006000_dashboard.sql` | 대시보드 RPC `fn_dashboard_v2`(+charts) (D-031/032) |
+| `20260913007000_forecast_overview.sql` | 예측 화면 개요 RPC + `v_item_master.is_excess` (D-034) |
+| `20260913007100_plan_overview.sql` | 발주 계획 개요 RPC (D-035) |
+| `20260913007200_allocation_overview.sql` | 재고 배정 개요 RPC (D-036) |
+| `20260914008000_ol_series.sql` | OL 시계열: `mc_plan_extra`·`core.v_mc_plan_actual`·`v_item_ol*`, 업로드 대상 추가 (D-040) |
+| `20260914008100_auto_run.sql` | 자동 런 기록·설정 (D-041) |
+| `20260914008200_agent.sql` | AI 감시: 신호 RPC·`agent_event`·승인 트리거·통계 (D-042) |
+| `20260914008300_order_feedback.sql` | 사후 채점·오버라이드 패턴·DoS 조정 적용 (D-044) |
+| `20260914008500_notify_switch.sql` | 알림 on/off 게이트·이메일 복제·tick 가드 (D-046) |
+| `20260914008400_retention.sql` | 보존 정책 `fn_prune_runs`·설정·감사 트리거 축소 (D-045) |
+| `20260913999900_grants.sql` | 권한. **항상 마지막** — 파일명 순서상 앞서지만 `migrate.sh` 가 마지막에 따로 실행한다. 그래도 새 마이그레이션은 자기 객체에 직접 `grant` 를 쓴다 |
 
 raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `supabase/scripts/load-raw.sh` (\copy). 구 `02-data-*.sql`, `03-verify.sql`, `07-*.sql` 은 `supabase/legacy/` 참고용.
 
@@ -52,11 +66,11 @@ raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `
 
 | 테이블 | 행수 | 키/주요 컬럼 | 주의 |
 |---|---|---|---|
-| `raw.dim_item` | 93,868 | item_code PK, hoc_code, family, item_type(PART/SUPPLY/OPTION/BOM/MACHINE), source_types | 익명화 코드 (Q-013) |
-| `raw.dim_model` | 145 | model_key PK, model_base, biz(DT/GC/PRT), iot_code | model_base 빈 8행은 기종 아님 → `core.v_model` |
+| `raw.dim_item` | 93,881 | item_code PK, hoc_code, family, item_type(PART/SUPPLY/OPTION/BOM/MACHINE), source_types | 익명화 코드 (Q-013) |
+| `raw.dim_model` | 156 | model_key PK, model_base, biz(DT/GC/PRT), iot_code | model_base 빈 8행은 기종 아님 → `core.v_model` |
 | `raw.fact_shipment` | 103,795 | item_code, ym('YYYY-MM'), qty, item_type, source_file | **0 인 달 미저장.** PART 2023-04~2026-07, OPTION 2020-01~2026-07 |
 | `raw.fact_mc_plan_actual` | 2,765 | fy_sheet, model_key, model_base, biz, ym, sales_ol, scm_ol, act | Bias 양수 = 과대예측. **FY26 이후 새 시트는 업로드 대상 `mc_plan_actual` → `app.mc_plan_extra`**, 단일 소스는 `core.v_mc_plan_actual`(raw 변형 합산 ∪ 추가분, 추가분 우선; 엔진·`v_mc_compare` 가 읽음, D-040). `v_ol_accuracy(_fy)` 는 raw 파일 기준선 그대로 |
-| `raw.bridge_bom` | 7,157 | model_key, model_base, bom_group, item_code, qty, active(O/X/△), start/end_date(text) | active·date 는 GC 만 |
+| `raw.bridge_bom` | 7,170 | model_key, model_base, bom_group, item_code, qty, active(O/X/△), start/end_date(text) | active·date 는 GC 만 |
 | `raw.bridge_scc_config` | 88 | neutral_item_code → scc_item_code, qty | GC SCC 시트 |
 | `raw.bridge_mc_cap` | 106 | model_key, predecessor_model, cap_item_code, neutral_item_code | 전임기 정보 있음 (EOL 전환 분석에 활용 가능) |
 | `raw.bridge_cap_option` | 646 | cap_item_code → option_item_code, role(MUST_OPTION 340 / SCC/LABEL 306) | 필수옵션 전개 기준 |
@@ -67,9 +81,9 @@ raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `
 
 | 뷰 | 역할 | 관련 규칙 |
 |---|---|---|
-| `core.v_ym_calendar` | 데이터에 존재하는 모든 월 (79). 희소 저장 보완용 LEFT JOIN | R-FC-03 |
+| `core.v_ym_calendar` | 데이터에 존재하는 모든 월 (79: 2020-01~2026-07). 희소 저장 보완용 LEFT JOIN | R-FC-03 |
 | `core.v_item` | hoc_code 빈값 → 자기 자신 보정 | R-XCN-04 |
-| `core.v_model` | 기종 아닌 8행 제거 (137) | R-BOM-09 |
+| `core.v_model` | 기종 아닌 8행 제거 (148) | R-BOM-09 |
 | `core.v_part_linkage` | 구코드 → 대표코드 | R-XCN-01 |
 | `core.v_shipment_by_hoc` | **XCN 합산 월별 출고. 부품 조회는 항상 이것** | R-XCN-01 |
 | `core.v_option_commonality` | 옵션이 몇 기종에 공용인지 | R-BOM-06 |
@@ -77,7 +91,7 @@ raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `
 ### analytics 뷰 (화면·Tool 전용)
 
 `v_shipment_trend`, `v_item_demand_profile`, `v_item_demand_kpi`, `v_ol_accuracy`, `v_ol_accuracy_fy`, `v_bom_requirement`, `v_bom_requirement_x`, `v_part_linkage`, `v_realdata_kpi`
-(5회차 더미 뷰 `v_stockout_risk`, `v_stockout_kpi`, `v_leadtime_gap` 은 폐기 예정 — 07 파일 참조)
+(5회차 더미 뷰 `v_stockout_risk`·`v_stockout_kpi`·`v_leadtime_gap` 은 **삭제 완료**. 현재 analytics 는 뷰 23 + 물리화 뷰 2)
 
 ## 3. `app` 스키마 (SP1 구현, migrations 000400~000700)
 
@@ -86,7 +100,7 @@ raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `
 | 테이블 | 용도 | 규칙 |
 |---|---|---|
 | `app.profiles` | 사용자·역할(enum `app.role` 7종). auth.users 가입 트리거로 생성 | 01-business-process §4 |
-| `app.system_settings` ★ | key/value(jsonb): ol_lead_months, flex_ranges, dos_avg_months, ship_lead_days, submit_deadline_rule, reminder_interval_min, projection_past/future_months | R-OQ-10/11, R-SCH-05/20/21, R-UI-04 |
+| `app.system_settings` ★ | key/value(jsonb) 32개. 발주·일정: ol_lead_months, flex_ranges, dos_avg_months, default_lead_time_days, ship_lead_days, submit_deadline_rule, submission_depts, reminder_interval_min, temp_alloc_days, expiry_reminder_days, projection_past/future_months, fiscal_year_start_month · AI: ai_model · **알림**: notify_enabled/notify_email_enabled/notify_reminders_enabled (D-046) · **자동 런**: auto_run_enabled/day/hour/backtest/tune (D-041) · **AI 감시**: agent_mode/dos_ratio/lead_days/surge_pct/cooldown_hours/max_per_tick (D-042) · **보존·부하**: run_retention/audit_retention_days/engine_n_jobs (D-045) · 내부 플래그 matview_refresh_requested | R-OQ-10/11, R-SCH-05/20/21/31, R-UI-04/10 |
 | `app.supplier` ★ | 공급처 5곳: prep_days, lead_time_days, sailing_rule(SP5) | R-SCH-02/06 |
 | `app.item_setting` ★ | 목표 DoS, MOQ, pack_unit·min_order_amount(미사용), 단가, 배정방식, 승인상태 | R-OQ-02/30~33, R-AL-10 |
 | `app.inventory_snapshot` ★ | 품목·기준일·수량·재고구분(normal/inspection/defect/service_center/partner/in_transit) | R-INV-01/08 |
@@ -97,8 +111,11 @@ raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `
 | `app.shipment_extra` | 추가 출고 실적(과거 연도·최신 월). 업로드는 긴 형식 또는 회사 파일 넓은 형식 자동 변환. v_item_monthly 가 부품은 HOC 귀속·옵션 SW 분리해 UNION. 반영 후 `fn_request_refresh` → pg_cron `scm-refresh`(매분) 갱신 | D-030 |
 | `app.upload_log` | 업로드 이력·오류 행 | D-007 |
 | `app.audit_log` | 전 테이블 before/after/actor 이력 | 이력 요구 전부 |
-| `app.approval` ★ | 범용 승인함 kind(item_setting/target_dos/allocation_mode/order_plan/priority_alloc/bulkdeal) | R-OQ-40, R-AL-15 |
-| `app.notification` | 수신자·채널(system/email)·읽음·발송결과 | R-SCH-30 |
+| `app.approval` ★ | 범용 승인함 kind 8종(item_setting/target_dos/allocation_mode/order_plan/priority_alloc/bulkdeal/forecast_tuning/agent_order) | R-OQ-40, R-AL-15, R-FC-42, R-AI-13 |
+| `app.notification` | 수신자·채널(system/email)·읽음·발송결과. `trg_notify_gate`(전체 off)·`trg_email_copy`(이메일 복제) | R-SCH-30/31 |
+| `app.mc_plan_extra` | 기종 OL·실적 추가분(FY26~). `core.v_mc_plan_actual` 이 raw 와 합침 | R-FC-13, D-040 |
+| `app.auto_run_log` | 월 1회 자동 런 기록(백테스트/프로덕션 run id·summary·error) | R-FC-43, D-041 |
+| `app.agent_event` | AI 감시 이벤트(신호별 1행, 상태·판단·근거·피드백·승인 연결) | R-AI-14, D-042 |
 
 ### 뷰·물리화 뷰
 
@@ -114,7 +131,7 @@ raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `
 
 ### RPC (security definer)
 
-`app.current_role()`, `app.fn_request_approval(kind, target_table, target_pk, payload, reason)`, `app.fn_decide_approval(id, decision, comment)`, `app.fn_apply_upload(target, rows, mode, file_name)`, `app.fn_dashboard_summary()`, `app.fn_refresh_matviews()`, `app.fn_mark_read(ids)`, `app.fn_unread_count()`, `app.notify_role/notify_user`
+`app.current_role()`, `fn_request_approval`, `fn_decide_approval`, `fn_apply_upload(target, rows, mode, file_name)`, `fn_dashboard_summary()`, `fn_dashboard_v2()`, `fn_refresh_matviews()`, `fn_request_refresh()`, `fn_mark_read(ids)`, `fn_unread_count()`, `fn_sidebar_badges()`, `notify_role/notify_user`. app 스키마 함수는 현재 59개
 
 ### Supabase 대시보드 수동 설정
 Project Settings → Data API → **Exposed schemas**: `public, graphql_public, app, analytics, core`. 없으면 supabase-js `.schema('app')` 조회가 빈 배열/오류.
@@ -136,13 +153,30 @@ Project Settings → Data API → **Exposed schemas**: `public, graphql_public, 
 엔진 CLI: `engine forecast backtest --eval-fy 2025` · `run --horizon 6` · `pending` · `tune --run-id X`
 
 ### 발주 (SP3, migration 002000)
-`app.extra_demand`(수주확정·수급회의·Bulkdeal, 빈 문자열은 NULL 정규화) · `app.order_plan` / `order_plan_line`(근거·전개 jsonb) · `app.ol_submission`(승인 시 제출 OL) · `item_setting.supplier_id` · RPC `fn_order_inputs(plan_ym, category)`(force_custom_plan, 카테고리별 호출), `fn_save_order_plan(plan_ym, note, user)`, `fn_append_plan_lines`(500행 청크), `fn_finalize_order_plan`, `fn_override_line`, `fn_confirm_order_plan`, `fn_add_extra_demand`(→ jsonb {id, bulkdeal_overlap}), `fn_plan_cat_projection`, `fn_plan_overview(plan_id)`, 뷰 `analytics.v_item_ol`(품목 제출 OL 시계열 = 최신 `ol_submission`), `v_item_ol_accuracy`(품목별 제출 OL WAPE·Bias), `v_item_ol_accuracy_summary`(카테고리·전체) (D-040) · `app.auto_run_log`(월 1회 자동 런 기록: backtest/production run id·summary·error, D-041) · 설정 `auto_run_*` 5개 · `app.agent_event`(AI 감시 이벤트) · RPC `fn_agent_signals`(force_custom_plan)·`fn_agent_feedback`·`fn_agent_stats`, 트리거 `trg_agent_order_decided`, approval_kind `agent_order`, 설정 `agent_*` 6개 (migration 008200, D-042) · RPC `fn_plan_scorecard`·`fn_recent_scorecards`·`fn_override_patterns`, `fn_apply_tuning` DoS 조정 적용 (migration 008300, D-044) · `fn_prune_runs(keep)` + 설정 `run_retention`·`audit_retention_days`·`engine_n_jobs`, 대량 테이블 감사 트리거 제거 (migration 008400, D-045) · 알림 설정 `notify_*` 3개 + `trg_notify_gate`, 이메일 복제·tick 가드 (migration 008500, D-046)(카테고리·공급처·필요월·상위 10 품목·품절 리스크 집계, force_custom_plan, migration 007100, D-035) · 뷰 `analytics.v_order_plan_summary`(summary jsonb 기반). 계산은 `web/lib/order/calc.ts`. (D-022, D-026, D-027)
+`app.extra_demand`(수주확정·수급회의·Bulkdeal, 빈 문자열은 NULL 정규화) · `app.order_plan` / `order_plan_line`(근거·전개 jsonb) · `app.ol_submission`(승인 시 제출 OL) · `item_setting.supplier_id` · 뷰 `analytics.v_order_plan_summary`(summary jsonb 기반)
+RPC `fn_order_inputs(plan_ym, category)`(force_custom_plan, 카테고리별 호출), `fn_save_order_plan`, `fn_append_plan_lines`(500행 청크), `fn_finalize_order_plan`, `fn_override_line`, `fn_confirm_order_plan`, `fn_add_extra_demand`(→ jsonb {id, bulkdeal_overlap}), `fn_plan_cat_projection`, `fn_plan_overview(plan_id)`(카테고리·공급처·필요월·상위 10 품목·품절 리스크 집계, force_custom_plan, migration 007100, D-035). 계산은 `web/lib/order/calc.ts`. (D-022, D-026, D-027)
+
+### 학습 루프 (migration 008000·008100·008300)
+| 객체 | 내용 |
+|---|---|
+| `app.mc_plan_extra` + `core.v_mc_plan_actual` | 기종 OL·ACT = raw(변형 합산) ∪ 업로드 추가분(추가분 우선). 엔진·`v_mc_compare` 의 단일 소스 (D-040) |
+| `analytics.v_item_ol` / `v_item_ol_accuracy` / `v_item_ol_accuracy_summary` | 품목 제출 OL 시계열(최신 `ol_submission`)과 실적 대비 WAPE·Bias (D-040) |
+| `app.auto_run_log` + 설정 `auto_run_*` 5개 | 월 1회 자동 백테스트·프로덕션·AI 분석 기록 (D-041, R-FC-43) |
+| RPC `fn_plan_scorecard(plan)` · `fn_recent_scorecards(months)` · `fn_override_patterns(months)` | 사후 채점(제안 vs 실제 발주 vs 결과)·오버라이드 패턴 → AI 튜닝 입력 (D-044, R-OQ-42/43) |
+| `fn_request_tuning_approval` / `fn_apply_tuning` | 제안 payload 에 `dos_adjustments` 포함, 승인 시 목표 DoS 5~180일 가드로 적용 (D-044) |
+
+### 자율 모드 AI 감시 (migration 008200)
+`app.agent_event`(신호별 1행·쿨다운·피드백·승인 연결) · approval_kind `agent_order` · 트리거 `trg_agent_order_decided`(승인 → `extra_demand` 반영) · RPC `fn_agent_signals(dos_ratio, lead_days, surge_pct)`(force_custom_plan, 신호 5종)·`fn_agent_feedback`·`fn_agent_stats` · 설정 `agent_*` 6개 (D-042, R-AI-10~15). 엔진 `scm_engine/agent.py`, CLI `engine agent --mode --no-llm`.
+
+### 운영 (migration 008400·008500)
+`fn_prune_runs(keep)` + 설정 `run_retention`·`audit_retention_days`·`engine_n_jobs`, 대량 테이블(`order_plan_line`·`forecast_result`·`forecast_accuracy`) 감사 트리거 제거 (D-045) · 알림 설정 `notify_*` 3개 + `trg_notify_gate`, 이메일 복제·tick 가드 (D-046).
+
 ### 배정 (SP4, migration 003000)
 `app.sales_order` · `app.allocation`(temp/firm/hold) · 뷰 `app.v_sales_order`, `v_available_stock`(재정의), `v_allocation_queue` · RPC `fn_available_stock`, `fn_create_sales_order`, `fn_confirm_sales_order`, `fn_cancel_sales_order`, `fn_receive_inbound`, `fn_auto_allocate`, `fn_manual_allocate`, `fn_set_priority`, `fn_allocation_tick`, `fn_allocation_overview`(배정 구성·대기 부족 상위 10·임시배정 만료 예정 30일·입고 예정 월×공급처·90일 주문 상태·30일 요청 추이, migration 007200, D-036).
 ### 일정·알림 (SP5, migration 004000)
 `app.demand_submission` · `supplier.sailing_rule` · RPC `fn_business_day`, `fn_sailing_dates`, `fn_order_calendar`, `fn_submission_deadline/status`, `fn_submit_demand`, `fn_submission_reminder_tick`, `fn_tick`(pg_cron `scm-tick` */10) · 이메일 복제 트리거 `trg_email_copy` · 뷰 `analytics.v_inbound_gap(_summary)`.
 ### AI Agent (SP6, migration 005000)
-`app.ai_conversation` · `app.ai_message` · 뷰 `analytics.v_ai_stats_daily`, `v_ai_message_log` · RPC `fn_ai_stats`(force_custom_plan), `fn_sidebar_badges`(미읽음·승인 대기 배지, D-028), `fn_forecast_overview`(예측 화면 개요: ABC-XYZ 매트릭스(재고·DoS 포함)·등급별 재고·최근 12개월 카테고리 추이·챔피언 분포, migration 007000, D-034), `fn_dashboard_v2`(SCM 대시보드 5묶음 + 데이터 준비 + charts 집계: stock_by_cat·risk_by_cat_abc·plan_history·alloc_mix·accuracy_rounds, migration 006000, D-031/D-032; 구 `fn_dashboard_summary` 는 유지).
+`app.ai_conversation` · `app.ai_message` · 뷰 `analytics.v_ai_stats_daily`, `v_ai_message_log` · RPC `fn_ai_stats`(force_custom_plan), `fn_sidebar_badges`(미읽음·승인 대기 배지, D-028) · 화면 개요 RPC: `fn_forecast_overview`(예측 화면 개요: ABC-XYZ 매트릭스(재고·DoS 포함)·등급별 재고·최근 12개월 카테고리 추이·챔피언 분포, migration 007000, D-034), `fn_dashboard_v2`(SCM 대시보드 5묶음 + 데이터 준비 + charts 집계: stock_by_cat·risk_by_cat_abc·plan_history·alloc_mix·accuracy_rounds, migration 006000, D-031/D-032; 구 `fn_dashboard_summary` 는 유지).
 
 ### 향후 확장 후보
 | 영역 | 후보 테이블 | 규칙 |
