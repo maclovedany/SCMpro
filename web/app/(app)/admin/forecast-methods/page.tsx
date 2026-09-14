@@ -9,7 +9,7 @@ export default async function ForecastMethodsPage() {
   const { methods, policy } = await fetchMethods(await createServerSupabase());
   return (
     <div className="space-y-4">
-      <div><h1 className="text-xl font-semibold">예측 기법 설정</h1><p className="text-sm text-muted-foreground">기법 on/off · 파라미터 (D-018, R-FC-34) 와 ABC-XYZ 셀별 정책 (R-FC-35). 변경은 다음 런부터 적용, 이력은 audit_log.</p></div>
+      <div><h1 className="text-xl font-semibold">예측 기법 설정</h1><p className="text-sm text-muted-foreground">어떤 예측 기법을 쓸지 켜고 끄고, 기법마다 몇 가지 설정을 조정합니다. 바꾼 값은 다음 예측 런부터 적용되고 이력이 남습니다. 무엇을 바꿔야 할지 모르면 예측 › 런 의 AI 조정 제안을 따르세요.</p></div>
       <MethodTable methods={methods} policy={policy} />
     </div>
   );

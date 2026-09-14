@@ -1,10 +1,7 @@
 /** AI 조정 제안을 사람 말로 (D-052, R-UI-10): 기법 키·파라미터 키·JSON 대신 라벨·"현재 → 제안"·퍼센트 */
 import { METHOD_LABEL } from "@/lib/queries/forecast";
-export const PARAM_LABEL: Record<string, { label: string; unit?: string }> = {
-  window: { label: "평균 기간", unit: "개월" }, lags: { label: "과거 참조 기간", unit: "개월" }, n_estimators: { label: "트리 수" }, learning_rate: { label: "학습률" },
-  alpha: { label: "평활 계수" }, beta: { label: "추세 계수" }, gamma: { label: "계절 계수" }, season_length: { label: "계절 주기", unit: "개월" }, period: { label: "계절 주기", unit: "개월" },
-  source: { label: "OL 기준" }, yearly_seasonality: { label: "연간 계절성" }, damped: { label: "추세 감쇠" }, max_depth: { label: "트리 깊이" }, num_leaves: { label: "리프 수" },
-};
+export { PARAM_LABEL } from "@/lib/forecast/methodRegistry";
+import { PARAM_LABEL } from "@/lib/forecast/methodRegistry";
 const KEY_LABEL: Record<string, string> = {
   scm_ol_bias: "SCM OL Bias", scm_ol_wape: "SCM OL WAPE", sales_ol_bias: "Sales OL Bias", sales_ol_wape: "Sales OL WAPE", item_wape: "품목 WAPE", item_bias: "품목 Bias",
   model_wape: "기종 WAPE", model_bias: "기종 Bias", item_scm_ol_n: "제출 OL 채점 월수", champion_share: "챔피언 비중", worst_items: "오차 상위 품목", baseline6: "6M 평균", n_items: "품목 수",

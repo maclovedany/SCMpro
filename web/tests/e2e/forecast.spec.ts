@@ -31,6 +31,9 @@ test("예측 대시보드 · 기종 비교 · 런 상세 · 기법 토글", asyn
   await expect(page.getByTestId("proposals")).toContainText("분석 대기");
   // 기법 토글 on/off
   await page.goto("/admin/forecast-methods");
+  await expect(page.getByTestId("method-cards")).not.toContainText("{");            // JSON 노출 금지 (D-053)
+  await expect(page.getByLabel("ma12 평균 기간")).toBeVisible();
+  await expect(page.getByTestId("method-ma12")).toContainText("현재 설정: 평균 기간");
   const cb = page.getByLabel("prophet 사용");
   const before = await cb.isChecked();
   await cb.click(); await expect(page.getByText(`Prophet ${before ? "off" : "on"}`)).toBeVisible();

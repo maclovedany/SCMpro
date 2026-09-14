@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/auth/getProfile";
 import { canUpload, canWriteMaster } from "@/lib/auth/roles";
+import { encodeMethodParams } from "@/lib/forecast/methodRegistry";
 type R = { ok: true; id?: string } | { ok: false; error: string };
 export async function requestRun(runType: "backtest" | "production", evalFy?: number, horizon?: number): Promise<R> {
   const p = await getProfile(); if (!p || !canUpload(p.role)) return { ok: false, error: "권한이 없습니다" };
@@ -34,11 +35,14 @@ export async function toggleMethod(key: string, enabled: boolean): Promise<R> {
   if (error) return { ok: false, error: error.message };
   revalidatePath("/admin/forecast-methods"); return { ok: true };
 }
-export async function updateMethodParams(key: string, paramsJson: string): Promise<R> {
+/** 기법 파라미터 저장 (D-053): 화면 값은 레지스트리 스펙으로 검증·인코딩. 스펙에 없는 기존 키는 보존 */
+export async function updateMethodParams(key: string, values: Record<string, unknown>): Promise<R> {
   const p = await getProfile(); if (!p || !canWriteMaster(p.role)) return { ok: false, error: "권한이 없습니다" };
-  let params: unknown; try { params = JSON.parse(paramsJson); if (typeof params !== "object" || params === null || Array.isArray(params)) throw new Error(); } catch { return { ok: false, error: "params 는 JSON 객체여야 합니다" }; }
   const sb = await createServerSupabase();
-  const { error } = await sb.schema("app").from("forecast_method").update({ params: params as never, updated_by: p.user_id, updated_at: new Date().toISOString() }).eq("key", key);
+  const { data: cur } = await sb.schema("app").from("forecast_method").select("params").eq("key", key).maybeSingle();
+  const enc = encodeMethodParams(key, values, (cur?.params ?? {}) as Record<string, unknown>);
+  if (!enc.ok) return { ok: false, error: enc.error };
+  const { error } = await sb.schema("app").from("forecast_method").update({ params: enc.params as never, updated_by: p.user_id, updated_at: new Date().toISOString() }).eq("key", key);
   if (error) return { ok: false, error: error.message };
   revalidatePath("/admin/forecast-methods"); return { ok: true };
 }
