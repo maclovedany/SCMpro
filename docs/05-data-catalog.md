@@ -163,6 +163,7 @@ RPC `fn_order_inputs(plan_ym, category)`(force_custom_plan, 카테고리별 호�
 | `analytics.v_item_ol` / `v_item_ol_accuracy` / `v_item_ol_accuracy_summary` | 품목 제출 OL 시계열(최신 `ol_submission`)과 실적 대비 WAPE·Bias (D-040) |
 | `app.auto_run_log` + 설정 `auto_run_*` 5개 | 월 1회 자동 백테스트·프로덕션·AI 분석 기록 (D-041, R-FC-43) |
 | RPC `fn_plan_scorecard(plan)` · `fn_recent_scorecards(months)` · `fn_override_patterns(months)` | 사후 채점(제안 vs 실제 발주 vs 결과)·오버라이드 패턴 → AI 튜닝 입력 (D-044, R-OQ-42/43) |
+| `fn_request_tuning(run_id)` | 웹 "AI 오차 분석 요청" → queued 제안 행 (tick 의 process_pending 이 채움, migration 008600, D-052) |
 | `fn_request_tuning_approval` / `fn_apply_tuning` | 제안 payload 에 `dos_adjustments` 포함, 승인 시 목표 DoS 5~180일 가드로 적용 (D-044) |
 
 ### 자율 모드 AI 감시 (migration 008200)

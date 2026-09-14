@@ -24,8 +24,11 @@ test("예측 대시보드 · 기종 비교 · 런 상세 · 기법 토글", asyn
   // 런 목록 → 상세 → AI 제안 존재
   await page.goto("/forecast/runs");
   await page.locator("tbody tr").filter({ hasText: "backtest" }).first().locator("a").click();
-  await expect(page.getByText("총계 — 레벨")).toBeVisible();
+  await expect(page.getByText("총계 — 품목/기종")).toBeVisible();
   await expect(page.getByTestId("proposals")).toContainText("진단");
+  await expect(page.getByTestId("proposals")).not.toContainText("{");                 // JSON 노출 금지 (D-052)
+  await page.getByRole("button", { name: "AI 오차 분석 요청" }).click(); await expect(page.getByText("AI 분석을 요청했습니다")).toBeVisible();
+  await expect(page.getByTestId("proposals")).toContainText("분석 대기");
   // 기법 토글 on/off
   await page.goto("/admin/forecast-methods");
   const cb = page.getByLabel("prophet 사용");

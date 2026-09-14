@@ -135,6 +135,7 @@ def production(db: PostgresDB, horizon: int | None = None, *, n_jobs: int = 6, h
     return rid
 
 def process_pending(db: PostgresDB, **kw) -> list[str]:
+    """웹에서 요청한 런(status=requested) 과 AI 분석 요청(proposal status=queued) 처리. tick 마다 호출 (D-052)"""
     df = db.read_df("select id, run_type, eval_fy, horizon from app.forecast_run where status = 'requested' order by created_at")
     done = []
     for r in df.itertuples():
@@ -142,4 +143,12 @@ def process_pending(db: PostgresDB, **kw) -> list[str]:
             done.append(backtest(db, int(r.eval_fy), run_id=r.id, **kw))
         else:
             done.append(production(db, int(r.horizon) if r.horizon else None, run_id=r.id, **kw))
+    q = db.read_df("select p.id, p.run_id from app.forecast_tuning_proposal p join app.forecast_run r on r.id = p.run_id where p.status = 'queued' and r.status = 'done' order by p.created_at")
+    for r in q.itertuples():
+        try:
+            from . import ai_tuning
+            done.append(ai_tuning.tune(db, str(r.run_id), proposal_id=str(r.id)))
+        except Exception as e:   # 키 없음·LLM 오류 → 행에 실패 표시, 다음 tick 에 재시도하지 않음
+            log.warning("tune failed %s: %s", r.id, e)
+            db.execute("update app.forecast_tuning_proposal set status='failed', comment=%s where id=%s", (f"{type(e).__name__}: {e}"[:300], str(r.id)))
     return done

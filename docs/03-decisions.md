@@ -325,3 +325,12 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 배경: 예측 런 상세 화면이 `forecast_run.summary` 를 JSON 그대로 보여 주고 있었다(개발 중 잔재, R-UI-10 위반; 사용자 지적).
 - 결정: 백테스트 런 = KPI 6(품목 WAPE·Bias·직전 대비, 기종 WAPE, SCM/Sales OL WAPE, 회귀 여부, 제출 OL 채점, 실행 정보) + 챔피언 기법 분포 차트 + 기존 정확도 표 4개 + AI 제안. 프로덕션 런 = KPI 4(품목·기종 수, 지평선, 실행). "자동" 배지·오류 문구 표시. summary 원본은 DB 에만.
 - 규칙 반영: R-UI-10 적용 범위에 런 상세 포함(문구 추가 없음 — 기존 규칙으로 충분).
+
+## D-052 (2026-09-14) AI 제안을 사람 말로 + 웹에서 분석 요청 + tick 이 웹 요청 런을 처리
+- 배경: 런 상세의 AI 제안이 기법 키(`ma12`)·파라미터 JSON(`{"window":12}`)·근거 문장 속 변수명(`scm_ol_bias: 0.36…`) 을 그대로 보여 주고, 생성 방법이 "터미널 명령" 이었다(사용자 지적). 또 웹의 "백테스트 요청" 은 `engine forecast pending` 을 사람이 돌려야만 처리돼 Railway 운영에서 영영 처리되지 않는 상태였다.
+- 결정:
+  - 표시: `web/lib/forecast/tuningText.ts` — 기법 라벨, 파라미터 라벨·단위("평균 기간 9개월 → 12개월", 현재값은 `forecast_method.params`), 켬/끔, 근거 문장의 키 이름→라벨·0~1 소수→퍼센트 치환(`humanize`). 상태 라벨(분석 대기/검토 대기/승인 요청됨/적용됨/반려/실패). 프롬프트에도 "비개발자 독자, 변수명 금지, 퍼센트" 지시 추가.
+  - 요청: 런 상세 "AI 오차 분석 요청" 버튼 → `forecast_tuning_proposal(status='queued')` → `runner.process_pending` 이 `ai_tuning.tune(proposal_id=…)` 로 채움(실패 시 status failed + 사유).
+  - **tick 이 `process_pending` 을 호출** — 웹의 백테스트/프로덕션 요청과 분석 요청을 10분 내 처리. 병렬도는 `engine_n_jobs`.
+  - 프로덕션 런 상세는 빈 정확도 표 대신 안내 문장. 총계 표의 item/model → 품목/기종.
+- 규칙 반영: R-UI-10 준수, R-FC-42 표시 방식.

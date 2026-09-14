@@ -137,7 +137,7 @@ Topbar 버튼 → 우측 리사이즈 패널 → POST /api/ai/chat {conversation
 | 작업 | 실행 주체 | 주기 |
 |---|---|---|
 | `app.fn_tick()` (배정 만료·예고·승인 반복 알림·미제출 알림 — 반복 알림은 `notify_reminders_enabled`, D-046) | pg_cron `scm-tick` | 10분 |
-| `engine tick` = fn_tick + **자동 런**(월 1회, `auto_run_*`, D-041) + **AI 감시**(`agent_mode`, D-042) + 이메일 발송(`notify_email_enabled`) + 런 결과 정리(`fn_prune_runs`, D-045) | **Railway Cron 서비스**(`engine/Dockerfile`+`railway.json`, D-049). 개발 Mac 의 launchd `com.scmpro.tick` 은 중복이라 중지 — 둘 중 하나만 | 10분 |
+| `engine tick` = fn_tick + **자동 런**(월 1회, `auto_run_*`, D-041) + **AI 감시**(`agent_mode`, D-042) + **웹 요청 런·AI 분석 요청 처리**(`process_pending`, D-052) + 이메일 발송(`notify_email_enabled`) + 런 결과 정리(`fn_prune_runs`, D-045) | **Railway Cron 서비스**(`engine/Dockerfile`+`railway.json`, D-049). 개발 Mac 의 launchd `com.scmpro.tick` 은 중복이라 중지 — 둘 중 하나만 | 10분 |
 | 예측 백테스트·프로덕션 | 자동 런(설정 켜면 매월 지정일) 또는 `engine forecast backtest/run`·웹 요청 후 `engine forecast pending` | 월 1회 + 수동 |
 | 물리화 뷰 refresh | 출고 업로드 시 `fn_request_refresh` 플래그 → pg_cron `scm-refresh`(매분) 가 `fn_refresh_matviews` 실행 (8초 제한 회피, D-030) | 1분 |
 
@@ -165,6 +165,6 @@ web/vercel.json · engine/{Dockerfile,railway.json}  배포 설정 (D-048, D-049
 engine/scm_engine/forecast/{classify,metrics,backtest,runner,store,ai_tuning}.py + methods/*  예측
 engine/scm_engine/{export_raw,verify,seed_app,gen_types,notify,cli}.py                      적재·검증·시드·타입·알림
 engine/scm_engine/agent.py  자율 모드 감시 파이프라인(D-042) · forecast/auto_run.py 월 1회 자동 런(D-041) — 둘 다 `engine tick` 에서 실행
-supabase/migrations/0001~0007 기반 · 0010 예측 · 0020 발주 · 0030 배정 · 0040 일정 · 0050 AI · 0060 대시보드 RPC · 0070/0071/0072 예측·발주·배정 화면 개요 RPC · 0080 OL 시계열(D-040) · 0081 자동 런(D-041) · 0082 AI 감시(D-042) · 0083 발주 피드백(D-044) · 0084 보존 정책(D-045) · 0085 알림 스위치(D-046) · 9999 권한
+supabase/migrations/0001~0007 기반 · 0010 예측 · 0020 발주 · 0030 배정 · 0040 일정 · 0050 AI · 0060 대시보드 RPC · 0070/0071/0072 예측·발주·배정 화면 개요 RPC · 0080 OL 시계열(D-040) · 0081 자동 런(D-041) · 0082 AI 감시(D-042) · 0083 발주 피드백(D-044) · 0084 보존 정책(D-045) · 0085 알림 스위치(D-046) · 0086 AI 분석 요청 RPC(D-052) · 9999 권한
 docs/                      00 용어 · 01 업무절차 · 02 규칙(R-*) · 03 결정(D-*) · 04 미확인 · 05 데이터 카탈로그 · 06 데이터 검증 · 07 아키텍처 · 08 사용자 가이드 · 09 ERP 연동 계획 · 10 운영 · 11 전체 요약 · specs · plans · reports
 ```

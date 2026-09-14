@@ -19,6 +19,14 @@ export async function requestTuningApproval(proposalId: string, reason: string):
   if (error) return { ok: false, error: error.message.includes("ALREADY_PENDING") ? "이미 승인 대기 중입니다" : error.message };
   revalidatePath("/forecast/runs"); revalidatePath("/approvals"); return { ok: true, id: data as string };
 }
+/** AI 오차 분석 요청 (D-052): RPC 가 queued 행을 만들고 엔진 tick 이 10분 내 채운다 */
+export async function requestTuning(runId: string): Promise<R> {
+  const p = await getProfile(); if (!p || !canWriteMaster(p.role)) return { ok: false, error: "권한이 없습니다" };
+  const sb = await createServerSupabase();
+  const { data, error } = await sb.schema("app").rpc("fn_request_tuning", { p_run_id: runId });
+  if (error) return { ok: false, error: error.message.includes("ALREADY_QUEUED") ? "이미 분석 대기 중입니다" : error.message.includes("RUN_NOT_DONE") ? "완료된 백테스트 런에서만 요청할 수 있습니다" : error.message };
+  revalidatePath(`/forecast/runs/${runId}`); return { ok: true, id: data as string };
+}
 export async function toggleMethod(key: string, enabled: boolean): Promise<R> {
   const p = await getProfile(); if (!p || !canWriteMaster(p.role)) return { ok: false, error: "권한이 없습니다" };
   const sb = await createServerSupabase();

@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { fetchRunDetail, METHOD_LABEL, PATTERN_LABEL } from "@/lib/queries/forecast";
+import { fetchRunDetail, fetchMethods, METHOD_LABEL, PATTERN_LABEL } from "@/lib/queries/forecast";
+import { getProfile } from "@/lib/auth/getProfile";
+import { canWriteMaster } from "@/lib/auth/roles";
 import { Badge } from "@/components/ui/badge";
 import { KpiTile, type KpiTileProps } from "@/components/cards/KpiTile";
 import { ChartCard } from "@/components/cards/ChartCard";
@@ -19,8 +21,9 @@ function Tbl({ rows, title, labelFn }: { rows: AccRow[]; title: string; labelFn?
 export default async function RunDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const sb = await createServerSupabase();
-  const { run, acc, proposals } = await fetchRunDetail(sb, id);
+  const [{ run, acc, proposals }, { methods }, profile] = await Promise.all([fetchRunDetail(sb, id), fetchMethods(sb), getProfile()]);
   if (!run) notFound();
+  const methodParams = Object.fromEntries(methods.map(m => [m.key, (m.params ?? {}) as Record<string, unknown>]));
   const s = (run.summary ?? {}) as Record<string, unknown>;
   const lvl = (l: string, k?: string) => acc.filter(r => r.level === l && (k ? r.key === k : true));
   const num = (k: string) => (s[k] == null ? null : Number(s[k]));
@@ -51,13 +54,14 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" data-testid="run-kpi">{kpis.map(k => <KpiTile key={k.label} {...k} />)}</div>
       {isBt && share.length > 0 && <ChartCard title="챔피언 기법 분포 — 품목 비중 (%)" insight={`${METHOD_LABEL[share[0][0]] ?? share[0][0]} 이 품목 ${Math.round(share[0][1] * 100)}% 에서 최적 · 기법 ${share.length}종 사용`} href="/admin/forecast-methods" accent="forecast">
         <HBars height={Math.max(160, 22 * share.length + 16)} labels={share.map(([k]) => METHOD_LABEL[k] ?? k)} values={share.map(([, v]) => Math.round(v * 1000) / 10)} color={SERIES_LIGHT[2]} /></ChartCard>}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Tbl rows={lvl("total")} title="총계 — 레벨(item/model) × 기법" />
+      {acc.length > 0 && <div className="grid gap-4 lg:grid-cols-2">
+        <Tbl rows={lvl("total")} title="총계 — 품목/기종 × 기법" labelFn={k => ({ item: "품목", model: "기종" } as Record<string, string>)[k] ?? k} />
         <Tbl rows={[...lvl("category"), ...lvl("biz")]} title="카테고리 / 사업부 (챔피언)" />
         <Tbl rows={lvl("abcxyz")} title="ABC-XYZ 셀 (챔피언)" />
         <Tbl rows={lvl("pattern")} title="수요 패턴 (챔피언)" labelFn={k => PATTERN_LABEL[k] ?? k} />
-      </div>
-      {run.run_type === "backtest" && <ProposalList runId={run.id} proposals={proposals} />}
+      </div>}
+      {!isBt && <p className="text-sm text-muted-foreground">프로덕션 런은 미래 예측이라 정확도 표가 없습니다. 예측값은 품목 상세·발주 계획에 반영되어 있고, 정확도는 백테스트 런에서 봅니다.</p>}
+      {isBt && <ProposalList runId={run.id} proposals={proposals} methods={methodParams} canRequest={!!profile && canWriteMaster(profile.role)} />}
     </div>
   );
 }

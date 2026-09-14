@@ -30,6 +30,7 @@ SYSTEM = """당신은 복합기 부품·소모품·옵션·기계의 월간 수�
 회계연도는 4월 시작(FY25 = 2025-04~2026-03)입니다. 지표: WAPE = Σ|예측−실적|/Σ실적, Bias = Σ(예측−실적)/Σ실적(양수=과대).
 주어진 백테스트 결과만 근거로 (1) 오차 원인을 진단하고 (2) 기법별 파라미터 조정 또는 on/off 제안을 JSON 으로 작성하세요.
 제안의 method_key 는 제공된 기법 목록에 있는 키만 사용하고, param_patch 는 해당 기법의 params 키만 수정합니다. 근거 없는 추정은 하지 마세요. 한국어로 작성합니다.
+독자는 SCM 실무자(비개발자)입니다. finding·evidence·rationale·expected_effect 에는 JSON 키 이름(scm_ol_bias, item_wape, champion_share 등)이나 변수명을 쓰지 말고 "SCM OL 이 실적보다 36% 많음", "품목 WAPE 33%" 처럼 우리말과 퍼센트로 쓰세요. 소수(0.364)가 아니라 퍼센트(36.4%)로 씁니다.
 주의: 어떤 기법이 특정 레벨(예: 기종 레벨의 ol_bias)에서 챔피언 WAPE 를 만들고 있으면 그 기법을 끄자고 제안하지 마세요. 기법 off 제안은 그 기법이 어떤 레벨·셀에서도 챔피언이 아닐 때만 하세요. Sales OL / SCM OL 은 기법이 아니라 비교 대상입니다.
 발주 피드백(order_feedback)이 있으면: 지난 계획에서 시스템 제안대로 발주했을 때 결품/과잉이 반복된 품목·ABC-XYZ 셀, 담당자가 체계적으로(3회 이상, 같은 방향) 오버라이드한 품목에 대해 목표 DoS 조정을 dos_adjustments 로 제안하세요(scope item = 품목코드, cell = 'AX' 같은 셀 키, target_dos_days 는 5~180 정수). 근거가 없으면 빈 배열."""
 
@@ -74,12 +75,17 @@ def call_llm(summary: dict, model: str = "gpt-5-nano", client=None) -> dict:
     content = resp.choices[0].message.content
     return json.loads(content)
 
-def tune(db: PostgresDB, run_id: str, model: str | None = None, client=None) -> str:
+def tune(db: PostgresDB, run_id: str, model: str | None = None, client=None, proposal_id: str | None = None) -> str:
+    """proposal_id 가 있으면(웹에서 "AI 분석 요청" 으로 만든 queued 행) 그 행을 채우고, 없으면 새 행 (D-052)"""
     settings = dict(db.read_df("select key, value from app.system_settings").itertuples(index=False))
     model = model or (settings.get("ai_model") if isinstance(settings.get("ai_model"), str) else None) or "gpt-5-nano"
     summary = build_summary(db, run_id)
     prompt = json.dumps(summary, ensure_ascii=False, default=str)
     response = call_llm(summary, model=model, client=client)
+    if proposal_id:
+        db.execute("update app.forecast_tuning_proposal set model=%s, prompt=%s, response=%s, status='pending', created_at=now() where id=%s",
+                   (model, prompt[:20000], json.dumps(response, ensure_ascii=False), proposal_id))
+        return proposal_id
     pid = str(uuid.uuid4())
     db.execute("insert into app.forecast_tuning_proposal(id, run_id, model, prompt, response, status) values (%s,%s,%s,%s,%s,'pending')",
                (pid, run_id, model, prompt[:20000], json.dumps(response, ensure_ascii=False)))   # 프롬프트 원문은 20KB 까지만 보관 (D-045)

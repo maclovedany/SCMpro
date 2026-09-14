@@ -36,3 +36,18 @@ def test_order_feedback_none_when_no_scored_plans():
             return pd.DataFrame([{"p": {"items": [{"key_code": "X", "n": 3}]}}])
     fb = ai_tuning.order_feedback(DB2()); assert fb["override_patterns"]["items"][0]["key_code"] == "X"
     assert "dos_adjustments" in ai_tuning.SCHEMA["schema"]["required"]
+
+
+def test_tune_fills_queued_proposal_when_id_given(monkeypatch):
+    """D-052: 웹 'AI 분석 요청' 이 만든 queued 행은 insert 가 아니라 update 로 채운다"""
+    import pandas as pd
+    execs = []
+    class DB:
+        def read_df(self, sql, params=()): return pd.DataFrame([{"key": "ai_model", "value": "gpt-5-nano"}])
+        def execute(self, sql, params=()): execs.append((sql, params))
+    monkeypatch.setattr(ai_tuning, "build_summary", lambda db, rid: {"run": {}})
+    monkeypatch.setattr(ai_tuning, "call_llm", lambda summary, model, client=None: RESP)
+    out = ai_tuning.tune(DB(), "run-1", proposal_id="prop-9")
+    assert out == "prop-9" and execs[0][0].startswith("update app.forecast_tuning_proposal") and execs[0][1][-1] == "prop-9"
+    assert "status='pending'" in execs[0][0]
+    assert "비개발자" in ai_tuning.SYSTEM and "퍼센트" in ai_tuning.SYSTEM

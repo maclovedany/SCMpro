@@ -114,8 +114,11 @@ def tick_cmd():
     auto = auto_run.maybe_run(db)          # 월 1회 자동 백테스트·프로덕션 (D-041) — 설정 off 면 즉시 반환
     from . import agent
     ag = agent.run(db)                     # 자율 모드 감시 (D-042) — agent_mode off 면 즉시 반환
+    from .forecast import runner, store
+    n_jobs = int(store.load_settings(db).get("engine_n_jobs", 3))
+    pend = runner.process_pending(db, n_jobs=n_jobs)   # 웹 요청 런·AI 분석 요청 처리 (D-052)
     mail = notify.send_pending(db)
-    typer.echo(f"tick={res} auto_run={auto} agent={ag} email={mail}")
+    typer.echo(f"tick={res} auto_run={auto} agent={ag} pending={len(pend)} email={mail}")
 
 @app.command("agent")
 def agent_cmd(mode: str = None, no_llm: bool = False):

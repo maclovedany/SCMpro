@@ -1535,6 +1535,7 @@ export type Database = {
       fn_request_approval: { Args: { p_kind: string; p_target_table: string; p_target_pk: string; p_payload: Json; p_reason: string }; Returns: string }
       fn_request_forecast_run: { Args: { p_run_type: string; p_eval_fy: number; p_horizon: number }; Returns: string }
       fn_request_refresh: { Args: Record<string, never>; Returns: undefined }
+      fn_request_tuning: { Args: { p_run_id: string }; Returns: string }
       fn_request_tuning_approval: { Args: { p_proposal_id: string; p_reason: string }; Returns: string }
       fn_sailing_dates: { Args: { p_rule: Json; p_ym: unknown }; Returns: unknown }
       fn_save_order_plan: { Args: { p_plan_ym: unknown; p_note: string; p_user: string }; Returns: string }

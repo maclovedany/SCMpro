@@ -18,6 +18,7 @@ export default async function globalSetup() {
     update app.approval set status = 'rejected', comment = 'e2e reset', decided_at = now() where kind = 'agent_order' and status = 'pending';
     delete from app.extra_demand where reason like 'AI 감시 제안 승인%';
     delete from app.agent_event;
+    delete from app.forecast_tuning_proposal where status = 'queued';
     delete from app.notification where kind in ('agent_digest') and created_at < now() - interval '1 hour';
     select app.fn_request_refresh();
     select (select count(*) from app.sales_order where customer like 'E2E%' and status = 'cancelled') as cancelled_e2e, (select count(*) from app.inbound where item_code = '556K59129' and status <> 'received') as open_inbound;`;
