@@ -5,19 +5,20 @@ import { DrillCard } from "@/components/cards/DrillCard";
 import { TimeSeriesChart } from "@/components/charts/TimeSeriesChart";
 import { TreeGrid } from "@/components/tables/TreeGrid";
 import { Badge } from "@/components/ui/badge";
-import { fmtInt, fmtNum, fmtDate } from "@/lib/format";
+import { fmtInt, fmtNum, fmtDate, fmtPct } from "@/lib/format";
 import { drillHref } from "@/lib/drill";
 import type { ItemDetail as D } from "@/lib/queries/items";
-import { METHOD_LABEL, PATTERN_LABEL, type ItemBacktest } from "@/lib/queries/forecast";
+import { METHOD_LABEL, PATTERN_LABEL, type ItemBacktest, type ItemOl } from "@/lib/queries/forecast";
 import { BacktestSection } from "./BacktestSection";
 import type { TsSeries } from "@/components/charts/chartOption";
 type Fc = { ym: string | null; method: string | null; value: number | null; lower: number | null; upper: number | null }[];
 type Cls = { pattern: string | null; abc: string | null; xyz: string | null; champion_method: string | null; cv: number | null; adi: number | null } | null;
-export function ItemDetail({ d, forecast = [], cls = null, backtest = null }: { d: D; forecast?: Fc; cls?: Cls; backtest?: ItemBacktest | null }) {
+export function ItemDetail({ d, forecast = [], cls = null, backtest = null, ol = null }: { d: D; forecast?: Fc; cls?: Cls; backtest?: ItemBacktest | null; ol?: ItemOl | null }) {
   const m = d.master!;
   const histMonths = useMemo(() => d.monthly.map(r => r.ym!), [d.monthly]);
   const fcMonths = useMemo(() => forecast.map(r => r.ym!), [forecast]);
-  const months = useMemo(() => [...histMonths, ...fcMonths.filter(x => !histMonths.includes(x))], [histMonths, fcMonths]);
+  const olMonths = useMemo(() => (ol?.rows ?? []).map(r => r.ym), [ol]);
+  const months = useMemo(() => Array.from(new Set([...histMonths, ...fcMonths, ...olMonths])).sort(), [histMonths, fcMonths, olMonths]);
   const series = useMemo<TsSeries[]>(() => {
     const hist = new Map(d.monthly.map(r => [r.ym!, Number(r.qty)]));
     const fc = new Map(forecast.map(r => [r.ym!, r]));
@@ -25,8 +26,9 @@ export function ItemDetail({ d, forecast = [], cls = null, backtest = null }: { 
     if (forecast.length) out.push({ name: `기준예측 (${METHOD_LABEL[forecast[0].method ?? ""] ?? forecast[0].method})`, role: "forecast",
       data: months.map(x => fc.has(x) ? Number(fc.get(x)!.value) : null),
       band: { lower: months.map(x => fc.has(x) ? Number(fc.get(x)!.lower ?? fc.get(x)!.value) : 0), upper: months.map(x => fc.has(x) ? Number(fc.get(x)!.upper ?? fc.get(x)!.value) : 0) } });
+    if (ol?.rows.length) { const om = new Map(ol.rows.map(r => [r.ym, r.qty])); out.push({ name: "제출 OL (시스템)", role: "scm_ol", data: months.map(x => om.has(x) ? om.get(x)! : null) }); }   // D-040
     return out;
-  }, [d.monthly, forecast, months]);
+  }, [d.monthly, forecast, months, ol]);
   const gridMonths = useMemo(() => [...histMonths.slice(-12), ...fcMonths.filter(x => !histMonths.includes(x))], [histMonths, fcMonths]);
   const treeRows = useMemo(() => {
     const rows = [{ id: "ship", label: "실제 출고", level: 0, values: Object.fromEntries(d.monthly.map(r => [r.ym!, Number(r.qty)])) }];
@@ -56,6 +58,11 @@ export function ItemDetail({ d, forecast = [], cls = null, backtest = null }: { 
         <TimeSeriesChart months={months} series={series} forecastFrom={fcMonths[0]} height={300} />
       </section>
       <BacktestSection bt={backtest} histStart={histMonths[0]} />
+      {ol && ol.rows.length > 0 && <section id="ol" className="rounded-md border p-3">
+        <h2 className="mb-2 text-sm font-medium">제출 OL vs 실적 (시스템이 Supplier 에 제출한 OL, D-040) — {ol.acc ? `채점 ${fmtInt(ol.acc.n)}개월 · WAPE ${fmtPct(ol.acc.wape)} · Bias ${fmtPct(ol.acc.bias)}` : "실적이 쌓이면 채점"}</h2>
+        <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-muted-foreground"><th className="py-1 text-left">월</th><th className="text-right">제출 OL</th><th className="text-right">실적</th><th className="text-right">차이</th><th className="text-left">제출일</th></tr></thead>
+          <tbody>{ol.rows.map(r => { const act = d.monthly.find(m => m.ym === r.ym); const a = act ? Number(act.qty) : null; return <tr key={r.ym} className="border-t tabular-nums"><td className="py-1">{r.ym}</td><td className="text-right">{fmtInt(r.qty)}</td><td className="text-right">{a == null ? "-" : fmtInt(a)}</td><td className={a != null && r.qty - a !== 0 ? (r.qty > a ? "text-right text-[#eb6834]" : "text-right text-[#2a78d6]") : "text-right"}>{a == null ? "-" : fmtInt(r.qty - a)}</td><td className="text-xs text-muted-foreground">{fmtDate(r.submitted_at)}</td></tr>; })}</tbody></table></div>
+      </section>}
       <section className="rounded-md border p-3">
         <h2 className="mb-2 text-sm font-medium">재고전개 (SP3 에서 재고·발주 행 추가)</h2>
         <TreeGrid months={gridMonths} rows={treeRows} pastUntil={histMonths[histMonths.length - 1] ?? ""} />

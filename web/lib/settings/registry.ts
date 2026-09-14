@@ -22,8 +22,19 @@ export const SETTINGS: Record<string, SettingSpec> = {
   submission_depts: { kind: "dept-multi", label: "수요자료 제출 부서", help: "마감 후 미제출이면 반복 알림을 받는 부서" },
   projection_past_months: { kind: "int", label: "재고전개 과거 표시", unit: "개월", min: 1, max: 36, help: "재고전개 그리드에서 과거 몇 개월을 보여줄지" },
   projection_future_months: { kind: "int", label: "재고전개 미래 표시 (예측 지평선)", unit: "개월", min: 1, max: 24, help: "프로덕션 예측·발주 계획이 앞으로 몇 개월을 다룰지" },
+  auto_run_enabled: { kind: "select", label: "예측 자동 실행", options: [{ value: true, label: "켬 — 매월 자동으로 백테스트·프로덕션 예측" }, { value: false, label: "끔 — 예측 › 런 에서 수동 요청" }], help: "켜면 지정한 날·시각 이후 첫 주기 작업(10분)에서 실행하고 결과를 SCM팀장·품목담당자에게 알립니다 (D-041)" },
+  auto_run_day: { kind: "int", label: "자동 실행일", unit: "일 (매월)", min: 1, max: 28, help: "출고 실적이 정리된 뒤가 좋습니다 (예: 5일)" },
+  auto_run_hour: { kind: "int", label: "자동 실행 시각", unit: "시 (KST)", min: 0, max: 23, help: "업무 시간 전 새벽 권장 (예: 2시)" },
+  auto_run_backtest: { kind: "select", label: "자동 실행에 백테스트 포함", options: [{ value: true, label: "포함 — 정확도 재평가 후 프로덕션" }, { value: false, label: "프로덕션 예측만" }], help: "백테스트는 약 2~3분, 기법 챔피언을 다시 고릅니다" },
+  agent_mode: { kind: "select", label: "AI 감시 자율 모드", options: [{ value: "off", label: "끔 — 대화형만 (질문해야 답함)" }, { value: "dryrun", label: "드라이런 — 감지·판단만 기록 (알림 없음)" }, { value: "notify", label: "알림 — 담당자·팀장에게 조치 필요 알림" }, { value: "propose", label: "제안 — 알림 + 발주 제안을 결재함에 올림 (승인은 사람)" }], help: "10분 주기 작업마다 재고 부족·품절 위험·입고 지연·발주일 임박·수요 급증을 감지해 판단합니다 (D-042). 실데이터 초기에는 드라이런으로 오탐을 확인한 뒤 켜세요" },
+  agent_dos_ratio: { kind: "int", label: "재고 부족 신호 기준", unit: "% (목표 DoS 대비)", min: 10, max: 100, help: "현재 DoS 가 목표 DoS × 이 비율보다 낮고 입고예정이 부족하면 신호" },
+  agent_lead_days: { kind: "int", label: "발주일 임박 신호", unit: "일 전", min: 1, max: 30, help: "다음 발주일이 이 일수 안인데 그 달 계획이 승인되지 않았으면 신호" },
+  agent_surge_pct: { kind: "int", label: "수요 급증 신호 기준", unit: "% (6개월 평균 초과)", min: 10, max: 500, help: "최근 월 출고가 6개월 평균의 (100+N)% 를 넘으면 신호" },
+  agent_cooldown_hours: { kind: "int", label: "같은 신호 재알림 간격", unit: "시간", min: 1, max: 720, help: "같은 품목·신호는 이 시간 안에 다시 알리지 않음" },
+  agent_max_per_tick: { kind: "int", label: "한 번에 판단하는 최대 건수", unit: "건", min: 1, max: 200, help: "주기 작업 한 번에 AI 가 판단·알림하는 상한 (비용·소음 제한)" },
+  auto_run_tune: { kind: "select", label: "자동 실행 후 AI 오차 분석", options: [{ value: true, label: "생성 — 조정 제안을 결재함에 올림" }, { value: false, label: "생성 안 함" }], help: "제안은 팀장 승인 전까지 적용되지 않습니다 (D-021)" },
 };
-export const SETTING_ORDER = ["fiscal_year_start_month", "ol_lead_months", "flex_ranges", "dos_avg_months", "default_lead_time_days", "ship_lead_days", "temp_alloc_days", "expiry_reminder_days", "reminder_interval_min", "submit_deadline_rule", "submission_depts", "projection_past_months", "projection_future_months", "ai_model"];
+export const SETTING_ORDER = ["fiscal_year_start_month", "ol_lead_months", "flex_ranges", "dos_avg_months", "default_lead_time_days", "ship_lead_days", "temp_alloc_days", "expiry_reminder_days", "reminder_interval_min", "submit_deadline_rule", "submission_depts", "projection_past_months", "projection_future_months", "auto_run_enabled", "auto_run_day", "auto_run_hour", "auto_run_backtest", "auto_run_tune", "ai_model"];
 export type Flex = { offset: number; pct: number };
 /** 화면 값 → 저장 JSON 문자열. 오류면 메시지 */
 export function encodeSetting(key: string, value: unknown): { ok: true; json: string } | { ok: false; error: string } {

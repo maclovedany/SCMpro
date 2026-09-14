@@ -21,20 +21,22 @@ def load_inputs(db) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame]:
     monthly = db.read_df("select key_code, category, ym, qty from analytics.v_item_monthly where category <> 'SW' order by key_code, ym")
     monthly["qty"] = monthly["qty"].astype(float).clip(lower=0)
     prices = db.read_df("select item_code, unit_price from app.item_setting where unit_price is not null").set_index("item_code")["unit_price"].astype(float)
-    mc = db.read_df("""select p.model_base, coalesce(p.biz, m.biz) as biz, p.ym, p.sales_ol, p.scm_ol, p.act
-        from raw.fact_mc_plan_actual p left join (select model_base, max(biz) biz from raw.dim_model where biz is not null group by 1) m on m.model_base = p.model_base
-        where p.model_base is not null order by 1, 3""")
+    # 기종 OL/ACT 단일 소스: raw(변형 합산) ∪ 업로드 추가분 (core.v_mc_plan_actual, D-040)
+    mc = db.read_df("select model_base, biz, ym, sales_ol, scm_ol, act from core.v_mc_plan_actual order by 1, 3")
     for c in ("sales_ol", "scm_ol", "act"):
         mc[c] = mc[c].astype(float)
-    # 같은 기종의 변형 model_key(예: MDL142, MDL142-1.5)는 기종·월로 합산 (전부 NaN 이면 NaN 유지)
-    mc = mc.groupby(["model_base", "ym"], as_index=False).agg(biz=("biz", "first"), sales_ol=("sales_ol", lambda s: s.sum(min_count=1)),
-                                                              scm_ol=("scm_ol", lambda s: s.sum(min_count=1)), act=("act", lambda s: s.sum(min_count=1)))
     return monthly, prices, mc
 
-def backtest(db: PostgresDB, eval_fy: int, *, n_jobs: int = 6, heavy_limit: int | None = None, run_id: str | None = None, item_limit: int | None = None) -> str:
+def load_item_ol(db) -> pd.DataFrame:
+    """품목 SCM OL 시계열 = 시스템 제출 OL (analytics.v_item_ol, D-040). [key_code, ym, qty]"""
+    d = db.read_df("select key_code, ym, qty from analytics.v_item_ol order by 1, 2")
+    if not d.empty: d["qty"] = d["qty"].astype(float)
+    return d
+
+def backtest(db: PostgresDB, eval_fy: int, *, n_jobs: int = 6, heavy_limit: int | None = None, run_id: str | None = None, item_limit: int | None = None, extra_params: dict | None = None) -> str:
     t0 = time.time()
     cfg = _cfg(db, n_jobs, heavy_limit)
-    monthly, prices, mc = load_inputs(db)
+    monthly, prices, mc = load_inputs(db); item_ol = load_item_ol(db)
     if item_limit:
         keep = monthly.groupby("key_code")["qty"].sum().sort_values(ascending=False).head(item_limit).index
         monthly = monthly[monthly.key_code.isin(keep)]
@@ -45,13 +47,21 @@ def backtest(db: PostgresDB, eval_fy: int, *, n_jobs: int = 6, heavy_limit: int 
     ev_to_eff = min(ev_to, last_actual)
     horizon = (pd.Period(ev_to_eff, "M") - pd.Period(prev_to, "M")).n
     rid = store.create_run(db, "backtest", eval_fy=eval_fy, train_from=train_from, train_to=prev_to, horizon=horizon,
-                           params={"methods": [m.key for m in cfg.methods if m.enabled], "n_items": int(monthly.key_code.nunique()), "eval_to": ev_to_eff}, run_id=run_id)
+                           params={"methods": [m.key for m in cfg.methods if m.enabled], "n_items": int(monthly.key_code.nunique()), "eval_to": ev_to_eff, **(extra_params or {})}, run_id=run_id)
     try:
         eval_actual = monthly[(monthly.ym > prev_to) & (monthly.ym <= ev_to_eff)]
-        res_i, cls, acc_i = run_items(monthly, prices, cfg, train_to=prev_to, horizon=horizon, eval_actual=eval_actual)
+        res_i, cls, acc_i = run_items(monthly, prices, cfg, train_to=prev_to, horizon=horizon, eval_actual=eval_actual, item_ol=item_ol)
         res_m, acc_m = run_models(mc, cfg, train_to=prev_to, horizon=horizon, eval_to=ev_to_eff)
         results = pd.concat([res_i, res_m], ignore_index=True)
         agg = aggregate_accuracy(results, cls)
+        # 품목 제출 OL 총 정확도 (level=total, method=scm_ol) — 실적 있는 평가월만 (D-040)
+        item_ol_tot = None
+        if not item_ol.empty:
+            j = item_ol.merge(eval_actual[["key_code", "ym", "qty"]].rename(columns={"qty": "act"}), on=["key_code", "ym"])
+            if not j.empty:
+                from .metrics import all_metrics as _am
+                item_ol_tot = _am(j["qty"].to_numpy(), j["act"].to_numpy())
+                agg = pd.concat([agg, pd.DataFrame([{"level": "total", "key": "item", "method": "scm_ol", **item_ol_tot}])], ignore_index=True)
         acc = pd.concat([acc_i, acc_m, agg], ignore_index=True)
         store.write_results(db, rid, results)
         store.write_accuracy(db, rid, acc)
@@ -60,7 +70,8 @@ def backtest(db: PostgresDB, eval_fy: int, *, n_jobs: int = 6, heavy_limit: int 
         summary = {"eval_fy": eval_fy, "train_to": prev_to, "eval_to": ev_to_eff, "n_items": int(cls.shape[0]), "n_models": int(res_m.key_code.nunique()) if not res_m.empty else 0,
                    "item_wape": float(tot.loc["item", "wape"]) if "item" in tot.index else None, "item_bias": float(tot.loc["item", "bias"]) if "item" in tot.index else None,
                    "model_wape": float(tot.loc["model", "wape"]) if "model" in tot.index else None, "model_bias": float(tot.loc["model", "bias"]) if "model" in tot.index else None,
-                   "champion_share": cls["champion_method"].value_counts(normalize=True).round(3).to_dict(), "seconds": round(time.time() - t0, 1)}
+                   "champion_share": cls["champion_method"].value_counts(normalize=True).round(3).to_dict(), "seconds": round(time.time() - t0, 1),
+                   "item_scm_ol_wape": item_ol_tot["wape"] if item_ol_tot else None, "item_scm_ol_bias": item_ol_tot["bias"] if item_ol_tot else None, "item_scm_ol_n": item_ol_tot["n"] if item_ol_tot else 0}
         ol = acc_m[acc_m.method.isin(["sales_ol", "scm_ol"])] if not acc_m.empty else pd.DataFrame()
         if not ol.empty:
             from .metrics import all_metrics
@@ -85,19 +96,19 @@ def backtest(db: PostgresDB, eval_fy: int, *, n_jobs: int = 6, heavy_limit: int 
         raise
     return rid
 
-def production(db: PostgresDB, horizon: int | None = None, *, n_jobs: int = 6, heavy_limit: int | None = None, run_id: str | None = None) -> str:
+def production(db: PostgresDB, horizon: int | None = None, *, n_jobs: int = 6, heavy_limit: int | None = None, run_id: str | None = None, extra_params: dict | None = None) -> str:
     t0 = time.time()
     cfg = _cfg(db, n_jobs, heavy_limit)
     settings = store.load_settings(db)
     horizon = horizon or int(settings.get("projection_future_months", 6))
-    monthly, prices, mc = load_inputs(db)
+    monthly, prices, mc = load_inputs(db); item_ol = load_item_ol(db)
     train_to = monthly["ym"].max()
     # 최신 백테스트 챔피언을 품목별 기법으로 사용
     champ = db.read_df("select key_code, champion_method from app.item_class")
     rid = store.create_run(db, "production", eval_fy=None, train_from=monthly["ym"].min(), train_to=train_to, horizon=horizon,
-                           params={"methods": [m.key for m in cfg.methods if m.enabled], "horizon": horizon}, run_id=run_id)
+                           params={"methods": [m.key for m in cfg.methods if m.enabled], "horizon": horizon, **(extra_params or {})}, run_id=run_id)
     try:
-        res_i, cls, _ = run_items(monthly, prices, cfg, train_to=train_to, horizon=horizon, eval_actual=None)
+        res_i, cls, _ = run_items(monthly, prices, cfg, train_to=train_to, horizon=horizon, eval_actual=None, item_ol=item_ol)
         if not champ.empty:
             cm = champ.set_index("key_code")["champion_method"]
             have = res_i.groupby("key_code")["method"].agg(set)

@@ -6,7 +6,7 @@ export function autoMap(headers: string[], target: TargetKey): Record<string, st
   for (const c of UPLOAD_TARGETS[target].columns) out[c.key] = headers.find(h => norm(h) === norm(c.key) || norm(h) === norm(c.label));
   return out;
 }
-const DATE = /^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$/, YM = /^(\d{4})[-./](\d{1,2})$/;
+const DATE = /^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$/, YM = /^(\d{4})[-./](\d{1,2})(?:[-./]\d{1,2})?$/;   // 월은 YYYY-MM 또는 날짜(YYYY-MM-DD, 파서가 Date 로 읽은 경우) 허용
 const toDate = (s: string) => { const m = DATE.exec(s); return m ? `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}` : null; };
 const toYm = (s: string) => { const m = YM.exec(s); return m ? `${m[1]}-${m[2].padStart(2, "0")}` : null; };
 const toNum = (s: string) => { const n = Number(s.replace(/,/g, "")); return isNaN(n) ? null : n; };

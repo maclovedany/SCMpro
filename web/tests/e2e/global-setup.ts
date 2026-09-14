@@ -13,7 +13,10 @@ export default async function globalSetup() {
       and order_id in (select id from app.sales_order where customer like 'E2E%' and status not in ('cancelled','rejected','expired'));
     update app.sales_order set status = 'cancelled', cancel_reason = 'e2e reset', decided_at = now() where customer like 'E2E%' and status not in ('cancelled','rejected','expired');
     update app.inbound set status = 'ordered', actual_date = null where item_code = '556K59129' and is_dummy and source = 'seed';
+    delete from app.mc_plan_extra where model_base like 'E2E%';
+    delete from app.shipment_extra where ym between '2022-01' and '2022-06' and item_code in ('556K59129','041K90296','EC136270') and source = 'upload';   -- upload-wide 픽스처 (학습 구간 오염 방지)
+    select app.fn_request_refresh();
     select (select count(*) from app.sales_order where customer like 'E2E%' and status = 'cancelled') as cancelled_e2e, (select count(*) from app.inbound where item_code = '556K59129' and status <> 'received') as open_inbound;`;
   try { const out = execFileSync("psql", [url, "-At", "-v", "ON_ERROR_STOP=1", "-c", sql], { encoding: "utf8" }); console.log("[e2e] 픽스처 리셋:", out.trim().split("\n").pop()); }
-  catch (e) { console.warn("[e2e] 픽스처 리셋 실패 (psql 필요):", (e as Error).message.split("\n")[0]); }
+  catch (e) { const err = e as { stderr?: string; code?: string }; console.warn("[e2e] 픽스처 리셋 실패 (psql 필요):", err.code ?? "", (err.stderr ?? "").trim().split("\n").slice(-2).join(" ")); }   // 접속 문자열(비밀번호)은 절대 출력하지 않는다
 }

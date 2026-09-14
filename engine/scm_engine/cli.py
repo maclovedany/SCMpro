@@ -108,10 +108,21 @@ def tick_cmd():
     """주기 작업 (pg_cron 대안): 배정 만료·예고·반복 알림 + 제출 마감 알림 + 이메일 발송."""
     from dotenv import load_dotenv; load_dotenv(ENGINE_DIR / ".env")
     from . import notify
+    from .forecast import auto_run
     db = _pg()
     res = db.read_df("select app.fn_tick() as r").iloc[0, 0]
+    auto = auto_run.maybe_run(db)          # 월 1회 자동 백테스트·프로덕션 (D-041) — 설정 off 면 즉시 반환
+    from . import agent
+    ag = agent.run(db)                     # 자율 모드 감시 (D-042) — agent_mode off 면 즉시 반환
     mail = notify.send_pending(db)
-    typer.echo(f"tick={res} email={mail}")
+    typer.echo(f"tick={res} auto_run={auto} agent={ag} email={mail}")
+
+@app.command("agent")
+def agent_cmd(mode: str = None, no_llm: bool = False):
+    """AI 감시 1회 실행 (D-042). --mode off|dryrun|notify|propose 로 설정을 덮어쓰고, --no-llm 이면 규칙 판단만."""
+    from dotenv import load_dotenv; load_dotenv(ENGINE_DIR / ".env")
+    from . import agent
+    typer.echo(str(agent.run(_pg(), mode_override=mode, use_llm=not no_llm)))
 
 @app.command("notify")
 def notify_cmd(dry_run: bool = False):

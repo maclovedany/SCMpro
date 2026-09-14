@@ -13,6 +13,7 @@ export const MENU_GROUPS: MenuGroup[] = [
   { key: "status", label: "현황", items: [
     { href: "/dashboard", label: "대시보드", icon: "LayoutDashboard", roles: ALL },
     { href: "/notifications", label: "알림", icon: "Bell", roles: ALL, badge: "unread" },
+    { href: "/agent", label: "AI 감시", icon: "Radar", roles: SCM },
   ] },
   { key: "plan", label: "계획", items: [
     { href: "/items", label: "품목", icon: "Package", roles: ALL },

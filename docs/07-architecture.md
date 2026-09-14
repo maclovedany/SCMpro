@@ -160,6 +160,7 @@ web/lib/queries/{dashboard,forecast,orders,allocation,schedule}.ts  화면 개�
 web/tests/e2e/global-setup.ts  e2e 실행 전 픽스처 리셋(E2E 주문·더미 입고, D-036)
 engine/scm_engine/forecast/{classify,metrics,backtest,runner,store,ai_tuning}.py + methods/*  예측
 engine/scm_engine/{export_raw,verify,seed_app,gen_types,notify,cli}.py                      적재·검증·시드·타입·알림
-supabase/migrations/0001~0007 기반 · 0010 예측 · 0020 발주 · 0030 배정 · 0040 일정 · 0050 AI · 0060 대시보드 RPC · 0070/0071/0072 예측·발주·배정 화면 개요 RPC · 9999 권한
+engine/scm_engine/agent.py  자율 모드 감시 파이프라인(D-042) · forecast/auto_run.py 월 1회 자동 런(D-041) — 둘 다 `engine tick` 에서 실행
+supabase/migrations/0001~0007 기반 · 0010 예측 · 0020 발주 · 0030 배정 · 0040 일정 · 0050 AI · 0060 대시보드 RPC · 0070/0071/0072 예측·발주·배정 화면 개요 RPC · 0080 OL 시계열(D-040) · 0081 자동 런(D-041) · 0082 AI 감시(D-042) · 9999 권한
 docs/                      00 용어 · 01 업무절차 · 02 규칙(R-*) · 03 결정(D-*) · 04 미확인 · 05 데이터 카탈로그 · 06 데이터 검증 · 07 아키텍처 · specs · plans · reports
 ```

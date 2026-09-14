@@ -178,3 +178,18 @@ export function overviewCharts(o: ForecastOverview) {
   };
 }
 export type OverviewCharts = ReturnType<typeof overviewCharts>;
+
+/** 품목 제출 OL 시계열 + 정확도 (D-040): analytics.v_item_ol / v_item_ol_accuracy */
+export async function fetchItemOl(sb: SB, code: string) {
+  const [rows, acc] = await Promise.all([
+    sb.schema("analytics").from("v_item_ol").select("ym,qty,submitted_at,plan_id").eq("key_code", code).order("ym"),
+    sb.schema("analytics").from("v_item_ol_accuracy").select("n,first_ym,last_ym,wape,bias").eq("key_code", code).maybeSingle(),
+  ]);
+  return { rows: (rows.data ?? []).map(r => ({ ym: r.ym!, qty: Number(r.qty), submitted_at: r.submitted_at, plan_id: r.plan_id })), acc: acc.data ?? null };
+}
+export type ItemOl = Awaited<ReturnType<typeof fetchItemOl>>;
+/** 제출 OL 정확도 요약 (전체·카테고리) — 실적이 쌓인 달이 있을 때만 행이 있음 */
+export async function fetchItemOlSummary(sb: SB) {
+  const { data } = await sb.schema("analytics").from("v_item_ol_accuracy_summary").select("level,key,n_items,n,wape,bias");
+  return (data ?? []).map(r => ({ level: r.level!, key: r.key!, n_items: Number(r.n_items ?? 0), n: Number(r.n ?? 0), wape: r.wape == null ? null : Number(r.wape), bias: r.bias == null ? null : Number(r.bias) }));
+}

@@ -2,7 +2,7 @@
 export type ColType = "text" | "int" | "number" | "date" | "ym" | "enum";
 export type ColDef = { key: string; label: string; required: boolean; type: ColType; enum?: string[] };
 export type TargetDef = { label: string; description: string; mode: "upsert" | "replace"; columns: ColDef[] };
-export type TargetKey = "inventory_snapshot" | "inbound" | "item_setting" | "attach_rate" | "supplier" | "eol_eos" | "holiday" | "shipment_extra";
+export type TargetKey = "inventory_snapshot" | "inbound" | "item_setting" | "attach_rate" | "supplier" | "eol_eos" | "holiday" | "shipment_extra" | "mc_plan_actual";
 export const UPLOAD_TARGETS: Record<TargetKey, TargetDef> = {
   inventory_snapshot: { label: "재고 스냅샷", description: "기준일 기준 재고. 같은 기준일은 교체 (R-INV-01)", mode: "replace", columns: [
     { key: "item_code", label: "품목코드", required: true, type: "text" },
@@ -48,6 +48,12 @@ export const UPLOAD_TARGETS: Record<TargetKey, TargetDef> = {
     { key: "ym", label: "월", required: true, type: "ym" },
     { key: "qty", label: "수량", required: true, type: "number" },
     { key: "item_type", label: "품목유형", required: true, type: "enum", enum: ["PART", "SUPPLY", "OPTION"] } ] },
+  mc_plan_actual: { label: "기종 OL·실적 추가 (FY26~)", description: "기종별 월 Sales OL / SCM OL / 실적(ACT). 회사 MC_OL_vs_ACT 파일의 새 회계연도 시트를 긴 형식으로. 같은 기종·월은 갱신, 빈 칸은 유지 (D-040)", mode: "upsert", columns: [
+    { key: "model_base", label: "기종", required: true, type: "text" },
+    { key: "ym", label: "월", required: true, type: "ym" },
+    { key: "sales_ol", label: "Sales OL", required: false, type: "number" },
+    { key: "scm_ol", label: "SCM OL", required: false, type: "number" },
+    { key: "act", label: "실적", required: false, type: "number" } ] },
 };
 export const TARGET_KEYS = Object.keys(UPLOAD_TARGETS) as TargetKey[];
 export function templateCsv(target: TargetKey): string {

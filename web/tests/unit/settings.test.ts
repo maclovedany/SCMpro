@@ -16,3 +16,16 @@ it("describes values for non-developers", () => {
   expect(describeSetting("submit_deadline_rule", "last_day-1")).toBe("전월 말일의 하루 전");
   expect(SETTING_ORDER.every(k => k in SETTINGS)).toBe(true);
 });
+it("자동 런 설정 (D-041): 켬/끔 은 boolean JSON, 일·시각 범위", () => {
+  expect(encodeSetting("auto_run_enabled", "true")).toEqual({ ok: true, json: "true" });
+  expect(encodeSetting("auto_run_enabled", false)).toEqual({ ok: true, json: "false" });
+  expect(encodeSetting("auto_run_day", "29").ok).toBe(false);
+  expect(encodeSetting("auto_run_hour", "2")).toEqual({ ok: true, json: "2" });
+  expect(describeSetting("auto_run_enabled", true)).toContain("켬");
+});
+it("AI 감시 설정 (D-042)", () => {
+  expect(encodeSetting("agent_mode", "propose")).toEqual({ ok: true, json: '"propose"' });
+  expect(encodeSetting("agent_mode", "auto").ok).toBe(false);
+  expect(encodeSetting("agent_dos_ratio", "5").ok).toBe(false);
+  expect(describeSetting("agent_mode", "dryrun")).toContain("드라이런");
+});

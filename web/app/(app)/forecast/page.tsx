@@ -1,5 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase/server";
-import { fetchLatestRuns, fetchAccuracySummary, accuracyTable, fetchForecastOverview, overviewCharts, METHOD_LABEL, PATTERN_LABEL } from "@/lib/queries/forecast";
+import { fetchLatestRuns, fetchAccuracySummary, accuracyTable, fetchForecastOverview, overviewCharts, fetchItemOlSummary, METHOD_LABEL, PATTERN_LABEL } from "@/lib/queries/forecast";
 import { DrillCard } from "@/components/cards/DrillCard";
 import { KpiTile, type KpiTileProps } from "@/components/cards/KpiTile";
 import { drillHref } from "@/lib/drill";
@@ -9,7 +9,8 @@ const pct1 = (v: number | null | undefined) => (v == null ? 0 : Math.round(Numbe
 /** 예측 화면 (D-034, R-UI-13): KPI 스트립 + 정확도 · ABC-XYZ 교차 분석 · 등급별 재고 · 출고 추이 · 챔피언 분포 */
 export default async function ForecastPage() {
   const sb = await createServerSupabase();
-  const [runs, acc, ov] = await Promise.all([fetchLatestRuns(sb), fetchAccuracySummary(sb), fetchForecastOverview(sb)]);
+  const [runs, acc, ov, olSum] = await Promise.all([fetchLatestRuns(sb), fetchAccuracySummary(sb), fetchForecastOverview(sb), fetchItemOlSummary(sb)]);
+  const olTot = olSum.find(r => r.level === "total");   // 시스템 제출 OL 정확도 (실적 쌓인 뒤, D-040)
   const bt = runs.backtest; const pr = runs.production;
   const s = (bt?.summary ?? {}) as Record<string, number | string | null>;
   const itemTbl = accuracyTable(acc, "item");
@@ -28,7 +29,7 @@ export default async function ForecastPage() {
       delta: gain == null ? undefined : { text: `SCM OL 보다 ${pct1(Math.abs(gain))}%p ${gain >= 0 ? "정확" : "부정확"}`, dir: gain >= 0 ? "down" : "up", good: gain >= 0 }, progress: { pct: Math.max(0, 100 - pct1(sys?.wape)), label: `Bias ${fmtPct(sys?.bias)} · 목표 < 50%` } },
     { label: "SCM OL · Sales OL WAPE", value: fmtPct(scm?.wape), sub: `Sales OL ${fmtPct(sales?.wape)} · Bias ${fmtPct(scm?.bias)}`, href: "/forecast/mc", accent: "cycle", icon: "Users" },
     { label: "품목 기준예측 WAPE", value: fmtPct(itemW), href: bt ? `/forecast/runs/${bt.id}` : "/forecast/runs", accent: "stock", icon: "Package",
-      delta: itemW != null && base6 != null ? { text: `6M 평균 대비 ${pct1(base6 - itemW)}%p 개선`, dir: "down", good: base6 >= itemW } : undefined, sub: `품목 ${fmtInt(Number(s.n_items ?? 0))}개 · 챔피언 자동 선택` },
+      delta: itemW != null && base6 != null ? { text: `6M 평균 대비 ${pct1(base6 - itemW)}%p 개선`, dir: "down", good: base6 >= itemW } : undefined, sub: olTot?.wape != null ? `제출 OL WAPE ${fmtPct(olTot.wape)} (${fmtInt(olTot.n_items)}품목 ${fmtInt(olTot.n)}개월)` : `품목 ${fmtInt(Number(s.n_items ?? 0))}개 · 제출 OL 은 실적이 쌓이면 채점` },
     { label: "최근 프로덕션 예측", value: pr ? `${pr.horizon}개월` : "-", sub: pr ? `${pr.train_to} 까지 학습 · ${fmtDateTime(pr.finished_at)}` : "아직 없음 — 런에서 요청", href: "/forecast/runs", accent: "ops", icon: "PlayCircle", tone: pr ? "default" : "warn" },
   ];
   const wapeMethods = { labels: modelTbl.map(r => r.label), keys: modelTbl.map(r => r.method), values: modelTbl.map(r => pct1(r.wape)), href: "/forecast/mc",

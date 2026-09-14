@@ -1,6 +1,6 @@
 # 규칙: 수요 예측 (R-FC)
 
-최종 갱신: 2026-09-14 · 출처: stage1.md §4, 데이터 설명.docx, 회의록, D-002, D-016~020, D-034(셀별 운영 지침) · 구현: engine/scm_engine/forecast/, migrations/20260913001000_forecast.sql
+최종 갱신: 2026-09-14 · 출처: stage1.md §4, 데이터 설명.docx, 회의록, D-002, D-016~020, D-034(셀별 운영 지침), D-040(OL 시계열), D-041(자동 런) · 구현: engine/scm_engine/forecast/, migrations/20260913001000_forecast.sql
 
 ## 예측 대상과 기법 방향
 
@@ -23,6 +23,7 @@
 | R-FC-10 | 기계 예측 화면은 **Sales OL / SCM OL / 시스템 기준예측 / ACT** 4열을 항상 함께 보여준다. 어느 하나를 숨기지 않는다. |
 | R-FC-11 | 정확도 지표: Bias = SUM(예측−ACT)/SUM(ACT) (양수 = 과대), MAPE, 절대오차. 월별·기종별·FY별로 3종 각각 계산해 누적한다. |
 | R-FC-12 | 기준예측이 OL 을 대체하는 시점은 사용자 결정 사항. 시스템은 판단 근거(누적 정확도 비교)만 제공한다. |
+| R-FC-13 | **OL 시계열 출처 (D-040)**: 기종(MC) OL·ACT 는 회사 파일(raw, 수정 금지) + 업로드 추가분(`app.mc_plan_extra`, FY26~) 의 UNION `core.v_mc_plan_actual` 이 단일 소스(같은 기종·월은 추가분 우선). 품목(부품·소모품·옵션)은 이 시스템이 Supplier 에 제출한 OL(`ol_submission` → `analytics.v_item_ol`) 이 SCM OL 시계열이다. 품목 제출 OL 은 백테스트에서 `scm_ol` 로 채점(예측 후보 아님)하고, `ol_bias` 기법을 item 레벨로 켜면 미래 제출 OL 을 편향 보정한 후보가 된다. 실적이 있는 달만 채점한다. |
 
 ## 기준 예측과 조정 범위 연결
 
@@ -46,6 +47,7 @@
 |---|---|
 | R-FC-40 | 평가 단위는 **회계연도(R-FC-08)**. 라운드 r: 학습 = 시작 FY ~ FY(r−1), 평가 = FY(r). 초기 라운드: 학습 FY23+FY24, 평가 FY25. FY 가 추가될 때마다 라운드 추가(롤링). |
 | R-FC-41 | 라운드마다 기법별·품목별 Bias/WAPE/MAPE 와 오차 패턴(월별·카테고리·기종·수요패턴·EOL 단계별)을 `forecast_accuracy` 에 저장하고 화면에서 비교(Sales OL / SCM OL / 기준예측). 챔피언은 평가 구간에서 선택되므로 라운드 WAPE 는 상한 추정으로 표기; 프로덕션은 최신 백테스트 챔피언을 적용(out-of-sample) (D-020). 구현: `engine forecast backtest/run`, `analytics.v_accuracy_summary`, `/forecast`, 품목별 검증은 `/items/[code]` 예측 검증 섹션(`BacktestSection`, 실적 vs 기법별 예측·월별 차이·WAPE/Bias, D-028). |
+| R-FC-43 | **자동 런 (D-041)**: 관리자 설정 `auto_run_enabled/day/hour/backtest/tune` 에 따라 매월 지정일·시각(KST) 이후 첫 tick(10분) 에서 ① 백테스트(평가 FY = 실적이 끝까지 있는 최근 회계연도) ② 프로덕션 예측(지평선 = projection_future_months) ③ AI 오차 분석 제안(옵션, 승인은 결재) 순으로 실행한다. 월 1회(`app.auto_run_log.month`), advisory lock 으로 중복 실행 금지, 런의 `params_snapshot.auto_month` 로 "자동" 표시. 완료·회귀·실패는 SCM팀장·품목담당자·관리자에게 알림(`auto_run`, `auto_run_regressed`, `auto_run_failed`). 수동 요청(예측 › 런)은 그대로 병행. |
 | R-FC-42 | AI 정교화: 라운드 결과를 gpt-5-nano 에 요약 전달해 (a) 오차 원인 진단, (b) 기법/파라미터/전처리 조정 제안을 구조화(JSON)로 받는다. 제안은 `forecast_tuning_proposal` 에 저장, SCM 품목담당자 검토·팀장 승인 후 다음 라운드에 적용. 자동 적용 금지. 프롬프트·응답·적용 여부 이력 보관. 가드레일: 최신 백테스트 챔피언 기법의 off 제안은 무시, 라운드 간 WAPE 회귀 감지 (D-021). |
 
 ## 미정

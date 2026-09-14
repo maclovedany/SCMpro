@@ -56,7 +56,8 @@ uv --directory engine run engine forecast backtest --eval-fy 2025   # FY 롤링 
 uv --directory engine run engine forecast run --horizon 6           # 프로덕션 예측
 uv --directory engine run engine forecast tune                      # gpt-5-nano 오차 분석 → 제안 (승인은 /approvals)
 uv --directory engine run engine forecast pending                   # 웹에서 요청한 런 처리
-uv --directory engine run engine tick                               # pg_cron 대안: 배정 만료·알림·제출 알림·이메일 발송
+uv --directory engine run engine tick                               # pg_cron 대안: 배정 만료·알림·제출 알림·이메일 발송 + 월 1회 자동 런(auto_run_* 설정, D-041) + AI 감시(agent_mode 설정, D-042)
+uv --directory engine run engine agent --mode dryrun --no-llm   # AI 감시 1회 수동 실행 (규칙 판단만)
 uv --directory engine run engine notify                             # 이메일 큐 발송 (SMTP 미설정 시 skipped)
 # 이 Mac 에 launchd 잡 com.scmpro.tick 이 10분마다 `engine tick` 실행 (~/Library/LaunchAgents/com.scmpro.tick.plist, 로그 /tmp/scmpro/tick.log)
 # Web

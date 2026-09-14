@@ -15,5 +15,7 @@ export function notificationHref(n: { kind: string; payload: unknown }): string 
   if (n.kind.startsWith("alloc") || n.kind.startsWith("order_") || n.kind.includes("allocated") || n.kind === "priority_alloc_decided") return "/sales-orders?all=1";
   if (n.kind === "inbound_manual") return "/allocation";
   if (n.kind === "submission_reminder") return "/schedule";
+  if (n.kind.startsWith("agent")) return "/agent";                       // AI 감시 (D-042)
+  if (n.kind.startsWith("auto_run")) return "/forecast/runs";            // 자동 런 (D-041)
   return "/dashboard";
 }

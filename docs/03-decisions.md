@@ -259,3 +259,27 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 ## D-039 (2026-09-14) 사이드바 선택·호버 색상
 - 결정: 선택된 메뉴는 밝고 옅은 노랑(#fff1cc) 배경 + 진갈색(#8a5a00) 글자, 호버 시 형광 연두(#7CFF3B) 1px 테두리 + 연한 연두 배경. 선택 메뉴 위에 호버해도 테두리가 나타나 식별 가능. 상태색(주의 노랑·조치 빨강)과 혼동되지 않도록 테두리는 초록 계열.
 - 규칙 반영: R-UI-11.
+
+## D-040 (2026-09-14) OL 시계열 연결 — 시스템 제출 OL 이 품목 SCM OL, 기종 OL 은 업로드로 이어감
+- 배경: 26년부터 SCM OL 은 회사 파일이 아니라 이 시스템이 제출한다. 그대로 두면 27년 예측 시 OL 편향보정·OL 정확도 비교가 끊긴다(사용자 확인 2026-09-14).
+- 결정:
+  - 기종: `app.mc_plan_extra`(업로드 대상 `mc_plan_actual`) + `core.v_mc_plan_actual`(raw 변형 합산 ∪ 추가분, 추가분 우선). 엔진 `load_inputs` 와 `analytics.v_mc_compare` 는 이 뷰만 읽는다. raw 는 수정하지 않는다.
+  - 품목: `analytics.v_item_ol`(최신 `ol_submission`) = SCM OL 시계열. `v_item_ol_accuracy(_summary)` 로 실적 있는 달만 채점. 백테스트는 평가월 제출 OL 을 `scm_ol` 로 채점해 `forecast_accuracy`(item·total) 와 런 summary(`item_scm_ol_wape/bias/n`)에 기록; `ol_bias` 기법 스펙을 item/both 레벨로 바꾸면 품목에도 후보로 참여(기본은 model 유지 — 품목 OL 이력이 6개월 이상 쌓인 뒤 관리자가 켠다).
+  - 화면: 품목 상세 "제출 OL vs 실적" 섹션 + 차트 시리즈, 예측 KPI 에 제출 OL WAPE(실적 쌓이면), 업로드 대상 추가. 실제 발주량은 수요 모델 입력으로 쓰지 않는다(자기 순환 편향) — OL 시계열·재고 전개·규칙 보정에만 쓴다.
+  - e2e: 기종 OL 업로드 → 기종 비교 반영 검증, global-setup 이 `E2E%` 기종 추가분 정리.
+- 규칙 반영: R-FC-13 신설, R-FC-20 의 기준값 출처 명확화.
+
+## D-041 (2026-09-14) 예측 자동 런 — 월 1회 백테스트·프로덕션·AI 분석을 tick 이 실행
+- 배경: 실적이 쌓여도 런을 사람이 켜야 학습되던 것을 자동화(사용자 "계속 학습" 요구, 신규 작업 2번).
+- 결정: 설정 5개(`auto_run_enabled` 기본 끔, `auto_run_day` 5일, `auto_run_hour` 2시 KST, `auto_run_backtest` 켬, `auto_run_tune` 켬) 를 시스템 설정 화면(비개발자 UI)에서 관리. 엔진 `forecast/auto_run.py` 가 tick 마다 `due()` 판정 → `app.auto_run_log` 에 월 단위 기록 → `runner.backtest/production(extra_params={'auto_month'})` → `ai_tuning.tune` → `notify_role` 3역할. 실패 시 로그·알림 후 예외 재전파(다음 tick 재시도 없음 — 같은 달 재실행은 관리자가 로그 행 삭제).
+- 평가 FY 규칙: `eval_fy_for(last_actual)` = 진행 중 FY 면 전년도. 실데이터 운영 시 실적 마감 후 실행되도록 실행일을 잡는다.
+- 규칙 반영: R-FC-43 신설. CLAUDE.md 실행 명령의 tick 설명 갱신.
+
+## D-042 (2026-09-14) 자율 모드 — AI 감시 파이프라인 (감지 → 판단 → 알림·발주 제안 → 승인 게이트)
+- 배경: 현재 AI Agent 는 대화형(질문해야 답함). 사용자 확인: 계획 생성·감지·판단·제안·알림까지 자동, 발주 제안 **승인은 사람**. 모드 스위치로 구현(off/dryrun/notify/propose).
+- 결정:
+  - 감지 `app.fn_agent_signals(dos_ratio, lead_days, surge_pct)` 5종(R-AI-11), 이벤트 `app.agent_event`(key 유일, 쿨다운·피드백·approval 연결), 승인 트리거 `trg_agent_order_decided`(approved → `extra_demand` kind=meeting_approval status=approved, reason "AI 감시 제안 승인"), 통계 `fn_agent_stats`, 피드백 `fn_agent_feedback`.
+  - 엔진 `agent.py`: tick 마다 실행(설정 off 면 즉시 반환). LLM(gpt-5-nano, 구조화 출력) 판단 + 규칙 폴백, 수량 후보 가드레일(R-AI-12), 다이제스트 알림(R-AI-13), 제안은 관리자 계정 명의로 승인함에 등록. CLI `engine agent --mode --no-llm` 으로 수동/드라이런 실행.
+  - 화면 `/agent`(AI 감시, 현황 그룹, SCM 역할): KPI(모드·조치 필요·제안 대기·유용함 비율) + 이벤트 표(심각도·신호·대상·판단 사유·근거·상태·피드백). 결재함에 "AI 감시 발주 제안" 항목, 알림은 `/agent` 로 이동. 설정 6개는 시스템 설정 화면.
+  - 커리큘럼 [06]·[09] 대응. 배송 지연(신규 작업 5번)은 `inbound_delay` 신호로 이 파이프라인에 포함.
+- 규칙 반영: R-AI-10~15 신설.

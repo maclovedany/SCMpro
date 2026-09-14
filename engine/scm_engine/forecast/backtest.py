@@ -66,9 +66,10 @@ def _pick_champion(scores: dict[str, float | None], baseline_key: str = "baselin
     return champ
 
 def run_items(monthly: pd.DataFrame, prices: pd.Series | None, cfg: Config, *, train_to: str, horizon: int,
-              eval_actual: pd.DataFrame | None = None) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+              eval_actual: pd.DataFrame | None = None, item_ol: pd.DataFrame | None = None) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """품목 레벨. monthly: [key_code, category, ym, qty] 전체 이력(0채움).
     train_to 까지 학습, horizon 개월 예측. eval_actual 이 있으면(백테스트) 정확도 계산·챔피언 선택, 없으면(프로덕션) item_class.champion_method 를 쓴다.
+    item_ol: 품목 제출 OL [key_code, ym, qty] (D-040) — 평가월에 OL 이 있으면 method='scm_ol' 로 채점, ol_bias 스펙이 item 레벨이면 후보로도 사용.
     반환: results(level,key_code,category,ym,method,value,lower,upper,is_champion,actual), item_class, accuracy(item 레벨)."""
     train = monthly[monthly["ym"] <= train_to]
     months = sorted(train["ym"].unique())
@@ -111,6 +112,22 @@ def run_items(monthly: pd.DataFrame, prices: pd.Series | None, cfg: Config, *, t
             for k, v in pred.items():
                 fc[k]["lgbm"] = (v, None, None)
 
+    # 품목 제출 OL (D-040): 미래 OL → ol_bias 후보(스펙 level 이 item/both 일 때), 평가월 OL → scm_ol 채점
+    ol_fut_map, ol_hist_map = {}, {}
+    if item_ol is not None and not item_ol.empty:
+        for k, g in item_ol.groupby("key_code"):
+            if k not in series: continue
+            gi = g.set_index("ym")["qty"]
+            ol_fut_map[k] = gi.reindex(fut_months).to_numpy(dtype=float)
+            ol_hist_map[k] = gi.reindex(months).to_numpy(dtype=float)
+        ob = next((m for m in cfg.methods if m.key == "ol_bias" and m.enabled and m.level in ("item", "both")), None)
+        if ob is not None and horizon:
+            from .methods.mc import ol_bias
+            for k, olf in ol_fut_map.items():
+                oh = ol_hist_map[k]; overlap = int((~np.isnan(oh) & (series[k] >= 0)).sum())
+                if np.isnan(olf).any() or overlap < ob.min_history: continue
+                fc[k]["ol_bias"] = (ol_bias(olf, oh, series[k], ob.params).point, None, None)
+
     # 정확도·챔피언
     act_map = {}
     if eval_actual is not None:
@@ -124,6 +141,8 @@ def run_items(monthly: pd.DataFrame, prices: pd.Series | None, cfg: Config, *, t
             if a is not None:
                 m = all_metrics(pt, a); scores[mk] = m["wape"]
                 acc_rows.append({"level": "item", "key": k, "method": mk, **m})
+        if a is not None and k in ol_fut_map and not np.isnan(ol_fut_map[k]).all():
+            acc_rows.append({"level": "item", "key": k, "method": "scm_ol", **all_metrics(ol_fut_map[k], a)})   # 제출 OL 채점 (후보 아님)
         if eval_actual is not None:
             champ = _pick_champion(scores)
         else:

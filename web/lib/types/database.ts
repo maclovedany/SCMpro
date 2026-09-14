@@ -799,6 +799,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mc_plan_extra: {
+        Row: {
+          model_base: string
+          ym: string
+          sales_ol: number | null
+          scm_ol: number | null
+          act: number | null
+          source: string
+          updated_by: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          model_base?: string
+          ym?: string
+          sales_ol?: number | null
+          scm_ol?: number | null
+          act?: number | null
+          source?: string
+          updated_by?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          model_base?: string
+          ym?: string
+          sales_ol?: number | null
+          scm_ol?: number | null
+          act?: number | null
+          source?: string
+          updated_by?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notification: {
         Row: {
           id: number
@@ -1653,6 +1686,42 @@ export type Database = {
         }
         Relationships: []
       }
+      v_item_ol: {
+        Row: {
+          key_code: string | null
+          ym: string | null
+          qty: number | null
+          submitted_at: string | null
+          plan_id: string | null
+          source: string | null
+        }
+        Relationships: []
+      }
+      v_item_ol_accuracy: {
+        Row: {
+          key_code: string | null
+          category: string | null
+          n: number | null
+          first_ym: string | null
+          last_ym: string | null
+          sum_actual: number | null
+          wape: number | null
+          bias: number | null
+        }
+        Relationships: []
+      }
+      v_item_ol_accuracy_summary: {
+        Row: {
+          level: string | null
+          key: string | null
+          n_items: number | null
+          n: number | null
+          sum_actual: number | null
+          wape: number | null
+          bias: number | null
+        }
+        Relationships: []
+      }
       v_mc_compare: {
         Row: {
           model_base: string | null
@@ -1777,6 +1846,18 @@ export type Database = {
           family: string | null
           item_type: string | null
           source_types: string | null
+        }
+        Relationships: []
+      }
+      v_mc_plan_actual: {
+        Row: {
+          model_base: string | null
+          biz: string | null
+          ym: string | null
+          sales_ol: number | null
+          scm_ol: number | null
+          act: number | null
+          source: string | null
         }
         Relationships: []
       }

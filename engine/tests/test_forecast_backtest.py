@@ -50,3 +50,18 @@ def test_trim_leading_zeros():
     from scm_engine.forecast.backtest import trim_leading_zeros
     assert list(trim_leading_zeros(np.array([0, 0, 3, 0, 5]))) == [3, 0, 5]
     assert len(trim_leading_zeros(np.zeros(4))) == 4
+
+
+def test_run_items_scores_submitted_ol_and_item_ol_bias():
+    """D-040: 품목 제출 OL 은 scm_ol 로 채점, ol_bias 스펙이 item 레벨이면 후보로 참여"""
+    m = _panel()
+    ev = m[(m.ym > "2025-03") & (m.ym <= "2026-03")]
+    months = sorted(m.ym.unique())
+    ol = pd.DataFrame([{"key_code": "K0", "ym": ym, "qty": 110.0} for ym in months])          # K0 만 OL 보유 (이력+미래)
+    cfg = Config(methods=CFG.methods + [_spec("ol_bias", "mc", level="item", mh=6, params={"source": "scm_ol"})], policy={}, n_jobs=1)
+    res, cls, acc = run_items(m, None, cfg, train_to="2025-03", horizon=12, eval_actual=ev, item_ol=ol)
+    a0 = acc[acc.key == "K0"]
+    assert "scm_ol" in set(a0.method) and a0[a0.method == "scm_ol"].wape.notna().all()
+    assert "ol_bias" in set(res[res.key_code == "K0"].method)
+    assert "scm_ol" not in set(res.method)                                                  # 채점만, 예측 후보 아님
+    assert "scm_ol" not in set(acc[acc.key == "K1"].method)                                 # OL 없는 품목은 채점 없음
