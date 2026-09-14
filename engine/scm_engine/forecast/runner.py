@@ -91,6 +91,7 @@ def backtest(db: PostgresDB, eval_fy: int, *, n_jobs: int = 6, heavy_limit: int 
             summary["regressed"] = bool((summary["vs_prev"]["item_wape_delta"] or 0) > 0.01 or (summary["vs_prev"]["model_wape_delta"] or 0) > 0.01)
         store.finish_run(db, rid, summary)
         log.info("backtest done %s", summary)
+        log.info("prune %s", store.prune_runs(db))
     except Exception as e:
         store.finish_run(db, rid, {}, error=f"{type(e).__name__}: {e}")
         raise
@@ -127,6 +128,7 @@ def production(db: PostgresDB, horizon: int | None = None, *, n_jobs: int = 6, h
         summary = {"train_to": train_to, "horizon": horizon, "n_items": int(res_i.key_code.nunique()), "n_models": int(res_m.key_code.nunique()) if not res_m.empty else 0,
                    "months": sorted(res_i.ym.unique().tolist()), "seconds": round(time.time() - t0, 1)}
         store.finish_run(db, rid, summary)
+        log.info("prune %s", store.prune_runs(db))
     except Exception as e:
         store.finish_run(db, rid, {}, error=f"{type(e).__name__}: {e}")
         raise

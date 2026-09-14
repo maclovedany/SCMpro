@@ -82,5 +82,5 @@ def tune(db: PostgresDB, run_id: str, model: str | None = None, client=None) -> 
     response = call_llm(summary, model=model, client=client)
     pid = str(uuid.uuid4())
     db.execute("insert into app.forecast_tuning_proposal(id, run_id, model, prompt, response, status) values (%s,%s,%s,%s,%s,'pending')",
-               (pid, run_id, model, prompt[:200000], json.dumps(response, ensure_ascii=False)))
+               (pid, run_id, model, prompt[:20000], json.dumps(response, ensure_ascii=False)))   # 프롬프트 원문은 20KB 까지만 보관 (D-045)
     return pid

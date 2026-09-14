@@ -4,6 +4,72 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   app: {
     Tables: {
+      agent_event: {
+        Row: {
+          id: string
+          key: string
+          signal: string
+          item_code: string | null
+          category: string | null
+          supplier: string | null
+          severity: number | null
+          status: string
+          first_seen: string
+          last_seen: string
+          last_notified_at: string | null
+          notified_count: number
+          evidence: Json | null
+          judgment: Json | null
+          approval_id: string | null
+          feedback: string | null
+          feedback_by: string | null
+          feedback_at: string | null
+          resolved_at: string | null
+        }
+        Insert: {
+          id?: string
+          key?: string
+          signal?: string
+          item_code?: string | null
+          category?: string | null
+          supplier?: string | null
+          severity?: number | null
+          status?: string
+          first_seen?: string
+          last_seen?: string
+          last_notified_at?: string | null
+          notified_count?: number
+          evidence?: Json | null
+          judgment?: Json | null
+          approval_id?: string | null
+          feedback?: string | null
+          feedback_by?: string | null
+          feedback_at?: string | null
+          resolved_at?: string | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          signal?: string
+          item_code?: string | null
+          category?: string | null
+          supplier?: string | null
+          severity?: number | null
+          status?: string
+          first_seen?: string
+          last_seen?: string
+          last_notified_at?: string | null
+          notified_count?: number
+          evidence?: Json | null
+          judgment?: Json | null
+          approval_id?: string | null
+          feedback?: string | null
+          feedback_by?: string | null
+          feedback_at?: string | null
+          resolved_at?: string | null
+        }
+        Relationships: []
+      }
       ai_conversation: {
         Row: {
           id: string
@@ -232,6 +298,36 @@ export type Database = {
           after?: Json | null
           actor?: string | null
           at?: string | null
+        }
+        Relationships: []
+      }
+      auto_run_log: {
+        Row: {
+          month: string
+          started_at: string | null
+          finished_at: string | null
+          backtest_run_id: string | null
+          production_run_id: string | null
+          summary: Json | null
+          error: string | null
+        }
+        Insert: {
+          month?: string
+          started_at?: string | null
+          finished_at?: string | null
+          backtest_run_id?: string | null
+          production_run_id?: string | null
+          summary?: Json | null
+          error?: string | null
+        }
+        Update: {
+          month?: string
+          started_at?: string | null
+          finished_at?: string | null
+          backtest_run_id?: string | null
+          production_run_id?: string | null
+          summary?: Json | null
+          error?: string | null
         }
         Relationships: []
       }
@@ -1397,6 +1493,10 @@ export type Database = {
     Functions: {
       current_role: { Args: Record<string, never>; Returns: unknown }
       fn_add_extra_demand: { Args: { p_kind: string; p_item: string; p_need_ym: unknown; p_qty: unknown; p_order_no: string; p_customer: string; p_model: string; p_reason: string }; Returns: Json }
+      fn_agent_feedback: { Args: { p_id: string; p_feedback: string }; Returns: undefined }
+      fn_agent_order_decided: { Args: Record<string, never>; Returns: unknown }
+      fn_agent_signals: { Args: { p_dos_ratio: unknown; p_lead_days: number; p_surge_pct: unknown }; Returns: Json }
+      fn_agent_stats: { Args: { p_days: number }; Returns: Json }
       fn_ai_stats: { Args: { p_days: number }; Returns: Json }
       fn_allocation_overview: { Args: Record<string, never>; Returns: Json }
       fn_allocation_tick: { Args: Record<string, never>; Returns: Json }
@@ -1422,9 +1522,12 @@ export type Database = {
       fn_order_calendar: { Args: { p_from: unknown; p_months: number }; Returns: unknown }
       fn_order_inputs: { Args: { p_plan_ym: unknown; p_category: string }; Returns: Json }
       fn_override_line: { Args: { p_line_id: unknown; p_qty: unknown; p_reason: string }; Returns: undefined }
+      fn_override_patterns: { Args: { p_months: number }; Returns: Json }
       fn_plan_cat_projection: { Args: { p_plan_id: string }; Returns: Json }
       fn_plan_overview: { Args: { p_plan_id: string }; Returns: Json }
+      fn_plan_scorecard: { Args: { p_plan_id: string }; Returns: Json }
       fn_receive_inbound: { Args: { p_inbound_id: unknown; p_actual: unknown }; Returns: Json }
+      fn_recent_scorecards: { Args: { p_months: number }; Returns: Json }
       fn_refresh_if_requested: { Args: Record<string, never>; Returns: unknown }
       fn_refresh_matviews: { Args: Record<string, never>; Returns: undefined }
       fn_request_approval: { Args: { p_kind: string; p_target_table: string; p_target_pk: string; p_payload: Json; p_reason: string }; Returns: string }
@@ -1450,7 +1553,7 @@ export type Database = {
       alloc_kind: "temp" | "firm" | "hold"
       alloc_mode_choice: "partial" | "wait"
       allocation_mode: "auto" | "manual"
-      approval_kind: "item_setting" | "target_dos" | "allocation_mode" | "order_plan" | "priority_alloc" | "bulkdeal" | "forecast_tuning"
+      approval_kind: "item_setting" | "target_dos" | "allocation_mode" | "order_plan" | "priority_alloc" | "bulkdeal" | "forecast_tuning" | "agent_order"
       approval_status: "pending" | "approved" | "rejected"
       extra_kind: "confirmed_order" | "meeting_approval" | "bulkdeal"
       extra_status: "pending" | "approved" | "rejected"

@@ -294,3 +294,8 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 결정: `fn_plan_scorecard(plan)`(라인별 결과·개선/악화·카테고리·최악 15), `fn_recent_scorecards(months)`, `fn_override_patterns(months)`; AI 튜닝 프롬프트에 `order_feedback` 섹션 + 응답 스키마 `dos_adjustments`; `fn_request_tuning_approval` payload 와 `fn_apply_tuning` 에 DoS 조정 적용(5~180일 가드, 품목/셀). 화면: 승인된 계획 상세 "지난 계획 채점", 런 상세 제안에 "목표 DoS 조정 제안", 결재 설명.
 - 현재 데이터로는 필요월(2026-10~) 실적이 없어 채점 결과가 비어 있음 — 실적이 쌓이면 자동으로 채워진다.
 - 규칙 반영: R-OQ-42/43 신설.
+
+## D-045 (2026-09-14) 디스크 가득 참 장애 → 보존 정책·부하 제한
+- 장애: 09:22 백테스트 중 Postgres 크래시 루프(`pg_wal: No space left on device`). Free/nano 디스크 2GB 에 DB 1.2GB + WAL 576MB. 원인은 런 결과 무제한 누적(`forecast_result` 591MB, 12런), 라인 단위 감사 로그(`audit_log` 264MB), 같은 발주월의 계획 중복(212MB). Pro 조직 이전 + Micro 로 디스크 8GB 확장 후 복구(13:41). 정리 후 287MB.
+- 결정: 설정 `run_retention`(기본 3, 종류별 최근 N런만 결과 보관), `audit_retention_days`(90), `engine_n_jobs`(3). `fn_prune_runs` 를 런 종료 시·tick 에서 호출. 대량 테이블(`order_plan_line`, `forecast_result`, `forecast_accuracy`)은 감사 트리거 제외(계획·런 단위 이력으로 충분). AI 제안 프롬프트 원문은 20KB 까지만 보관. CLI 기본 병렬도 6→3. 런·물리화 뷰 refresh·e2e 동시 실행 금지(10-operations).
+- 이번 정리에서 삭제한 것: 완료 런 결과(최신 백테스트·프로덕션 1개씩만 유지), 2026-09 중복 계획 9개(최신 승인 1개 유지, 제출 OL 은 최신 계획분 유지), 3일 이전 감사 로그.

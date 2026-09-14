@@ -32,12 +32,13 @@ def rule_judge(s: dict, mode: str) -> dict:
     """LLM 없이 쓰는 규칙 판단 (폴백·드라이런·테스트)"""
     ev = s.get("evidence") or {}; sig = s["signal"]; abc = ev.get("abc")
     if sig == "stockout": sev = 3 if abc == "A" else 2
-    elif sig == "low_dos": sev = 2 if abc == "A" else 1
+    elif sig == "low_dos": sev = 2 if abc in ("A", "B") else 1
     elif sig == "inbound_delay": sev = 2 if float(ev.get("days_late") or 0) > 7 else 1
     elif sig == "lead_imminent": sev = 2
     else: sev = 1
     act = "propose" if (sev >= 2 and sig in ("stockout", "low_dos") and (ev.get("shortage") or 0) > 0) else "notify"
-    reason = {"stockout": f"필요월 {ev.get('need_ym')} 기초재고 부족 {ev.get('shortage')}개 (ABC {abc or '-'})",
+    reason = {"stockout": (f"필요월 {ev.get('need_ym')} 발주 반영 후 기말 {ev.get('shortage')}개 부족 (ABC {abc or '-'})" if (ev.get("shortage") or 0) > 0
+                           else f"필요월 {ev.get('need_ym')} 기초재고 {ev.get('start_need')} < 수요 {ev.get('forecast_need')} — 발주 {ev.get('final_qty')} 로 커버, 입고 지연 시 결품 (ABC {abc or '-'})"),
               "low_dos": f"DoS {ev.get('dos_days')}일 < 목표 {ev.get('target_dos_days')}일, 입고예정 {ev.get('inbound_qty')}",
               "inbound_delay": f"{ev.get('supplier')} {ev.get('po_no')} 입고 {ev.get('days_late')}일 지연 ({ev.get('qty')}개)",
               "lead_imminent": f"{ev.get('supplier')} 발주일 {ev.get('order_date')} (D-{ev.get('days_left')}), 계획 {ev.get('plan_status') or '없음'}",
@@ -60,7 +61,7 @@ def run(db, now: datetime | None = None, *, mode_override: str | None = None, us
         return {"mode": "off", "signals": 0}
     now = now or datetime.now(tz=timezone.utc)
     now_ym = now.strftime("%Y-%m")
-    sig = db.read_df("select app.fn_agent_signals(%s, %s, %s) as s", (float(settings.get("agent_dos_ratio", 50)), int(settings.get("agent_lead_days", 7)), float(settings.get("agent_surge_pct", 50)))).iloc[0, 0] or []
+    sig = db.read_df("select app.fn_agent_signals(%s::numeric, %s::int, %s::numeric) as s", (float(settings.get("agent_dos_ratio", 50)), int(settings.get("agent_lead_days", 7)), float(settings.get("agent_surge_pct", 50)))).iloc[0, 0] or []
     keys = set()
     for s in sig:
         k = _key(s); keys.add(k)
@@ -79,7 +80,7 @@ def run(db, now: datetime | None = None, *, mode_override: str | None = None, us
     cd = int(settings.get("agent_cooldown_hours", 24)); mx = int(settings.get("agent_max_per_tick", 30))
     cand = db.read_df("""select id, key, signal, item_code, category, supplier, evidence, notified_count from app.agent_event
                          where status in ('open','notified') and (last_notified_at is null or last_notified_at < now() - (%s || ' hours')::interval)
-                         order by first_seen limit %s""", (cd, mx))
+                         order by coalesce((evidence->>'shortage')::numeric, 0) desc, first_seen limit %s""", (cd, mx))
     if cand.empty:
         return {"mode": mode, "signals": len(sig), "resolved": resolved, "judged": 0, "notified": 0, "proposed": 0}
     items = []

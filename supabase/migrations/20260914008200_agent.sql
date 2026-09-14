@@ -36,7 +36,7 @@ language sql stable security definer set search_path = app, analytics, public as
              'evidence', jsonb_build_object('plan_ym', (select plan_ym from plan), 'need_ym', l.need_ym, 'on_hand', l.on_hand, 'inbound', l.inbound_until_need,
                'forecast_need', l.forecast_need, 'extras', l.extras_need, 'start_need', l.start_need, 'end_after', l.end_after, 'dos_after', l.dos_after,
                'final_qty', coalesce(l.override_qty, l.final_qty), 'moq', l.moq, 'abc', c.abc, 'amount', l.amount, 'unit_price', l.unit_price,
-               'shortage', greatest(0, ceil(coalesce(l.forecast_need, 0) + coalesce(l.extras_need, 0) - coalesce(l.start_need, 0) - coalesce(l.override_qty, l.final_qty, 0))))) j,
+               'shortage', greatest(0, ceil(-coalesce(l.end_after, 0))), 'end_after_month', l.need_ym)) j,   -- 부족량 = 발주 반영 후 기말 예상이 음수인 만큼
            coalesce(l.amount, 0) rank
     from app.order_plan_line l left join app.item_class c on c.key_code = l.key_code
     where l.plan_id = (select id from plan) and (l.stockout_risk or coalesce(l.end_after, 0) < 0) order by rank desc limit 100),

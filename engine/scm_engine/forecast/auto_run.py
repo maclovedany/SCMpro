@@ -52,6 +52,7 @@ def maybe_run(db, now: datetime | None = None, *, n_jobs: int = 6, runner=None, 
         last_actual = db.read_df("select max(ym) as ym from analytics.v_item_monthly where qty > 0").iloc[0, 0]
         eval_fy = eval_fy_for(str(last_actual), fy_start)
         extra = {"auto_month": month}
+        n_jobs = int(settings.get("engine_n_jobs", n_jobs))   # DB 부하 제한 (D-045)
         bt = runner.backtest(db, eval_fy, n_jobs=n_jobs, extra_params=extra) if settings.get("auto_run_backtest", True) else None
         pr = runner.production(db, None, n_jobs=n_jobs, extra_params=extra)
         out.update(backtest=bt, production=pr)

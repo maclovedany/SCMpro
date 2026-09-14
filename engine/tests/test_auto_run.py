@@ -55,3 +55,14 @@ def test_maybe_run_skips_when_disabled():
     db = FakeDB({"auto_run_enabled": False})
     assert auto_run.maybe_run(db, now=datetime(2026, 9, 14, tzinfo=KST), runner=FakeRunner) == {"ran": False, "reason": "disabled"}
     assert db.execs == []
+
+def test_auto_run_uses_engine_n_jobs_setting():
+    FakeRunner.calls.clear()
+    class R(FakeRunner):
+        @staticmethod
+        def backtest(db, eval_fy, **kw): FakeRunner.calls.append(("bt", kw.get("n_jobs"))); return "BT"
+        @staticmethod
+        def production(db, horizon, **kw): FakeRunner.calls.append(("pr", kw.get("n_jobs"))); return "PR"
+    db = FakeDB({"auto_run_enabled": True, "auto_run_day": 1, "auto_run_hour": 0, "auto_run_backtest": True, "auto_run_tune": False, "engine_n_jobs": 2})
+    auto_run.maybe_run(db, now=datetime(2026, 9, 14, 9, 0, tzinfo=KST), runner=R)
+    assert FakeRunner.calls[0] == ("bt", 2)

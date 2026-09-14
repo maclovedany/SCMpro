@@ -32,6 +32,9 @@ export const SETTINGS: Record<string, SettingSpec> = {
   agent_surge_pct: { kind: "int", label: "수요 급증 신호 기준", unit: "% (6개월 평균 초과)", min: 10, max: 500, help: "최근 월 출고가 6개월 평균의 (100+N)% 를 넘으면 신호" },
   agent_cooldown_hours: { kind: "int", label: "같은 신호 재알림 간격", unit: "시간", min: 1, max: 720, help: "같은 품목·신호는 이 시간 안에 다시 알리지 않음" },
   agent_max_per_tick: { kind: "int", label: "한 번에 판단하는 최대 건수", unit: "건", min: 1, max: 200, help: "주기 작업 한 번에 AI 가 판단·알림하는 상한 (비용·소음 제한)" },
+  run_retention: { kind: "int", label: "예측 런 결과 보존", unit: "개 (종류별)", min: 1, max: 20, help: "백테스트·프로덕션 각각 최근 N개만 결과를 보관. 런 1개 ≈ 50~100MB — 디스크 한도 안에서 (D-045)" },
+  audit_retention_days: { kind: "int", label: "감사 로그 보존", unit: "일", min: 7, max: 3650, help: "설정·승인·주문 변경 이력 보관 기간" },
+  engine_n_jobs: { kind: "int", label: "엔진 병렬 프로세스", unit: "개", min: 1, max: 8, help: "백테스트 병렬도. DB 가 작으면 2~3 (D-045)" },
   auto_run_tune: { kind: "select", label: "자동 실행 후 AI 오차 분석", options: [{ value: true, label: "생성 — 조정 제안을 결재함에 올림" }, { value: false, label: "생성 안 함" }], help: "제안은 팀장 승인 전까지 적용되지 않습니다 (D-021)" },
 };
 export const SETTING_ORDER = ["fiscal_year_start_month", "ol_lead_months", "flex_ranges", "dos_avg_months", "default_lead_time_days", "ship_lead_days", "temp_alloc_days", "expiry_reminder_days", "reminder_interval_min", "submit_deadline_rule", "submission_depts", "projection_past_months", "projection_future_months", "auto_run_enabled", "auto_run_day", "auto_run_hour", "auto_run_backtest", "auto_run_tune", "ai_model"];

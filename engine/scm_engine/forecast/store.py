@@ -57,3 +57,8 @@ def load_policy(db) -> dict[str, list[str]]:
 def load_settings(db) -> dict:
     df = db.read_df("select key, value from app.system_settings")
     return {r.key: r.value for r in df.itertuples()}
+
+def prune_runs(db: PostgresDB) -> dict:
+    """보존 정책 (D-045): 설정 run_retention(기본 3) 개만 남기고 결과 삭제 + 감사 로그 정리"""
+    keep = int(load_settings(db).get("run_retention", 3))
+    return db.read_df("select app.fn_prune_runs(%s) as r", (keep,)).iloc[0, 0]

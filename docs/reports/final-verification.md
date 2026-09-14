@@ -64,3 +64,17 @@ E2E 는 `E2E_BASE_URL=http://localhost:3001` 로 기존 dev 서버에 붙여 실
 | 발주 계획 목록·상세: KPI·구성 차트 4·이력 (`fn_plan_overview`) | vitest planCharts 5건, orders e2e(전체 워크플로), 스크린샷 |
 | 재고 배정·일정·영업 주문: KPI·차트 (`fn_allocation_overview`, `scheduleCharts`) | vitest allocScheduleCharts 8건, allocation/schedule e2e |
 | e2e 픽스처 리셋(global-setup), perf 스펙 배지 허용 | 전체 14 spec 직렬 통과 (2026-09-14 08:10, 2.8분) · vitest 60/60 · tsc/lint 0 error |
+
+## 신규 작업 1~8 (2026-09-14 오후) — D-040~D-045
+| # | 작업 | 검증 |
+|---|---|---|
+| 1 | OL 시계열 연결 (D-040): `core.v_mc_plan_actual`, `v_item_ol(_accuracy)`, 업로드 "기종 OL·실적 추가", 엔진 제출 OL 채점, 품목 상세 "제출 OL vs 실적" | 백테스트 2회(기종 WAPE 31.4%, 제출 OL 채점 0건 — 실적 미도래), 업로드 e2e(E2E-MDL → 기종 비교 FY26 42), items e2e, pytest scores_submitted_ol |
+| 2 | 자동 런 (D-041): `auto_run.py`·tick, 설정 5개, `auto_run_log`, 런 "자동" 배지, 알림 | **실제 실행**: 설정 켜고 tick → 백테스트 67s(품목 33.0%/기종 31.4%, 회귀 없음) → 프로덕션 96s → AI 제안 1건 → 알림 4건·이메일 22통 → 로그 행 1. pytest 5건 |
+| 3 | 자율 모드 AI 감시 (D-042): 감지 5종, LLM/규칙 판단, 다이제스트 알림, `agent_order` 승인 → 추가수요, `/agent` 화면, 설정 6개 | 실데이터 드라이런 251건 감지·30건 판단; agent e2e(제안 모드 → 화면·피드백 → 팀장 알림 → 승인 → 추가수요 반영 → accepted); pytest 5건 |
+| 4 | 발주 피드백 루프 (D-044): 채점·오버라이드 패턴 RPC, AI 튜닝 `dos_adjustments`, 승인 시 목표 DoS 적용, 계획 상세 "지난 계획 채점" | RPC 적용·화면 렌더(현재 "채점 전" — 필요월 실적 미도래), vitest scorecardInsight, pytest order_feedback |
+| 5 | 배송 지연 반영 | AI 감시 `inbound_delay` 신호(드라이런 1건 감지) |
+| 7 | 운영 이관 문서 (D-043) | `09-integration-plan.md`, `10-operations.md` |
+| 8 | 물류 구간 분석 | Q-020 등록(데이터 대기) |
+| — | 디스크 장애 대응 (D-045): 런·계획·감사로그 정리 1.2GB→287MB, `fn_prune_runs`, 보존 설정 3개, 감사 트리거 축소, 병렬도 3 | Pro/Micro 8GB 이전 후 복구; 정리 후 3런 보관 상태 454MB |
+| — | 전체 회귀 | pytest 46 · vitest 67 · lint 0 error · e2e 16 spec 직렬 통과 (아래 로그) |
+스크린샷: /tmp/scmpro/{agent,runs,item-ol,scorecard,settings-agent}.png

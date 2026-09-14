@@ -69,7 +69,7 @@ forecast_app = typer.Typer(help="예측 엔진 (SP2)")
 app.add_typer(forecast_app, name="forecast")
 
 @forecast_app.command("backtest")
-def fc_backtest(eval_fy: int = 2025, n_jobs: int = 6, heavy_limit: int = None, item_limit: int = None):
+def fc_backtest(eval_fy: int = 2025, n_jobs: int = 3, heavy_limit: int = None, item_limit: int = None):
     """FY 롤링 백테스트 (R-FC-40). 학습 ~ eval_fy-1, 평가 eval_fy."""
     import logging; logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     from .forecast import runner
@@ -77,7 +77,7 @@ def fc_backtest(eval_fy: int = 2025, n_jobs: int = 6, heavy_limit: int = None, i
     typer.echo(f"run_id={rid}")
 
 @forecast_app.command("run")
-def fc_run(horizon: int = None, n_jobs: int = 6, heavy_limit: int = None):
+def fc_run(horizon: int = None, n_jobs: int = 3, heavy_limit: int = None):
     """프로덕션 예측 (최신 백테스트 챔피언 사용)."""
     import logging; logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     from .forecast import runner
@@ -85,7 +85,7 @@ def fc_run(horizon: int = None, n_jobs: int = 6, heavy_limit: int = None):
     typer.echo(f"run_id={rid}")
 
 @forecast_app.command("pending")
-def fc_pending(n_jobs: int = 6):
+def fc_pending(n_jobs: int = 3):
     """웹에서 요청된(requested) 런 처리."""
     import logging; logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     from .forecast import runner

@@ -30,7 +30,7 @@
 5. 새 데이터 파일이 들어오면 `05-data-catalog.md` 에 먼저 등록한다.
 6. 하드코딩 금지 대상: 리드타임, OL 제출 선행 개월, 목표 DoS, MOQ, Flex 범위, 출항일 → 전부 관리자 설정값.
 7. 화면 작업 시 `docs/02-domain-rules/ui.md` R-UI-07~09·R-UI-13 준수: 카드는 KpiTile/DrillCard/ChartCard 만 사용(동일 높이, `.scm-card` 표면 — 테두리·액센트 띠 금지), 차트는 `MiniCharts` + `lib/design/palette.ts` 토큰(순환 색·이중축 금지), 표는 숫자 우측·여백 통일, 한글 단어 잘림 금지(전역 keep-all). 화면 구조 = KPI 스트립 → 차트(한 줄 해석) → 근거 표, 전부 드릴다운. 반응형(창 축소)에서 확인 후 완료.
-8. 엔진 런(backtest/run)이 도는 동안 `migrate.sh` 를 실행하지 않는다 — 물리화 뷰 재생성으로 런이 실패한다.
+8. 엔진 런(backtest/run)이 도는 동안 `migrate.sh` 를 실행하지 않는다 — 물리화 뷰 재생성으로 런이 실패한다. 런·물리화 뷰 refresh·e2e 를 동시에 돌리지 않는다(2026-09-14 디스크 장애, D-045). 런 결과는 `run_retention` 개만 보관된다.
 9. Supabase PostgREST 는 statement_timeout 8s. 파라미터 있는 집계 RPC 는 `plan_cache_mode = force_custom_plan` 을 붙이고 호출당 8초 내로 분할한다 (D-027).
 10. 마스터·설정 데이터(재고, 입고예정, 단가, MOQ, 공급처, 장착률 …)는 **파일 업로드 + 관리자 화면 입력** 둘 다 지원. 실데이터 없는 것은 더미 시드하되 `is_dummy` 로 구분 (D-007).
 

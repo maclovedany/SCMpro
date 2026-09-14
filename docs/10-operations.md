@@ -7,7 +7,7 @@
 |---|---|---|
 | Web (Next.js) | 개발 Mac `npm run dev` | Vercel 또는 사내 Node 서버. 환경변수 `web/.env.local` 항목 그대로 |
 | Engine (Python) | 개발 Mac launchd `com.scmpro.tick` 10분 | 사내 Linux 서버 systemd timer 10분 (`engine tick`), 월 1회 자동 런은 tick 안에서(D-041) |
-| DB (Supabase) | 클라우드 프로젝트(Micro) | Small 이상 권장 — 백테스트(6 프로세스 쓰기)·물리화 뷰 refresh·e2e 를 동시에 돌리면 인스턴스가 재시작될 수 있음(2026-09-14 장애: 동시 부하 후 1시간 이상 복구 대기) |
+| DB (Supabase) | Pro 조직 · Micro · 디스크 8GB (2026-09-14 이전) | Small 이상 권장 — 백테스트(6 프로세스 쓰기)·물리화 뷰 refresh·e2e 를 동시에 돌리면 인스턴스가 재시작될 수 있음(2026-09-14 장애: 동시 부하 후 1시간 이상 복구 대기) |
 | SMTP / OpenAI | 네이버 SMTP, OpenAI 키 (engine/.env, web/.env.local) | 회사 메일 서버·OpenAI 조직 키, 비밀은 서버 환경변수/시크릿 매니저 |
 
 ## 2. 정기 작업 달력
@@ -23,6 +23,7 @@
 - 런 실패: `app.forecast_run.status='failed'` + 알림 `auto_run_failed`. 런이 `running` 인 채 30분 이상이면 프로세스 사망 → `failed` 로 표시 후 재실행(2026-09-14 DB 장애 사례).
 - tick 이 멈추면: 알림·이메일이 끊긴다. 운영 서버에서 timer 상태 + 마지막 로그 시각을 대시보드 "데이터 준비"에 표시하도록 확장 예정.
 - DB 부하 규칙: 엔진 런 중 `migrate.sh` 금지(CLAUDE.md 8), 런과 e2e·물리화 뷰 refresh 동시 실행 금지.
+- **디스크(D-045)**: Supabase Infrastructure 의 Disk 사용률을 주 1회 확인. 70% 넘으면 `run_retention` 을 줄이거나 `select app.fn_prune_runs(2)` 실행 후 `vacuum full app.forecast_result`. 런 1개 ≈ 50~100MB, WAL 은 체크포인트 후 회수. 2026-09-14 장애: 2GB 디스크에 1.2GB DB + 576MB WAL → 크래시 루프 → Pro/Micro(8GB) 로 해결.
 
 ## 4. 변경 절차
 1. 규칙 변경 → `docs/02-domain-rules` 갱신 → 참조 코드 grep → 테스트(pytest·vitest·e2e) → `03-decisions.md` D-번호 → 배포.
