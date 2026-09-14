@@ -60,3 +60,6 @@ export default async function OrdersPage() {
     </div>
   );
 }
+
+/** Vercel 함수 시간 제한 상향 (계획 생성 ~20s·대량 업로드·LLM 응답). Pro 플랜 필요 (D-048) */
+export const maxDuration = 60;

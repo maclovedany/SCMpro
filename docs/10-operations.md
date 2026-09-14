@@ -5,7 +5,7 @@
 ## 1. 구성 요소와 실행 위치
 | 구성 요소 | 지금 | 운영 권장 |
 |---|---|---|
-| Web (Next.js) | 개발 Mac `npm run dev` | Vercel 또는 사내 Node 서버. 환경변수 `web/.env.local` 항목 그대로 |
+| Web (Next.js) | 개발 Mac `npm run dev` | **Vercel Pro** (Root Directory `web`, 리전 서울 `icn1` — `web/vercel.json`, 함수 제한 `maxDuration = 60` 은 발주 계획·업로드 페이지와 AI 채팅 라우트에 선언, D-048). 환경변수 4개: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`. Supabase Auth 의 Site/Redirect URL 에 Vercel 도메인 추가 |
 | Engine (Python) | 개발 Mac launchd `com.scmpro.tick` 10분 | 사내 Linux 서버 systemd timer 10분 (`engine tick`), 월 1회 자동 런은 tick 안에서(D-041) |
 | DB (Supabase) | Pro 조직 · Micro · 디스크 8GB (2026-09-14 이전) | Small 이상 권장 — 백테스트(6 프로세스 쓰기)·물리화 뷰 refresh·e2e 를 동시에 돌리면 인스턴스가 재시작될 수 있음(2026-09-14 장애: 동시 부하 후 1시간 이상 복구 대기) |
 | SMTP / OpenAI | 네이버 SMTP, OpenAI 키 (engine/.env, web/.env.local) | 회사 메일 서버·OpenAI 조직 키, 비밀은 서버 환경변수/시크릿 매니저 |
