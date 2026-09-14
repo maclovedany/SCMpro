@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>주문 · 배정 — SP4</title>
+<title>예측 — SP2</title>
 <style>
 /* ── 16:9 다이어그램 공통 스타일 (skill: diagram) ─────────────────── */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
@@ -244,102 +244,104 @@ svg.edges .lbl.mono text { font-family: ui-monospace, Menlo, monospace; font-siz
 <div class="wrap">
 <div class="stage">
 <div class="title">
-  <span class="kicker">SCMPRO ARCHITECTURE · §5.3</span>
-  <h1>주문 · 배정 상태 흐름</h1>
-  <p>여러 사람이 같은 품목을 동시에 건드린다. 그래서 상태를 바꾸는 일은 전부 RPC 안에서만 일어난다.</p>
+  <span class="kicker">SCMPRO ARCHITECTURE · §5.2</span>
+  <h1>예측 — 세 개의 명령</h1>
+  <p>과거로 기법을 고르고(backtest), 고른 기법으로 미래를 만들고(run), 틀린 만큼을 다시 고친다(tune).</p>
 </div>
 
-<div class="note" style="left:60px; top:185px; width:1800px">
-  <b>전부 RPC 안 트랜잭션 · 품목 단위 advisory lock</b> — 화면은 상태를 직접 쓰지 않는다. 아래 함수 이름이 곧 트랜잭션 경계다.
+<!-- ── backtest ────────────────────────────────────────────────── -->
+<div class="zone z-blue" id="ZBT" style="left:60px; top:225px; width:1800px; height:230px">
+  <div class="zl"><svg><use href="#i-search"/></svg>forecast backtest --eval-fy N &nbsp;<span class="tag">과거로 챔피언을 고른다</span>&nbsp;<span class="tag">자동 런이 월 1회 대신 실행</span></div>
 </div>
-
-<!-- ── 주문 생성 ───────────────────────────────────────────────── -->
-<div class="node hl" id="CRE" style="left:60px; top:400px; width:290px; height:180px">
-  <div class="ic"><svg><use href="#i-pen"/></svg></div>
-  <div class="body"><div class="t">주문 생성</div><div class="d">재고 상황에 따라 셋 중 하나로 떨어진다</div><span class="tag">fn_create_sales_order</span></div>
+<div class="node a-blue" id="B1" style="left:85px; top:280px; width:270px; height:150px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="body"><div class="t">입력</div><div class="d mono">v_item_monthly<br>fact_mc_plan_actual</div></div>
 </div>
-
-<!-- ── 초기 상태 ───────────────────────────────────────────────── -->
-<div class="node a-blue" id="TEMP" style="left:430px; top:250px; width:280px; height:150px">
-  <div class="ic"><svg><use href="#i-hourglass"/></svg></div>
-  <div class="body"><div class="t">temp</div><div class="d">가배정 30일<br>재고가 충분할 때</div></div>
+<div class="node a-blue" id="B2" style="left:385px; top:280px; width:250px; height:150px">
+  <div class="ic"><svg><use href="#i-grid"/></svg></div>
+  <div class="body"><div class="t">분류</div><div class="d">SBC · ABC-XYZ<br>품목을 셀로 나눈다</div></div>
 </div>
-<div class="node a-blue" id="PART" style="left:430px; top:430px; width:280px; height:150px">
-  <div class="ic"><svg><use href="#i-scale"/></svg></div>
-  <div class="body"><div class="t">partial</div><div class="d">일부 수량만 잡힌 상태</div></div>
+<div class="node a-blue" id="B3" style="left:665px; top:280px; width:250px; height:150px">
+  <div class="ic"><svg><use href="#i-list"/></svg></div>
+  <div class="body"><div class="t">정책</div><div class="d">셀마다 시도할<br>후보 기법을 정한다</div></div>
 </div>
-<div class="node a-blue" id="WAIT" style="left:430px; top:610px; width:280px; height:150px">
-  <div class="ic"><svg><use href="#i-clock"/></svg></div>
-  <div class="body"><div class="t">waiting</div><div class="d">재고가 없어 입고를 기다린다</div></div>
-</div>
-
-<!-- ── 다음 동작 ───────────────────────────────────────────────── -->
-<div class="node a-green" id="CONF" style="left:780px; top:250px; width:320px; height:150px">
-  <div class="ic"><svg><use href="#i-check"/></svg></div>
-  <div class="body"><div class="t">확정</div><div class="d">temp → firm</div><span class="tag">fn_confirm_sales_order</span></div>
-</div>
-<div class="node a-orange" id="CANC" style="left:780px; top:430px; width:320px; height:150px">
-  <div class="ic"><svg><use href="#i-swap"/></svg></div>
-  <div class="body"><div class="t">취소</div><div class="d">배정 해제 · 주문 취소 · 알림</div><span class="tag">fn_cancel_sales_order</span></div>
-</div>
-<div class="node a-green" id="RECV" style="left:780px; top:610px; width:320px; height:150px">
-  <div class="ic"><svg><use href="#i-inbox"/></svg></div>
-  <div class="body"><div class="t">입고</div><div class="d">재고 반영 후 품목 설정대로 갈린다</div><span class="tag">fn_receive_inbound</span></div>
-</div>
-
-<!-- ── 배정 실행 ───────────────────────────────────────────────── -->
-<div class="node hl" id="AUTO" style="left:1180px; top:500px; width:320px; height:150px">
+<div class="node hl" id="B4" style="left:945px; top:280px; width:290px; height:150px">
   <div class="ic"><svg><use href="#i-cpu"/></svg></div>
-  <div class="body"><div class="t">자동 배정</div><div class="d">우선순위 → 요청순</div><span class="tag">fn_auto_allocate</span></div>
+  <div class="body"><div class="t">기법 13종 fit / predict</div><div class="d">joblib 병렬<br>LightGBM 은 전역 1회</div></div>
 </div>
-<div class="node hl" id="MAN" style="left:1180px; top:680px; width:320px; height:150px">
-  <div class="ic"><svg><use href="#i-user"/></svg></div>
-  <div class="body"><div class="t">수동 배정</div><div class="d">담당자에게 알림 후 처리</div><span class="tag">fn_manual_allocate</span></div>
+<div class="node hl" id="B5" style="left:1265px; top:280px; width:270px; height:150px">
+  <div class="ic"><svg><use href="#i-target"/></svg></div>
+  <div class="body"><div class="t">챔피언 선택</div><div class="d">WAPE 최소<br>동률이면 기준선 우선</div></div>
+</div>
+<div class="node a-green" id="B6" style="left:1565px; top:280px; width:270px; height:150px">
+  <div class="ic"><svg><use href="#i-box"/></svg></div>
+  <div class="body"><div class="t">저장 · 요약</div><div class="d mono">forecast_result<br>accuracy · item_class</div></div>
 </div>
 
-<!-- ── 최종 상태 ───────────────────────────────────────────────── -->
-<div class="node a-green" id="FIRM" style="left:1580px; top:490px; width:280px; height:160px">
+<!-- ── run ─────────────────────────────────────────────────────── -->
+<div class="zone z-green" id="ZRUN" style="left:60px; top:510px; width:1800px; height:215px">
+  <div class="zl"><svg><use href="#i-trend"/></svg>engine forecast run &nbsp;<span class="tag">챔피언으로 미래를 만든다</span></div>
+</div>
+<div class="node a-green" id="R1" style="left:85px; top:565px; width:420px; height:135px">
+  <div class="ic"><svg><use href="#i-target"/></svg></div>
+  <div class="body"><div class="t">최신 챔피언을 읽는다</div><div class="d mono">forecast_run · item_class</div></div>
+</div>
+<div class="node hl" id="R2" style="left:565px; top:565px; width:480px; height:135px">
+  <div class="ic"><svg><use href="#i-trend"/></svg></div>
+  <div class="body"><div class="t">미래 H개월 예측 · 밴드</div><div class="d">품목마다 한 줄, 상·하한을 함께</div></div>
+</div>
+<div class="node a-green" id="R3" style="left:1105px; top:565px; width:350px; height:135px">
+  <div class="ic"><svg><use href="#i-monitor"/></svg></div>
+  <div class="body"><div class="t">화면</div><div class="d mono">/forecast · v_forecast_*</div></div>
+</div>
+<div class="node a-green" id="R4" style="left:1485px; top:565px; width:350px; height:135px">
+  <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
+  <div class="body"><div class="t">발주 계획 입력</div><div class="d mono">fn_order_inputs</div></div>
+</div>
+
+<!-- ── tune ────────────────────────────────────────────────────── -->
+<div class="zone z-orange" id="ZTUNE" style="left:60px; top:780px; width:1800px; height:215px">
+  <div class="zl"><svg><use href="#i-sparkles"/></svg>engine forecast tune &nbsp;<span class="tag">틀린 만큼을 되먹인다</span></div>
+</div>
+<div class="node a-gray" id="T1" style="left:85px; top:835px; width:300px; height:135px">
+  <div class="ic"><svg><use href="#i-chart"/></svg></div>
+  <div class="body"><div class="t">런 요약</div><div class="d">오차가 큰 셀을 추린다</div></div>
+</div>
+<div class="node ext" id="T2" style="left:435px; top:835px; width:300px; height:135px">
+  <div class="ic"><svg><use href="#i-cloud"/></svg></div>
+  <div class="body"><div class="t">gpt-5-nano</div><div class="d">조정안 생성</div></div>
+</div>
+<div class="node a-gray" id="T3" style="left:785px; top:835px; width:300px; height:135px">
+  <div class="ic"><svg><use href="#i-pen"/></svg></div>
+  <div class="body"><div class="t">제안 저장</div><div class="d mono">tuning_proposal</div></div>
+</div>
+<div class="node hl" id="T4" style="left:1135px; top:835px; width:300px; height:135px">
   <div class="ic"><svg><use href="#i-check"/></svg></div>
-  <div class="body"><div class="t">firm</div><div class="d">확정 배정<br>더 이상 만료되지 않는다</div></div>
+  <div class="body"><div class="t">사람이 승인</div><div class="d mono">/approvals</div></div>
 </div>
-<div class="node a-amber" id="HOLD" style="left:1580px; top:690px; width:280px; height:160px">
-  <div class="ic"><svg><use href="#i-shield"/></svg></div>
-  <div class="body"><div class="t">hold</div><div class="d">큐 선두를 건너뛴 배정<br>승인을 받아야 풀린다</div><span class="tag">approval · priority_alloc</span></div>
-</div>
-
-<!-- ── 주기 스윕 ───────────────────────────────────────────────── -->
-<div class="node dim" id="TICK" style="left:60px; top:890px; width:1800px">
-  <div class="ic"><svg><use href="#i-clock"/></svg></div>
-  <div class="body">
-    <div class="t">10분마다 전체를 훑는다 <span class="d mono" style="display:inline;font-size:13px">fn_allocation_tick</span></div>
-    <div class="d">만료된 가배정 해제 &nbsp;·&nbsp; 만료 예고 알림 10 · 5 · 3 · 2 · 1일 전 &nbsp;·&nbsp; 승인 대기 건 반복 알림</div>
-  </div>
+<div class="node a-gray" id="T5" style="left:1485px; top:835px; width:350px; height:135px">
+  <div class="ic"><svg><use href="#i-sliders"/></svg></div>
+  <div class="body"><div class="t">파라미터 · DoS 반영</div><div class="d mono">forecast_method.params</div><div class="d">목표 DoS 보정 · 챔피언 off 가드</div></div>
 </div>
 
-<div class="legend" style="left:60px; top:820px">
-  <div class="li"><span class="box hl"></span>배정을 실행하는 RPC</div>
-  <div class="li"><span class="box" style="border-color:var(--amber);background:var(--amber-bg)"></span>사람 승인이 필요한 상태</div>
-</div>
-<div class="foot">docs/07-architecture.md §5.3 · 2026-09-13</div>
+<div class="foot">docs/07-architecture.md §5.2 · 2026-09-14</div>
 
 <script>
 window.EDGES = [
-  { from:'CRE', to:'TEMP', ts:'left', ta:0.5 },
-  { from:'CRE', to:'PART', ts:'left', ta:0.5 },
-  { from:'CRE', to:'WAIT', ts:'left', ta:0.5 },
+  { from:'B1', to:'B2', fs:'right', ts:'left', ta:0.5 },
+  { from:'B2', to:'B3', fs:'right', ts:'left', ta:0.5 },
+  { from:'B3', to:'B4', fs:'right', ts:'left', ta:0.5 },
+  { from:'B4', to:'B5', fs:'right', ts:'left', ta:0.5 },
+  { from:'B5', to:'B6', fs:'right', ts:'left', ta:0.5 },
 
-  { from:'TEMP', to:'CONF', fs:'right', ts:'left', ta:0.5 },
-  { from:'PART', to:'CANC', fs:'right', ts:'left', ta:0.5 },
-  { from:'WAIT', to:'RECV', fs:'right', ts:'left', ta:0.5 },
+  { from:'R1', to:'R2', fs:'right', ts:'left', ta:0.5 },
+  { from:'R2', to:'R3', fs:'right', ts:'left', ta:0.5 },
+  { from:'R2', to:'R4', fs:'right', ts:'top', ta:0.5, via:[[1075,632],[1075,545],[1660,545]] },
 
-  { from:'RECV', to:'AUTO', fs:'right', fa:0.5, ts:'left', ta:0.5, label:'auto' },
-  { from:'RECV', to:'MAN',  fs:'right', fa:0.5, ts:'left', ta:0.5, label:'manual' },
-
-  { from:'CONF', to:'FIRM', fs:'right', ts:'left', ta:0.25, mid:1540 },
-  { from:'AUTO', to:'FIRM', fs:'right', ts:'left', ta:0.6 },
-  { from:'MAN',  to:'FIRM', fs:'right', ts:'left', ta:0.85, label:'큐 선두' },
-  { from:'MAN',  to:'HOLD', fs:'right', fa:0.75, ts:'left', ta:0.5, label:'건너뜀', loff:[-28,0] },
-  { from:'HOLD', to:'FIRM', fs:'top', fa:0.5, ts:'bottom', ta:0.5, cls:'green', label:'승인 시' },
+  { from:'T1', to:'T2', fs:'right', ts:'left', ta:0.5, cls:'orange' },
+  { from:'T2', to:'T3', fs:'right', ts:'left', ta:0.5, cls:'orange' },
+  { from:'T3', to:'T4', fs:'right', ts:'left', ta:0.5 },
+  { from:'T4', to:'T5', fs:'right', ts:'left', ta:0.5 },
 ];
 </script>
 </div>

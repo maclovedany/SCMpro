@@ -8,7 +8,7 @@
 
 <!-- ── Web 층 ──────────────────────────────────────────────────── -->
 <div class="zone z-blue" id="ZWEB" style="left:60px; top:200px; width:1120px; height:190px">
-  <div class="zl"><svg><use href="#i-monitor"/></svg>Web &nbsp;<span class="tag">web/</span></div>
+  <div class="zl"><svg><use href="#i-monitor"/></svg>Web &nbsp;<span class="tag">web/ → Vercel</span></div>
 </div>
 <div class="node a-blue" id="W1" style="left:88px; top:245px; width:520px; height:120px">
   <div class="ic"><svg><use href="#i-grid"/></svg></div>
@@ -25,20 +25,20 @@
 </div>
 <div class="node a-green" id="S1" style="left:88px; top:485px; width:520px; height:120px">
   <div class="ic"><svg><use href="#i-db"/></svg></div>
-  <div class="body"><div class="t">단일 데이터 저장소</div><div class="d">4 스키마 · RLS · pg_cron</div><span class="tag">PostgreSQL 17 · Auth</span></div>
+  <div class="body"><div class="t">단일 데이터 저장소</div><div class="d">4 스키마 · RLS · pg_cron 2잡</div><span class="tag">PostgreSQL 17 · Auth</span></div>
 </div>
 <div class="node hl" id="S2" style="left:640px; top:485px; width:512px; height:120px">
   <div class="ic"><svg><use href="#i-swap"/></svg></div>
-  <div class="body"><div class="t">트랜잭션 업무 로직</div><div class="d">배정 상태머신 · 승인 적용 · 업로드 반영</div><span class="tag">RPC 43 · security definer</span></div>
+  <div class="body"><div class="t">트랜잭션 업무 로직</div><div class="d">배정 상태머신 · 승인 적용 · 업로드 반영</div><span class="tag">함수 59 · security definer</span></div>
 </div>
 
 <!-- ── Engine 층 ───────────────────────────────────────────────── -->
 <div class="zone z-violet" id="ZENG" style="left:60px; top:680px; width:1120px; height:190px">
-  <div class="zl"><svg><use href="#i-terminal"/></svg>Engine &nbsp;<span class="tag">engine/</span></div>
+  <div class="zl"><svg><use href="#i-terminal"/></svg>Engine &nbsp;<span class="tag">engine/ → Railway Cron</span></div>
 </div>
 <div class="node a-violet" id="E1" style="left:88px; top:725px; width:520px; height:120px">
   <div class="ic"><svg><use href="#i-trend"/></svg></div>
-  <div class="body"><div class="t">예측 배치</div><div class="d">백테스트 · 프로덕션 · AI 오차 분석</div><span class="tag">pandas · statsforecast · prophet · lightgbm</span></div>
+  <div class="body"><div class="t">예측 배치 · AI 감시</div><div class="d">백테스트 · 프로덕션 · 자동 런 · 오차 분석 · 감지</div><span class="tag">pandas · statsforecast · prophet · lightgbm</span></div>
 </div>
 <div class="node a-violet" id="E2" style="left:640px; top:725px; width:512px; height:120px">
   <div class="ic"><svg><use href="#i-wrench"/></svg></div>
@@ -68,14 +68,14 @@
 </div>
 <div class="node ext" id="SMTP" style="left:640px; top:915px; width:512px">
   <div class="ic"><svg><use href="#i-inbox"/></svg></div>
-  <div class="body"><div class="t">SMTP — 선택</div><div class="d">이메일 채널 발송 · 미설정 시 skipped:no_smtp</div></div>
+  <div class="body"><div class="t">SMTP</div><div class="d">네이버 SMTP · 설정 notify_email_enabled 로 on/off</div></div>
 </div>
 
 <div class="legend" style="left:1240px; top:920px">
   <div class="li"><span class="box hl"></span>업무 로직이 사는 곳</div>
   <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>외부 서비스</div>
 </div>
-<div class="foot">docs/07-architecture.md §2 · 2026-09-13</div>
+<div class="foot">docs/07-architecture.md §2 · 2026-09-14</div>
 
 <script>
 window.EDGES = [

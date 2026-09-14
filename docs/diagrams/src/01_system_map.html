@@ -1,0 +1,129 @@
+<title>전체 시스템 구성도</title>
+
+<div class="title">
+  <span class="kicker">SYSTEM OVERVIEW · §3</span>
+  <h1>전체 시스템 구성도</h1>
+  <p>여섯 역할이 하나의 웹을 쓰고, 웹과 엔진이 같은 DB 하나를 본다. 권한은 화면이 아니라 DB 가 막는다.</p>
+</div>
+
+<!-- ── 사용자 6역할 ────────────────────────────────────────────── -->
+<div class="zone z-amber" id="ZU" style="left:60px; top:205px; width:1380px; height:175px">
+  <div class="zl"><svg><use href="#i-users"/></svg>사용자 — 6역할</div>
+</div>
+<div class="actor" id="U1" style="left:95px; top:255px; width:200px">
+  <div class="ic"><svg><use href="#i-user"/></svg></div>
+  <div class="t">SCM 품목담당자</div><div class="d">계획 · 확정 · 배정</div>
+</div>
+<div class="actor" id="U2" style="left:320px; top:255px; width:200px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="t">SCM팀장</div><div class="d">승인 · 감독</div>
+</div>
+<div class="actor" id="U3" style="left:545px; top:255px; width:200px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="t">영업</div><div class="d">주문 · 가용재고</div>
+</div>
+<div class="actor" id="U4" style="left:770px; top:255px; width:210px">
+  <div class="ic"><svg><use href="#i-users"/></svg></div>
+  <div class="t">마케팅 · 서비스</div><div class="d">수요자료 · 추가수요</div>
+</div>
+<div class="actor" id="U5" style="left:1000px; top:255px; width:200px">
+  <div class="ic"><svg><use href="#i-target"/></svg></div>
+  <div class="t">사업강화</div><div class="d">배정 우선순위</div>
+</div>
+<div class="actor" id="U6" style="left:1220px; top:255px; width:190px">
+  <div class="ic"><svg><use href="#i-sliders"/></svg></div>
+  <div class="t">관리자</div><div class="d">설정 · 마스터</div>
+</div>
+
+<!-- ── Web ─────────────────────────────────────────────────────── -->
+<div class="zone z-blue" id="ZW" style="left:60px; top:430px; width:1380px; height:175px">
+  <div class="zl"><svg><use href="#i-monitor"/></svg>Web &nbsp;<span class="tag">Vercel · icn1</span></div>
+</div>
+<div class="node hl" id="W1" style="left:90px; top:480px; width:660px; height:105px">
+  <div class="ic"><svg><use href="#i-grid"/></svg></div>
+  <div class="body"><div class="t">화면 28 라우트 · 서버 액션</div><div class="d">Next.js 16 App Router · 사이드바 6그룹 · 역할별 메뉴<br>발주량 계산은 여기서</div></div>
+</div>
+<div class="node a-blue" id="W2" style="left:780px; top:480px; width:630px; height:105px">
+  <div class="ic"><svg><use href="#i-bot"/></svg></div>
+  <div class="body"><div class="t">AI Agent 채팅 API</div><div class="d">모든 화면 우측 패널 · 도구 9종으로 근거와 함께 답변</div></div>
+</div>
+
+<!-- ── Supabase ────────────────────────────────────────────────── -->
+<div class="zone z-green" id="ZD" style="left:60px; top:655px; width:1380px; height:200px">
+  <div class="zl"><svg><use href="#i-db"/></svg>Supabase — PostgreSQL 17 · Auth · RLS · pg_cron &nbsp;<span class="tag">Pro</span></div>
+</div>
+<div class="node a-gray" id="D1" style="left:90px; top:705px; width:200px; height:120px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="body"><div class="t">raw</div><div class="d">원본 10<br>수정 금지</div></div>
+</div>
+<div class="node a-gray" id="D2" style="left:320px; top:705px; width:200px; height:120px">
+  <div class="ic"><svg><use href="#i-layers"/></svg></div>
+  <div class="body"><div class="t">core</div><div class="d">정제 뷰 8</div></div>
+</div>
+<div class="node a-green" id="D3" style="left:550px; top:705px; width:210px; height:120px">
+  <div class="ic"><svg><use href="#i-sigma"/></svg></div>
+  <div class="body"><div class="t">analytics</div><div class="d">뷰 23 + 물리화 2</div></div>
+</div>
+<div class="node hl" id="D4" style="left:790px; top:705px; width:620px; height:120px">
+  <div class="ic"><svg><use href="#i-box"/></svg></div>
+  <div class="body"><div class="t">app — 업무 테이블 33 · 함수 59</div><div class="d">배정 상태머신 · 승인 · 알림 · 감사 로그. 쓰기는 RPC 안에서만</div></div>
+</div>
+
+<!-- ── Engine ──────────────────────────────────────────────────── -->
+<div class="zone z-violet" id="ZE" style="left:60px; top:895px; width:1380px; height:120px">
+  <div class="zl" style="left:auto; right:18px"><svg><use href="#i-terminal"/></svg>Engine — Python &nbsp;<span class="tag">Railway Cron · 10분</span></div>
+</div>
+<div class="node a-violet" id="E1" style="left:90px; top:930px; width:320px; height:72px">
+  <div class="body"><div class="t" style="font-size:16px">예측 백테스트 · 프로덕션</div></div>
+</div>
+<div class="node a-violet" id="E2" style="left:430px; top:930px; width:320px; height:72px">
+  <div class="body"><div class="t" style="font-size:16px">자동 런 · AI 오차 분석</div></div>
+</div>
+<div class="node a-violet" id="E3" style="left:770px; top:930px; width:320px; height:72px">
+  <div class="body"><div class="t" style="font-size:16px">AI 감시 — 감지 → 판단 → 제안</div></div>
+</div>
+<div class="node a-violet" id="E4" style="left:1110px; top:930px; width:300px; height:72px">
+  <div class="body"><div class="t" style="font-size:16px">알림 · 이메일 발송</div></div>
+</div>
+
+<!-- ── 외부 ────────────────────────────────────────────────────── -->
+<div class="node ext" id="LLM" style="left:1520px; top:480px; width:340px; height:140px">
+  <div class="ic"><svg><use href="#i-cloud"/></svg></div>
+  <div class="body"><div class="t">OpenAI</div><div class="d mono">gpt-5-nano</div><div class="d">답변 · 조정 제안 · 감시 판단</div></div>
+</div>
+<div class="node ext" id="SMTP" style="left:1520px; top:880px; width:340px; height:115px">
+  <div class="ic"><svg><use href="#i-inbox"/></svg></div>
+  <div class="body"><div class="t">이메일</div><div class="d">네이버 SMTP · 설정으로 on/off</div></div>
+</div>
+
+<div class="note" style="left:1520px; top:690px; width:340px">
+  <b>권한은 DB 가 막는다</b><br>화면을 우회해도 RLS 때문에 못 본다 · 못 바꾼다.
+</div>
+
+<div class="foot">docs/11-system-overview.md §3 · 2026-09-14</div>
+
+<script>
+window.EDGES = [
+  // 사용자 → Web (구역 탭 x 범위를 피해 들어간다)
+  { from:'U1', to:'W1', fs:'bottom', ts:'top', ta:0.30, thin:true },
+  { from:'U2', to:'W1', fs:'bottom', ts:'top', ta:0.45, thin:true },
+  { from:'U3', to:'W1', fs:'bottom', ts:'top', ta:0.62, thin:true },
+  { from:'U4', to:'W1', fs:'bottom', ts:'top', ta:0.88, thin:true },
+  { from:'U5', to:'W2', fs:'bottom', ts:'top', ta:0.35, thin:true },
+  { from:'U6', to:'W2', fs:'bottom', ts:'top', ta:0.65, thin:true },
+
+  { from:'W1', to:'D4', fs:'bottom', fa:0.6, ts:'top', ta:0.35, both:true, mid:620, label:'RPC 쓰기 · 뷰 읽기' },
+  { from:'W2', to:'D4', fs:'bottom', fa:0.4, ts:'top', ta:0.75, both:true, dash:true, mid:620, label:'도구 조회' },
+  { from:'W2', to:'LLM', fs:'right', ts:'left', ta:0.5, both:true, cls:'orange' },
+
+  { from:'D1', to:'D2', fs:'right', ts:'left', ta:0.5 },
+  { from:'D2', to:'D3', fs:'right', ts:'left', ta:0.5 },
+
+  { from:'E1', to:'D3', fs:'top', fa:0.5, ts:'bottom', ta:0.4, cls:'violet', both:true },
+  { from:'E2', to:'D4', fs:'top', fa:0.5, ts:'bottom', ta:0.25, cls:'violet', both:true },
+  { from:'E3', to:'D4', fs:'top', fa:0.5, ts:'bottom', ta:0.6, cls:'violet', both:true },
+  { from:'ZE', to:'LLM', fs:'right', fa:0.35, ts:'bottom', ta:0.5, cls:'orange', dash:true,
+    via:[[1482,937],[1482,660],[1690,660]], label:'조정 제안 · 감시 판단', lat:0.62 },
+  { from:'E4', to:'SMTP', fs:'right', ts:'left', ta:0.5, cls:'orange' },
+];
+</script>

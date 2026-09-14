@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>데이터 계층 — Supabase 스키마</title>
+<title>전체 시스템 구성도</title>
 <style>
 /* ── 16:9 다이어그램 공통 스타일 (skill: diagram) ─────────────────── */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
@@ -244,92 +244,130 @@ svg.edges .lbl.mono text { font-family: ui-monospace, Menlo, monospace; font-siz
 <div class="wrap">
 <div class="stage">
 <div class="title">
-  <span class="kicker">SCMPRO ARCHITECTURE · §3</span>
-  <h1>데이터 계층</h1>
-  <p>원본은 손대지 않는다. 정제 규칙은 한 번만 적용하고, 화면과 엔진은 가장 바깥 층만 읽는다.</p>
+  <span class="kicker">SYSTEM OVERVIEW · §3</span>
+  <h1>전체 시스템 구성도</h1>
+  <p>여섯 역할이 하나의 웹을 쓰고, 웹과 엔진이 같은 DB 하나를 본다. 권한은 화면이 아니라 DB 가 막는다.</p>
 </div>
 
-<!-- ── raw → core → analytics 파이프라인 ───────────────────────── -->
-<div class="zone z-green" id="ZPIPE" style="left:60px; top:230px; width:1120px; height:370px">
-  <div class="zl"><svg><use href="#i-layers"/></svg>읽기 전용 파이프라인</div>
+<!-- ── 사용자 6역할 ────────────────────────────────────────────── -->
+<div class="zone z-amber" id="ZU" style="left:60px; top:205px; width:1380px; height:175px">
+  <div class="zl"><svg><use href="#i-users"/></svg>사용자 — 6역할</div>
 </div>
-
-<div class="db bronze" id="RAW" style="left:90px; top:290px; width:290px; height:270px">
-  <div class="ic"><svg><use href="#i-db"/></svg></div>
-  <div class="t">raw</div>
-  <div class="d">CSV 원본 그대로 적재<br>원본 10 테이블<br><br><b>수정 금지</b><br>앱 역할 USAGE 없음<br>(fail-closed)</div>
-  <span class="tag">브론즈</span>
+<div class="actor" id="U1" style="left:95px; top:255px; width:200px">
+  <div class="ic"><svg><use href="#i-user"/></svg></div>
+  <div class="t">SCM 품목담당자</div><div class="d">계획 · 확정 · 배정</div>
 </div>
-
-<div class="db silver" id="CORE" style="left:475px; top:290px; width:290px; height:270px">
-  <div class="ic"><svg><use href="#i-layers"/></svg></div>
-  <div class="t">core</div>
-  <div class="d">정제 규칙 1회 적용<br>정제 뷰 7</div>
-  <span class="tag">v_shipment_by_hoc</span>
-  <span class="tag">v_option_model_link</span>
-  <span class="tag">v_item · v_model</span>
+<div class="actor" id="U2" style="left:320px; top:255px; width:200px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="t">SCM팀장</div><div class="d">승인 · 감독</div>
 </div>
-
-<div class="db gold" id="AN" style="left:860px; top:290px; width:290px; height:270px">
-  <div class="ic"><svg><use href="#i-sigma"/></svg></div>
-  <div class="t">analytics</div>
-  <div class="d">화면 · 엔진이 읽는 층<br>뷰 22</div>
-  <span class="tag">물리화 v_item_monthly</span>
-  <span class="tag">물리화 mv_item_stats</span>
-  <span class="tag">실시간 v_item_master</span>
-</div>
-
-<!-- ── app 업무 스키마 ─────────────────────────────────────────── -->
-<div class="zone z-blue" id="ZAPP" style="left:1230px; top:230px; width:630px; height:500px">
-  <div class="zl"><svg><use href="#i-box"/></svg>app — 업무 데이터 30 테이블</div>
-</div>
-<div class="node a-blue" id="A1" style="left:1255px; top:285px; width:290px; height:120px">
-  <div class="ic"><svg><use href="#i-sliders"/></svg></div>
-  <div class="body"><div class="t">설정 · 마스터</div><div class="d mono">system_settings · supplier<br>item_setting · inventory_snapshot</div></div>
-</div>
-<div class="node a-blue" id="A2" style="left:1565px; top:285px; width:270px; height:120px">
-  <div class="ic"><svg><use href="#i-shield"/></svg></div>
-  <div class="body"><div class="t">공통 메커니즘</div><div class="d mono">profiles · approval<br>notification · audit_log</div></div>
-</div>
-<div class="node a-blue" id="A3" style="left:1255px; top:425px; width:290px; height:120px">
-  <div class="ic"><svg><use href="#i-trend"/></svg></div>
-  <div class="body"><div class="t">예측</div><div class="d mono">forecast_method/policy/run<br>result · accuracy · item_class</div></div>
-</div>
-<div class="node a-blue" id="A4" style="left:1565px; top:425px; width:270px; height:120px">
-  <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
-  <div class="body"><div class="t">발주</div><div class="d mono">extra_demand · order_plan<br>order_plan_line · ol_submission</div></div>
-</div>
-<div class="node a-blue" id="A5" style="left:1255px; top:565px; width:290px; height:120px">
+<div class="actor" id="U3" style="left:545px; top:255px; width:200px">
   <div class="ic"><svg><use href="#i-swap"/></svg></div>
-  <div class="body"><div class="t">배정</div><div class="d mono">sales_order<br>allocation</div></div>
+  <div class="t">영업</div><div class="d">주문 · 가용재고</div>
 </div>
-<div class="node a-blue" id="A6" style="left:1565px; top:565px; width:270px; height:120px">
-  <div class="ic"><svg><use href="#i-chat"/></svg></div>
-  <div class="body"><div class="t">일정 · AI</div><div class="d mono">demand_submission<br>ai_conversation · ai_message</div></div>
+<div class="actor" id="U4" style="left:770px; top:255px; width:210px">
+  <div class="ic"><svg><use href="#i-users"/></svg></div>
+  <div class="t">마케팅 · 서비스</div><div class="d">수요자료 · 추가수요</div>
 </div>
-
-<!-- ── 공통 규칙 ───────────────────────────────────────────────── -->
-<div class="node dim" id="D7" style="left:60px; top:790px; width:1800px">
-  <div class="ic"><svg><use href="#i-pen"/></svg></div>
-  <div class="body"><div class="t">모든 app 마스터 테이블의 공통 칼럼 <span style="font-weight:600;color:var(--ink-3)">· D-007</span></div><div class="d mono">source(upload/manual/seed/parsed) · is_dummy · updated_by/at &nbsp;—&nbsp; 감사 트리거 trg_audit → audit_log</div></div>
+<div class="actor" id="U5" style="left:1000px; top:255px; width:200px">
+  <div class="ic"><svg><use href="#i-target"/></svg></div>
+  <div class="t">사업강화</div><div class="d">배정 우선순위</div>
 </div>
-<div class="node dim" id="D14" style="left:60px; top:640px; width:1120px">
-  <div class="ic"><svg><use href="#i-clock"/></svg></div>
-  <div class="body"><div class="t">물리화 뷰는 언제 갱신하나 <span style="font-weight:600;color:var(--ink-3)">· D-014</span></div><div class="d">출고 데이터가 바뀔 때만 <span class="d mono" style="display:inline">fn_refresh_matviews</span>. 설정 · 재고는 실시간 뷰로 조인해 승인 · 업로드가 즉시 반영된다.</div></div>
+<div class="actor" id="U6" style="left:1220px; top:255px; width:190px">
+  <div class="ic"><svg><use href="#i-sliders"/></svg></div>
+  <div class="t">관리자</div><div class="d">설정 · 마스터</div>
 </div>
 
-<div class="legend" style="left:60px; top:945px">
-  <div class="li"><span class="sw"></span>정제 단계</div>
-  <div class="li"><span class="sw dash"></span>실시간 조인 (물리화하지 않음)</div>
+<!-- ── Web ─────────────────────────────────────────────────────── -->
+<div class="zone z-blue" id="ZW" style="left:60px; top:430px; width:1380px; height:175px">
+  <div class="zl"><svg><use href="#i-monitor"/></svg>Web &nbsp;<span class="tag">Vercel · icn1</span></div>
 </div>
-<div class="foot">docs/07-architecture.md §3 · 2026-09-13</div>
+<div class="node hl" id="W1" style="left:90px; top:480px; width:660px; height:105px">
+  <div class="ic"><svg><use href="#i-grid"/></svg></div>
+  <div class="body"><div class="t">화면 28 라우트 · 서버 액션</div><div class="d">Next.js 16 App Router · 사이드바 6그룹 · 역할별 메뉴<br>발주량 계산은 여기서</div></div>
+</div>
+<div class="node a-blue" id="W2" style="left:780px; top:480px; width:630px; height:105px">
+  <div class="ic"><svg><use href="#i-bot"/></svg></div>
+  <div class="body"><div class="t">AI Agent 채팅 API</div><div class="d">모든 화면 우측 패널 · 도구 9종으로 근거와 함께 답변</div></div>
+</div>
+
+<!-- ── Supabase ────────────────────────────────────────────────── -->
+<div class="zone z-green" id="ZD" style="left:60px; top:655px; width:1380px; height:200px">
+  <div class="zl"><svg><use href="#i-db"/></svg>Supabase — PostgreSQL 17 · Auth · RLS · pg_cron &nbsp;<span class="tag">Pro</span></div>
+</div>
+<div class="node a-gray" id="D1" style="left:90px; top:705px; width:200px; height:120px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="body"><div class="t">raw</div><div class="d">원본 10<br>수정 금지</div></div>
+</div>
+<div class="node a-gray" id="D2" style="left:320px; top:705px; width:200px; height:120px">
+  <div class="ic"><svg><use href="#i-layers"/></svg></div>
+  <div class="body"><div class="t">core</div><div class="d">정제 뷰 8</div></div>
+</div>
+<div class="node a-green" id="D3" style="left:550px; top:705px; width:210px; height:120px">
+  <div class="ic"><svg><use href="#i-sigma"/></svg></div>
+  <div class="body"><div class="t">analytics</div><div class="d">뷰 23 + 물리화 2</div></div>
+</div>
+<div class="node hl" id="D4" style="left:790px; top:705px; width:620px; height:120px">
+  <div class="ic"><svg><use href="#i-box"/></svg></div>
+  <div class="body"><div class="t">app — 업무 테이블 33 · 함수 59</div><div class="d">배정 상태머신 · 승인 · 알림 · 감사 로그. 쓰기는 RPC 안에서만</div></div>
+</div>
+
+<!-- ── Engine ──────────────────────────────────────────────────── -->
+<div class="zone z-violet" id="ZE" style="left:60px; top:895px; width:1380px; height:120px">
+  <div class="zl" style="left:auto; right:18px"><svg><use href="#i-terminal"/></svg>Engine — Python &nbsp;<span class="tag">Railway Cron · 10분</span></div>
+</div>
+<div class="node a-violet" id="E1" style="left:90px; top:930px; width:320px; height:72px">
+  <div class="body"><div class="t" style="font-size:16px">예측 백테스트 · 프로덕션</div></div>
+</div>
+<div class="node a-violet" id="E2" style="left:430px; top:930px; width:320px; height:72px">
+  <div class="body"><div class="t" style="font-size:16px">자동 런 · AI 오차 분석</div></div>
+</div>
+<div class="node a-violet" id="E3" style="left:770px; top:930px; width:320px; height:72px">
+  <div class="body"><div class="t" style="font-size:16px">AI 감시 — 감지 → 판단 → 제안</div></div>
+</div>
+<div class="node a-violet" id="E4" style="left:1110px; top:930px; width:300px; height:72px">
+  <div class="body"><div class="t" style="font-size:16px">알림 · 이메일 발송</div></div>
+</div>
+
+<!-- ── 외부 ────────────────────────────────────────────────────── -->
+<div class="node ext" id="LLM" style="left:1520px; top:480px; width:340px; height:140px">
+  <div class="ic"><svg><use href="#i-cloud"/></svg></div>
+  <div class="body"><div class="t">OpenAI</div><div class="d mono">gpt-5-nano</div><div class="d">답변 · 조정 제안 · 감시 판단</div></div>
+</div>
+<div class="node ext" id="SMTP" style="left:1520px; top:880px; width:340px; height:115px">
+  <div class="ic"><svg><use href="#i-inbox"/></svg></div>
+  <div class="body"><div class="t">이메일</div><div class="d">네이버 SMTP · 설정으로 on/off</div></div>
+</div>
+
+<div class="note" style="left:1520px; top:690px; width:340px">
+  <b>권한은 DB 가 막는다</b><br>화면을 우회해도 RLS 때문에 못 본다 · 못 바꾼다.
+</div>
+
+<div class="foot">docs/11-system-overview.md §3 · 2026-09-14</div>
 
 <script>
 window.EDGES = [
-  { from:'RAW',  to:'CORE', label:'정제 규칙 1회 적용', loff:[0,-163] },
-  { from:'CORE', to:'AN',   label:'집계 · 조인 · 물리화', loff:[0,-163] },
-  { from:'A1', to:'AN', fs:'left', ts:'right', ta:0.25, mid:1205, dash:true, label:'실시간 조인', loff:[-25,120] },
-  { from:'A3', to:'AN', fs:'left', ts:'right', ta:0.75, mid:1205, dash:true },
+  // 사용자 → Web (구역 탭 x 범위를 피해 들어간다)
+  { from:'U1', to:'W1', fs:'bottom', ts:'top', ta:0.30, thin:true },
+  { from:'U2', to:'W1', fs:'bottom', ts:'top', ta:0.45, thin:true },
+  { from:'U3', to:'W1', fs:'bottom', ts:'top', ta:0.62, thin:true },
+  { from:'U4', to:'W1', fs:'bottom', ts:'top', ta:0.88, thin:true },
+  { from:'U5', to:'W2', fs:'bottom', ts:'top', ta:0.35, thin:true },
+  { from:'U6', to:'W2', fs:'bottom', ts:'top', ta:0.65, thin:true },
+
+  { from:'W1', to:'D4', fs:'bottom', fa:0.6, ts:'top', ta:0.35, both:true, mid:620, label:'RPC 쓰기 · 뷰 읽기' },
+  { from:'W2', to:'D4', fs:'bottom', fa:0.4, ts:'top', ta:0.75, both:true, dash:true, mid:620, label:'도구 조회' },
+  { from:'W2', to:'LLM', fs:'right', ts:'left', ta:0.5, both:true, cls:'orange' },
+
+  { from:'D1', to:'D2', fs:'right', ts:'left', ta:0.5 },
+  { from:'D2', to:'D3', fs:'right', ts:'left', ta:0.5 },
+
+  { from:'E1', to:'D3', fs:'top', fa:0.5, ts:'bottom', ta:0.4, cls:'violet', both:true },
+  { from:'E2', to:'D4', fs:'top', fa:0.5, ts:'bottom', ta:0.25, cls:'violet', both:true },
+  { from:'E3', to:'D4', fs:'top', fa:0.5, ts:'bottom', ta:0.6, cls:'violet', both:true },
+  { from:'ZE', to:'LLM', fs:'right', fa:0.35, ts:'bottom', ta:0.5, cls:'orange', dash:true,
+    via:[[1482,937],[1482,660],[1690,660]], label:'조정 제안 · 감시 판단', lat:0.62 },
+  { from:'E4', to:'SMTP', fs:'right', ts:'left', ta:0.5, cls:'orange' },
 ];
 </script>
 </div>

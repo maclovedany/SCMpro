@@ -315,3 +315,8 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 
 ## D-049 (2026-09-14) 엔진 실행 서버 = Railway Cron
 - `engine/Dockerfile`(python 3.12-slim + uv, libgomp1) + `engine/railway.json`(cron `*/10 * * * *`, 재시작 없음). tick 1회 = 컨테이너 1회 실행. 환경변수는 engine/.env 항목 그대로 Railway Variables. 절차는 10-operations §1-1. Mac launchd 와 동시 실행 금지(중복 알림).
+
+## D-050 (2026-09-14) 재고전개 행을 산식 순서로 — 예측 판매 행 명시
+- 배경: 그리드가 예측/입고/추가/기초/기말/확정 발주 순이라 "기초 − 기말 = 판매" 를 사용자가 암산해야 했다(사용자 요청).
+- 결정: 품목 행 값 = 기말, 자식 행 = 기초 → ＋입고예정 → −예측 판매 → −추가수요 → ＋확정 발주(편집) → ＝기말. 차감 행은 음수로 표시. 카테고리 합계 행도 같은 순서(기초 합 없음). `buildTreeRows` 단위 테스트로 세로 합 = 기말 검증.
+- 규칙 반영: R-UI-04.

@@ -1,0 +1,99 @@
+<title>환경 · 배포</title>
+
+<div class="title">
+  <span class="kicker">SCMPRO ARCHITECTURE · §7</span>
+  <h1>환경 · 배포</h1>
+  <p>2026-09-14 운영 배포 완료. 세 곳에 나뉘어 돌지만 데이터는 Supabase 한 곳에 있다. &nbsp;<span style="font-family:ui-monospace,Menlo,monospace">https://sc-mpro.vercel.app</span></p>
+</div>
+
+<!-- ── 운영 ────────────────────────────────────────────────────── -->
+<div class="zone z-green" id="ZPROD" style="left:60px; top:215px; width:1800px; height:290px">
+  <div class="zl"><svg><use href="#i-cloud"/></svg>운영 &nbsp;<span class="tag">2026-09-14 배포됨</span></div>
+</div>
+<div class="node hl" id="VERCEL" style="left:90px; top:270px; width:560px; height:210px">
+  <div class="ic"><svg><use href="#i-monitor"/></svg></div>
+  <div class="body">
+    <div class="t">Web — Vercel</div>
+    <div class="d">Root <span class="d mono" style="display:inline">web</span> · 리전 icn1(서울)<br>서버 액션 <span class="d mono" style="display:inline">maxDuration = 60</span></div>
+    <span class="tag">D-048</span>
+  </div>
+</div>
+<div class="node hl" id="RAILWAY" style="left:1290px; top:270px; width:540px; height:210px">
+  <div class="ic"><svg><use href="#i-terminal"/></svg></div>
+  <div class="body">
+    <div class="t">Engine — Railway Cron</div>
+    <div class="d">Root <span class="d mono" style="display:inline">engine</span> · <span class="d mono" style="display:inline">*/10 * * * *</span><br>Dockerfile + railway.json</div>
+    <span class="tag">D-049</span>
+  </div>
+</div>
+<div class="node hl" id="SUPA" style="left:690px; top:270px; width:560px; height:210px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="body">
+    <div class="t">DB — Supabase</div>
+    <div class="d">Pro 요금제 · Micro 인스턴스<br>디스크 8GB</div>
+    <span class="tag">PostgreSQL 17 · pg_cron</span>
+  </div>
+</div>
+
+<!-- ── 로컬 ────────────────────────────────────────────────────── -->
+<div class="zone z-blue" id="ZLOCAL" style="left:60px; top:555px; width:800px; height:250px">
+  <div class="zl"><svg><use href="#i-laptop"/></svg>로컬 개발</div>
+</div>
+<div class="node a-blue" id="WEBDEV" style="left:85px; top:610px; width:360px; height:75px">
+  <div class="body"><div class="t" style="font-size:17px">web dev 서버</div><div class="d mono">:3000 · :3001</div></div>
+</div>
+<div class="node a-violet" id="ENGDEV" style="left:475px; top:610px; width:360px; height:75px">
+  <div class="body"><div class="t" style="font-size:17px">engine</div><div class="d mono">uv run</div></div>
+</div>
+<div class="node dim" id="ENVF" style="left:85px; top:705px; width:750px; height:80px">
+  <div class="body"><div class="t" style="font-size:17px">비밀값은 저장소 밖</div><div class="d mono">web/.env.local · engine/.env — git 제외 · .env.example 은 빈 값</div></div>
+</div>
+
+<!-- ── 스키마 · 타입 ───────────────────────────────────────────── -->
+<div class="zone z-amber" id="ZMIG" style="left:910px; top:555px; width:950px; height:250px">
+  <div class="zl" style="left:auto; right:18px"><svg><use href="#i-git"/></svg>스키마와 타입을 맞추는 두 명령</div>
+</div>
+<div class="node a-amber" id="MIG" style="left:935px; top:610px; width:450px; height:175px">
+  <div class="ic"><svg><use href="#i-layers"/></svg></div>
+  <div class="body">
+    <div class="t">마이그레이션 23개</div>
+    <div class="d">파일명 순 psql · 재실행 안전<br><b>grants 는 스크립트가 마지막에 따로</b> 실행하지만, 새 파일은 자기 객체에 직접 grant 를 쓴다</div>
+    <span class="tag">supabase/scripts/migrate.sh</span>
+  </div>
+</div>
+<div class="node a-amber" id="TYPES" style="left:1405px; top:610px; width:430px; height:175px">
+  <div class="ic"><svg><use href="#i-code"/></svg></div>
+  <div class="body">
+    <div class="t">타입 생성</div>
+    <div class="d">supabase CLI 는 Docker 가 필요해<br>자체 생성기를 쓴다</div>
+    <span class="tag">engine gen-types</span>
+    <span class="tag">→ web/lib/types/database.ts</span>
+  </div>
+</div>
+
+<!-- ── 제약과 남은 과제 ────────────────────────────────────────── -->
+<div class="node ext" id="LIMIT" style="left:60px; top:855px; width:880px; height:165px">
+  <div class="ic"><svg><use href="#i-hourglass"/></svg></div>
+  <div class="body">
+    <div class="t">PostgREST 는 요청당 8초</div>
+    <div class="d">파라미터 집계 RPC 는 <span class="d mono" style="display:inline">plan_cache_mode = force_custom_plan</span>, 대량 저장은 청크로 나눈다 (D-027).<br><b>엔진 런 중에는 마이그레이션 금지</b> — 물리화 뷰를 재생성해 실행 중인 배치가 깨진다.</div>
+  </div>
+</div>
+<div class="node dim" id="TODO" style="left:980px; top:855px; width:880px; height:165px">
+  <div class="ic"><svg><use href="#i-list"/></svg></div>
+  <div class="body">
+    <div class="t">남은 운영 과제</div>
+    <div class="d">사내 도메인 · 계정 정책 &nbsp;·&nbsp; ERP / MES 연동 &nbsp;·&nbsp; 백업 주기 확정<br>디스크 사용률 모니터링(D-045) &nbsp;—&nbsp; 상세는 10-operations.md · 09-integration-plan.md</div>
+  </div>
+</div>
+
+<div class="foot">docs/07-architecture.md §7 · 2026-09-14</div>
+
+<script>
+window.EDGES = [
+  { from:'VERCEL', to:'SUPA', fs:'right', ts:'left', ta:0.5, label:'supabase-js', loff:[0,-118] },
+  { from:'RAILWAY', to:'SUPA', fs:'left', ts:'right', ta:0.5, label:'psycopg', loff:[0,-118] },
+  { from:'MIG', to:'SUPA', fs:'top', fa:0.5, ts:'bottom', ta:0.5,
+    cls:'green', via:[[1160,530],[970,530]], label:'스키마 적용' },
+];
+</script>

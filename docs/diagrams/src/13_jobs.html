@@ -1,0 +1,101 @@
+<title>주기 작업 · 배치</title>
+
+<div class="title">
+  <span class="kicker">SCMPRO ARCHITECTURE · §6</span>
+  <h1>주기 작업 · 배치</h1>
+  <p>스스로 도는 것이 네 갈래다. 둘은 DB 안에서, 하나는 Railway 에서, 하나는 사람이 시점을 고른다.</p>
+</div>
+
+<div class="note" style="left:60px; top:195px; width:280px"><b>얼마나 자주</b></div>
+<div class="note" style="left:380px; top:195px; width:980px"><b>무엇을 하는가</b></div>
+<div class="note" style="left:1420px; top:195px; width:440px"><b>누가 실행하는가</b></div>
+
+<!-- ── 1분 ─────────────────────────────────────────────────────── -->
+<div class="node a-green stack" id="P0" style="left:60px; top:240px; width:280px; height:165px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body"><div class="t">1분마다</div><div class="d mono">* * * * *</div></div>
+</div>
+<div class="node a-green" id="J0" style="left:380px; top:240px; width:980px; height:165px">
+  <div class="ic"><svg><use href="#i-layers"/></svg></div>
+  <div class="body">
+    <div class="t">fn_refresh_matviews — 물리화 뷰 갱신</div>
+    <div class="d">출고 업로드가 <span class="d mono" style="display:inline">fn_request_refresh</span> 로 플래그를 세우면, 매분 도는 잡이 그것만 보고 실행한다.<br>업로드 요청 안에서 직접 돌리지 않는 이유는 PostgREST 의 8초 제한을 넘기기 때문 (D-030).</div>
+    <span class="tag">v_item_monthly · mv_item_stats</span>
+  </div>
+</div>
+<div class="node a-green" id="W0" style="left:1420px; top:240px; width:440px; height:165px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="body"><div class="t">pg_cron — scm-refresh</div><div class="d">DB 안에서 스스로.<br>앱이 꺼져 있어도 돈다.</div></div>
+</div>
+
+<!-- ── 10분 · DB ───────────────────────────────────────────────── -->
+<div class="node hl stack" id="P1" style="left:60px; top:430px; width:280px; height:165px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body"><div class="t">10분마다</div><div class="d mono">*/10 * * * *</div></div>
+</div>
+<div class="node hl" id="J1" style="left:380px; top:430px; width:980px; height:165px">
+  <div class="ic"><svg><use href="#i-bell"/></svg></div>
+  <div class="body">
+    <div class="t">app.fn_tick()</div>
+    <div class="d">배정 만료 해제 &nbsp;·&nbsp; 만료 예고 알림 &nbsp;·&nbsp; 승인 대기 반복 알림 &nbsp;·&nbsp; 수요자료 미제출 부서 알림<br>반복 알림은 설정 <span class="d mono" style="display:inline">notify_reminders_enabled</span> 로 끌 수 있다 (D-046).</div>
+    <span class="tag">scm-tick</span>
+  </div>
+</div>
+<div class="node hl" id="W1" style="left:1420px; top:430px; width:440px; height:165px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="body"><div class="t">pg_cron — scm-tick</div><div class="d">DB 안에서 스스로.</div></div>
+</div>
+
+<!-- ── 10분 · Engine ───────────────────────────────────────────── -->
+<div class="node a-violet stack" id="P2" style="left:60px; top:620px; width:280px; height:165px">
+  <div class="ic"><svg><use href="#i-terminal"/></svg></div>
+  <div class="body"><div class="t">10분마다</div><div class="d mono">*/10 * * * *</div></div>
+</div>
+<div class="node a-violet" id="J2" style="left:380px; top:620px; width:980px; height:165px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body">
+    <div class="t">engine tick — 엔진 쪽 한 바퀴</div>
+    <div class="d mono">fn_tick &nbsp;+&nbsp; 자동 런(월 1회, D-041) &nbsp;+&nbsp; AI 감시(agent_mode, D-042)<br>+ 이메일 발송(notify_email_enabled) &nbsp;+&nbsp; 런 결과 정리(fn_prune_runs, D-045)</div>
+  </div>
+</div>
+<div class="node a-violet" id="W2" style="left:1420px; top:620px; width:440px; height:165px">
+  <div class="ic"><svg><use href="#i-cloud"/></svg></div>
+  <div class="body"><div class="t">Railway Cron</div><div class="d mono">engine/Dockerfile · railway.json</div><div class="d">D-049</div></div>
+</div>
+
+<!-- ── 월 1회 + 수동 ───────────────────────────────────────────── -->
+<div class="node a-amber stack" id="P3" style="left:60px; top:810px; width:280px; height:165px">
+  <div class="ic"><svg><use href="#i-hourglass"/></svg></div>
+  <div class="body"><div class="t">월 1회<br>+ 수동</div></div>
+</div>
+<div class="node a-amber" id="J3" style="left:380px; top:810px; width:980px; height:165px">
+  <div class="ic"><svg><use href="#i-trend"/></svg></div>
+  <div class="body">
+    <div class="t">engine forecast — 백테스트 · 프로덕션</div>
+    <div class="d mono">backtest — 챔피언 재선정 &nbsp;·&nbsp; run — 프로덕션 예측 &nbsp;·&nbsp; pending — 웹 요청분 처리</div>
+    <div class="d">설정을 켜 두면 자동 런이 매월 지정일에 대신 돌린다. 분 단위로 걸리므로 시점을 고르는 일이다.</div>
+  </div>
+</div>
+<div class="node a-amber" id="W3" style="left:1420px; top:810px; width:440px; height:165px">
+  <div class="ic"><svg><use href="#i-user"/></svg></div>
+  <div class="body"><div class="t">자동 런 또는 사람</div><div class="d">웹에서 요청해 두고 엔진이<br>이어받는 경로도 있다.</div></div>
+</div>
+
+<div class="note" style="left:60px; top:1000px; width:1800px">
+  <b>주의</b> — 개발 Mac 의 launchd <span style="font-family:ui-monospace,Menlo,monospace">com.scmpro.tick</span> 은 Railway Cron 과 중복이므로 둘 중 하나만 돌린다.
+</div>
+
+<div class="foot">docs/07-architecture.md §6 · 2026-09-14</div>
+
+<script>
+window.EDGES = [
+  { from:'P0', to:'J0', fs:'right', ts:'left', ta:0.5, thin:true },
+  { from:'P1', to:'J1', fs:'right', ts:'left', ta:0.5, thin:true },
+  { from:'P2', to:'J2', fs:'right', ts:'left', ta:0.5, thin:true },
+  { from:'P3', to:'J3', fs:'right', ts:'left', ta:0.5, thin:true },
+  { from:'W0', to:'J0', fs:'left', ts:'right', ta:0.5, thin:true, dash:true },
+  { from:'W1', to:'J1', fs:'left', ts:'right', ta:0.5, thin:true, dash:true },
+  { from:'W2', to:'J2', fs:'left', ts:'right', ta:0.5, thin:true, dash:true },
+  { from:'W3', to:'J3', fs:'left', ts:'right', ta:0.5, thin:true, dash:true },
+];
+</script>

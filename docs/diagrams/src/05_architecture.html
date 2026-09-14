@@ -38,7 +38,7 @@
 
 <!-- ── Web ─────────────────────────────────────────────────────── -->
 <div class="zone z-blue" id="ZW" style="left:310px; top:280px; width:430px; height:600px">
-  <div class="zl"><svg><use href="#i-monitor"/></svg>Web — Next.js 16 App Router</div>
+  <div class="zl"><svg><use href="#i-monitor"/></svg>Web — Next.js 16 &nbsp;<span class="tag">Vercel</span></div>
 </div>
 <div class="node hl" id="AI" style="left:332px; top:320px; width:380px">
   <div class="ic"><svg><use href="#i-bot"/></svg></div>
@@ -46,7 +46,7 @@
 </div>
 <div class="node a-blue" id="P" style="left:332px; top:470px; width:380px">
   <div class="ic"><svg><use href="#i-monitor"/></svg></div>
-  <div class="body"><div class="t">화면 27 라우트</div><div class="d">서버 컴포넌트 + 클라이언트 위젯</div></div>
+  <div class="body"><div class="t">화면 28 라우트</div><div class="d">서버 컴포넌트 + 클라이언트 위젯</div></div>
 </div>
 <div class="node a-blue" id="SA" style="left:332px; top:600px; width:380px">
   <div class="ic"><svg><use href="#i-code"/></svg></div>
@@ -64,12 +64,12 @@
 <div class="db gold" id="AN" style="left:830px; top:350px; width:160px; height:175px">
   <div class="ic"><svg><use href="#i-sigma"/></svg></div>
   <div class="t">analytics</div>
-  <div class="d">화면용 뷰 22</div>
+  <div class="d">뷰 23 + 물리화 2</div>
 </div>
 <div class="db silver" id="CORE" style="left:1000px; top:350px; width:160px; height:175px">
   <div class="ic"><svg><use href="#i-layers"/></svg></div>
   <div class="t">core</div>
-  <div class="d">정제 뷰 7</div>
+  <div class="d">정제 뷰 8</div>
 </div>
 <div class="db bronze" id="RAW" style="left:1170px; top:350px; width:160px; height:175px">
   <div class="ic"><svg><use href="#i-db"/></svg></div>
@@ -78,7 +78,7 @@
 </div>
 <div class="node hl" id="APP" style="left:830px; top:570px; width:500px">
   <div class="ic"><svg><use href="#i-box"/></svg></div>
-  <div class="body"><div class="t">app — 업무 데이터</div><div class="d">30 테이블 · RPC 43 (security definer) · 감사 트리거</div></div>
+  <div class="body"><div class="t">app — 업무 데이터</div><div class="d">33 테이블 · 함수 59 (security definer) · 감사 트리거</div></div>
 </div>
 <div class="node a-green" id="AUTH" style="left:830px; top:715px; width:245px">
   <div class="ic"><svg><use href="#i-lock"/></svg></div>
@@ -86,33 +86,41 @@
 </div>
 <div class="node a-green" id="CRON" style="left:1090px; top:715px; width:245px">
   <div class="ic"><svg><use href="#i-clock"/></svg></div>
-  <div class="body"><div class="t">pg_cron</div><div class="d mono">scm-tick */10분</div></div>
+  <div class="body"><div class="t">pg_cron</div><div class="d mono">scm-tick */10분<br>scm-refresh 매분</div></div>
 </div>
 
 <!-- ── Engine ──────────────────────────────────────────────────── -->
 <div class="zone z-violet" id="ZE" style="left:1380px; top:280px; width:490px; height:600px">
-  <div class="zl"><svg><use href="#i-terminal"/></svg>Engine — Python 3.12 (uv)</div>
+  <div class="zl"><svg><use href="#i-terminal"/></svg>Engine — Python 3.12 &nbsp;<span class="tag">Railway Cron · 10분</span></div>
 </div>
 <div class="node a-violet stack" id="CLI" style="left:1405px; top:360px; width:130px; height:420px">
   <div class="ic"><svg><use href="#i-terminal"/></svg></div>
-  <div class="body"><div class="t">engine<br>CLI</div><div class="d mono">uv run</div></div>
+  <div class="body"><div class="t">engine<br>tick</div><div class="d mono">10분</div></div>
 </div>
-<div class="node a-violet" id="FC" style="left:1560px; top:360px; width:285px">
+<div class="node a-violet" id="FC" style="left:1560px; top:360px; width:285px; height:72px">
   <div class="ic"><svg><use href="#i-trend"/></svg></div>
-  <div class="body"><div class="t">forecast</div><div class="d">분류 · 기법 13 · 백테스트 · 프로덕션</div></div>
+  <div class="body"><div class="t" style="font-size:17px">forecast</div><div class="d">기법 13 · 백테스트 · 프로덕션</div></div>
 </div>
-<div class="node a-violet" id="TUNE" style="left:1560px; top:520px; width:285px">
+<div class="node a-violet" id="AUTO" style="left:1560px; top:447px; width:285px; height:72px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body"><div class="t" style="font-size:17px">auto_run</div><div class="d">월 1회 자동 런</div></div>
+</div>
+<div class="node a-violet" id="TUNE" style="left:1560px; top:534px; width:285px; height:72px">
   <div class="ic"><svg><use href="#i-sparkles"/></svg></div>
-  <div class="body"><div class="t">ai_tuning</div><div class="d">오차 분석 → 조정 제안</div></div>
+  <div class="body"><div class="t" style="font-size:17px">ai_tuning</div><div class="d">오차 분석 → 제안 · DoS 보정</div></div>
 </div>
-<div class="node a-violet" id="TICK" style="left:1560px; top:660px; width:285px">
+<div class="node a-violet" id="AGENT" style="left:1560px; top:621px; width:285px; height:72px">
+  <div class="ic"><svg><use href="#i-bot"/></svg></div>
+  <div class="body"><div class="t" style="font-size:17px">agent</div><div class="d">감지 → 판단 → 알림 · 발주 제안</div></div>
+</div>
+<div class="node a-violet" id="TICK" style="left:1560px; top:708px; width:285px; height:72px">
   <div class="ic"><svg><use href="#i-bell"/></svg></div>
-  <div class="body"><div class="t">tick / notify</div><div class="d">배정 만료 · 알림 · 이메일</div></div>
+  <div class="body"><div class="t" style="font-size:17px">notify</div><div class="d">배정 만료 · 알림 · 이메일</div></div>
 </div>
 
 <div class="node ext" id="SMTP" style="left:1560px; top:900px; width:285px">
   <div class="ic"><svg><use href="#i-inbox"/></svg></div>
-  <div class="body"><div class="t">SMTP</div><div class="d">선택 · 미설정 시 skipped:no_smtp</div></div>
+  <div class="body"><div class="t">SMTP</div><div class="d">네이버 SMTP · 설정으로 on/off</div></div>
 </div>
 
 <div class="legend" style="left:60px; top:925px">
@@ -121,7 +129,7 @@
   <div class="li"><span class="box hl"></span>업무 로직이 사는 곳</div>
   <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>외부 서비스</div>
 </div>
-<div class="foot">docs/07-architecture.md §1 · 2026-09-13</div>
+<div class="foot">docs/07-architecture.md §1 · 2026-09-14</div>
 
 <script>
 window.EDGES = [
@@ -144,11 +152,13 @@ window.EDGES = [
   { from:'CRON', to:'APP',  fs:'top', ta:0.5, ts:'bottom', fa:0.5, cls:'green', label:'fn_tick' },
 
   // Engine
-  { from:'CLI', to:'FC',   fs:'right', fa:0.12, ts:'left', ta:0.5 },
-  { from:'CLI', to:'TUNE', fs:'right', fa:0.45, ts:'left', ta:0.5 },
-  { from:'CLI', to:'TICK', fs:'right', fa:0.78, ts:'left', ta:0.5 },
+  { from:'CLI', to:'FC',    fs:'right', fa:0.086, ts:'left', ta:0.5 },
+  { from:'CLI', to:'AUTO',  fs:'right', fa:0.293, ts:'left', ta:0.5 },
+  { from:'CLI', to:'TUNE',  fs:'right', fa:0.500, ts:'left', ta:0.5 },
+  { from:'CLI', to:'AGENT', fs:'right', fa:0.707, ts:'left', ta:0.5 },
+  { from:'CLI', to:'TICK',  fs:'right', fa:0.914, ts:'left', ta:0.5 },
   { from:'CLI', to:'RAW',  fs:'left', fa:0.08, ts:'top', ta:0.5, via:[[1362,394],[1362,322],[1250,322]], label:'export_raw 적재' },
-  { from:'FC',  to:'APP',  fs:'left', fa:0.55, ts:'right', ta:0.35, mid:1358, cls:'violet', label:'forecast_* 쓰기', lat:0.80 },
+  { from:'FC',  to:'APP',  fs:'left', fa:0.55, ts:'right', ta:0.35, mid:1358, cls:'violet', label:'forecast_* 쓰기', lat:0.85 },
   { from:'TICK',to:'APP',  fs:'left', fa:0.5, ts:'right', ta:0.8, mid:1350, dash:true, label:'알림 조회' },
 
   // 외부

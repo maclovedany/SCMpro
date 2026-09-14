@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>디렉터리 지도</title>
+<title>월간 업무 흐름 — 역할 × 단계</title>
 <style>
 /* ── 16:9 다이어그램 공통 스타일 (skill: diagram) ─────────────────── */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
@@ -243,88 +243,145 @@ svg.edges .lbl.mono text { font-family: ui-monospace, Menlo, monospace; font-siz
 
 <div class="wrap">
 <div class="stage">
+<style>
+/* ── 스윔레인 전용 부품 (이 도식에서만) ───────────────────────── */
+.sl-frame { position:absolute; border:1.5px solid var(--line); border-radius:10px; background:#fff; }
+.sl-vline { position:absolute; width:1px; background:#eef2f6; }
+.sl-hline { position:absolute; height:1px; background:#e2e8f0; }
+
+.sl-corner {
+  position:absolute; border:1.5px solid var(--line); border-radius:10px; overflow:hidden;
+  background: linear-gradient(to bottom right, #fff 0, #fff calc(50% - 1px), var(--line) 50%, #fff calc(50% + 1px), #fff 100%);
+}
+.sl-corner .a { position:absolute; right:12px; top:7px;  font-size:13px; font-weight:700; color:var(--ink-2); }
+.sl-corner .b { position:absolute; left:12px;  bottom:7px; font-size:13px; font-weight:700; color:var(--ink-2); }
+
+.sl-h {
+  position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  border:1.5px solid var(--line); border-radius:8px; background:var(--gray-bg);
+  font-size:16px; font-weight:700; letter-spacing:-0.01em; word-break:keep-all; text-align:center;
+}
+.sl-h .w { margin-top:3px; font-size:12px; font-weight:600; color:var(--ink-3); letter-spacing:0; }
+
+.sl-l {
+  position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  border:1.5px solid var(--line); border-radius:10px; background:#fff; padding:0 8px;
+  font-size:15.5px; font-weight:700; text-align:center; line-height:1.3; word-break:keep-all;
+}
+.sl-l .w { margin-top:5px; font-size:11.5px; font-weight:600; color:var(--ink-3); line-height:1.35; }
+.sl-l.sys { background:var(--blue-bg); border-color:var(--blue); color:var(--blue); }
+
+.sl-b {
+  position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  border:1.5px solid var(--line); border-radius:8px; background:#fff; padding:6px 10px;
+  box-shadow:0 1px 2px rgba(15,23,42,.05);
+  font-size:14.5px; font-weight:700; text-align:center; line-height:1.32; word-break:keep-all;
+}
+.sl-b .s { margin-top:4px; font-size:12px; font-weight:600; color:var(--ink-3);
+           font-family:ui-monospace,Menlo,monospace; line-height:1.35; }
+.sl-b.sys  { border-color:var(--blue); border-width:2px; background:var(--blue-bg); }
+.sl-b.auto { border-style:dashed; border-color:var(--edge-soft); background:var(--gray-bg); }
+.sl-b.appr { border-color:var(--amber); background:var(--amber-bg); }
+.sl-b.out  { border-color:var(--orange); background:var(--orange-bg); }
+.sl-b.term { border-radius:999px; background:var(--gray-soft); border-color:var(--gray); font-size:15px; }
+</style>
+
 <div class="title">
-  <span class="kicker">SCMPRO ARCHITECTURE · §8</span>
-  <h1>디렉터리 지도</h1>
-  <p>어디를 열어야 하는지. 네 갈래뿐이고, 갈래마다 규칙이 다르다.</p>
+  <span class="kicker">SYSTEM OVERVIEW · §5</span>
+  <h1>월간 업무 흐름 — 누가 · 언제 · 무엇을</h1>
+  <p>세로는 역할, 가로는 단계. 파란 칸은 사람이 누르지 않아도 시스템이 스스로 하는 일이다.</p>
 </div>
 
-<!-- ── web/ ────────────────────────────────────────────────────── -->
-<div class="zone z-blue" id="ZWEB" style="left:60px; top:215px; width:440px; height:765px">
-  <div class="zl"><svg><use href="#i-monitor"/></svg>web/</div>
-</div>
-<div class="node a-blue" id="W1" style="left:85px; top:275px; width:390px; height:175px">
-  <div class="ic"><svg><use href="#i-grid"/></svg></div>
-  <div class="body"><div class="t">라우트</div><div class="d mono">app/(app)/*</div><div class="d">서버 컴포넌트<br>+ *Panel / *Form (클라이언트)<br>+ actions.ts (서버 액션)</div></div>
-</div>
-<div class="node a-blue" id="W2" style="left:85px; top:470px; width:390px; height:155px">
-  <div class="ic"><svg><use href="#i-search"/></svg></div>
-  <div class="body"><div class="t">읽기 쿼리 · 계산</div><div class="d mono">lib/queries/*<br>lib/order/calc.ts (R-OQ)</div></div>
-</div>
-<div class="node a-blue" id="W3" style="left:85px; top:645px; width:390px; height:155px">
-  <div class="ic"><svg><use href="#i-bot"/></svg></div>
-  <div class="body"><div class="t">AI · 설정 스펙</div><div class="d mono">lib/ai/{tools,chat}.ts<br>lib/settings/registry.ts</div></div>
-</div>
-<div class="node a-blue" id="W4" style="left:85px; top:820px; width:390px; height:140px">
-  <div class="ic"><svg><use href="#i-box"/></svg></div>
-  <div class="body"><div class="t">공통 위젯</div><div class="d mono">components/{cards,charts,<br>tables,ai,upload,layout}</div></div>
-</div>
+<!-- ── 격자 ────────────────────────────────────────────────────── -->
+<div class="sl-frame" style="left:230px; top:252px; width:1640px; height:700px"></div>
+<div class="sl-vline" style="left:435px;  top:252px; height:700px"></div>
+<div class="sl-vline" style="left:640px;  top:252px; height:700px"></div>
+<div class="sl-vline" style="left:845px;  top:252px; height:700px"></div>
+<div class="sl-vline" style="left:1050px; top:252px; height:700px"></div>
+<div class="sl-vline" style="left:1255px; top:252px; height:700px"></div>
+<div class="sl-vline" style="left:1460px; top:252px; height:700px"></div>
+<div class="sl-vline" style="left:1665px; top:252px; height:700px"></div>
+<div class="sl-hline" style="left:230px; top:392px; width:1640px"></div>
+<div class="sl-hline" style="left:230px; top:532px; width:1640px"></div>
+<div class="sl-hline" style="left:230px; top:672px; width:1640px"></div>
+<div class="sl-hline" style="left:230px; top:812px; width:1640px"></div>
 
-<!-- ── engine/ ─────────────────────────────────────────────────── -->
-<div class="zone z-violet" id="ZENG" style="left:540px; top:215px; width:440px; height:765px">
-  <div class="zl"><svg><use href="#i-terminal"/></svg>engine/</div>
+<!-- ── 머리글 ──────────────────────────────────────────────────── -->
+<div class="sl-corner" style="left:60px; top:184px; width:170px; height:62px">
+  <span class="a">단계</span><span class="b">역할</span>
 </div>
-<div class="node a-violet" id="E1" style="left:565px; top:275px; width:390px; height:290px">
-  <div class="ic"><svg><use href="#i-trend"/></svg></div>
-  <div class="body"><div class="t">예측</div><div class="d mono">scm_engine/forecast/<br>classify · metrics<br>backtest · runner<br>store · ai_tuning · registry<br><br>methods/<br>simple · ets · intermittent<br>stat · ml · mc</div></div>
-</div>
-<div class="node a-violet" id="E2" style="left:565px; top:585px; width:390px; height:215px">
-  <div class="ic"><svg><use href="#i-wrench"/></svg></div>
-  <div class="body"><div class="t">적재 · 검증 · 시드 · 타입 · 알림</div><div class="d mono">export_raw · verify<br>seed_app · gen_types<br>notify · loaders · cli</div></div>
-</div>
-<div class="node dim" id="E3" style="left:565px; top:820px; width:390px; height:140px">
-  <div class="ic"><svg><use href="#i-plug"/></svg></div>
-  <div class="body"><div class="t">공통</div><div class="d mono">db/{base,postgres,sqlite}<br>config · fiscal</div></div>
-</div>
+<div class="sl-h" style="left:233px;  top:184px; width:199px; height:62px">수요 수집<span class="w">전월 말일−1 마감</span></div>
+<div class="sl-h" style="left:438px;  top:184px; width:199px; height:62px">실적 · 재고<span class="w">월초</span></div>
+<div class="sl-h" style="left:643px;  top:184px; width:199px; height:62px">예측<span class="w">지정일 · 자동</span></div>
+<div class="sl-h" style="left:848px;  top:184px; width:199px; height:62px">발주량 산출<span class="w">⑥ 핵심</span></div>
+<div class="sl-h" style="left:1053px; top:184px; width:199px; height:62px">검토 · 확정</div>
+<div class="sl-h" style="left:1258px; top:184px; width:199px; height:62px">승인<span class="w">팀장 결재</span></div>
+<div class="sl-h" style="left:1463px; top:184px; width:199px; height:62px">제출 · 보고<span class="w">⑦⑧⑨</span></div>
+<div class="sl-h" style="left:1668px; top:184px; width:199px; height:62px">입고 · 배정<span class="w">⑩ · 수시</span></div>
 
-<!-- ── supabase/ ───────────────────────────────────────────────── -->
-<div class="zone z-green" id="ZSB" style="left:1020px; top:215px; width:440px; height:765px">
-  <div class="zl"><svg><use href="#i-db"/></svg>supabase/migrations/</div>
-</div>
-<div class="node a-green" id="M1" style="left:1045px; top:275px; width:390px; height:290px">
-  <div class="ic"><svg><use href="#i-layers"/></svg></div>
-  <div class="body"><div class="t">기반 — 먼저 적용</div><div class="d mono">raw_schema<br>core_views<br>analytics_views<br>app_schema<br>app_functions<br>app_views<br>rls</div></div>
-</div>
-<div class="node a-green" id="M2" style="left:1045px; top:585px; width:390px; height:215px">
-  <div class="ic"><svg><use href="#i-box"/></svg></div>
-  <div class="body"><div class="t">기능별</div><div class="d mono">forecast · order<br>allocation · schedule · ai</div><div class="d">파일명 순서가 곧 적용 순서다</div></div>
-</div>
-<div class="node hl" id="M3" style="left:1045px; top:820px; width:390px; height:140px">
-  <div class="ic"><svg><use href="#i-lock"/></svg></div>
-  <div class="body"><div class="t">권한 — 항상 마지막</div><div class="d mono">grants</div></div>
-</div>
+<!-- ── 역할 레인 라벨 ──────────────────────────────────────────── -->
+<div class="sl-l" style="left:60px; top:260px; width:170px; height:124px">수요 제출 부서<span class="w">마케팅 · 영업<br>서비스 · 사업강화</span></div>
+<div class="sl-l" style="left:60px; top:400px; width:170px; height:124px">SCM<br>품목담당자<span class="w">계획 · 확정 · 배정</span></div>
+<div class="sl-l sys" style="left:60px; top:540px; width:170px; height:124px">SCMpro<br>시스템<span class="w">자동 실행</span></div>
+<div class="sl-l" style="left:60px; top:680px; width:170px; height:124px">SCM팀장<span class="w">승인 · 감독</span></div>
+<div class="sl-l" style="left:60px; top:820px; width:170px; height:124px">공급처<span class="w">해외 5곳</span></div>
 
-<!-- ── docs/ ───────────────────────────────────────────────────── -->
-<div class="zone z-amber" id="ZDOC" style="left:1500px; top:215px; width:360px; height:765px">
-  <div class="zl"><svg><use href="#i-book"/></svg>docs/</div>
-</div>
-<div class="node a-amber" id="D1" style="left:1525px; top:275px; width:310px; height:290px">
-  <div class="ic"><svg><use href="#i-list"/></svg></div>
-  <div class="body"><div class="t">번호 문서</div><div class="d mono">00 용어<br>01 업무절차<br>02 규칙 R-*<br>03 결정 D-*<br>04 미확인<br>05 데이터 카탈로그<br>06 데이터 검증<br>07 아키텍처</div></div>
-</div>
-<div class="node a-amber" id="D2" style="left:1525px; top:585px; width:310px; height:215px">
-  <div class="ic"><svg><use href="#i-pen"/></svg></div>
-  <div class="body"><div class="t">작업 문서</div><div class="d mono">specs/<br>plans/<br>reports/</div></div>
-</div>
-<div class="node dim" id="D3" style="left:1525px; top:820px; width:310px; height:140px">
-  <div class="ic"><svg><use href="#i-git"/></svg></div>
-  <div class="body"><div class="t">규칙은 ID 로</div><div class="d">근거를 반복하지 않고 <span class="d mono" style="display:inline">R-*</span> · <span class="d mono" style="display:inline">D-*</span> 로만 가리킨다</div></div>
-</div>
+<!-- ── 레인 1 · 수요 제출 부서 ─────────────────────────────────── -->
+<div class="sl-b" id="B11" style="left:248px; top:284px; width:169px; height:76px">수요자료 제출<span class="s">/schedule</span></div>
+<div class="sl-b" id="B18" style="left:1683px; top:284px; width:169px; height:76px">영업 주문 · 수주 확정<span class="s">/sales-orders · 가용재고</span></div>
 
-<div class="foot">docs/07-architecture.md §8 · 2026-09-13</div>
+<!-- ── 레인 2 · SCM 품목담당자 ────────────────────────────────── -->
+<div class="sl-b term" id="B21" style="left:272px; top:438px; width:120px; height:48px">시작</div>
+<div class="sl-b" id="B22" style="left:453px; top:424px; width:169px; height:76px">데이터 업로드 · 추가수요<span class="s">/upload · /extra-demand</span></div>
+<div class="sl-b" id="B24" style="left:863px; top:424px; width:169px; height:76px">발주 계획 생성<span class="s">/orders</span></div>
+<div class="sl-b" id="B25" style="left:1068px; top:424px; width:169px; height:76px">검토 · 오버라이드 → 확정<span class="s">/orders/[id]</span></div>
+<div class="sl-b" id="B27" style="left:1478px; top:424px; width:169px; height:76px">보고서 출력<span class="s">CSV · 인쇄</span></div>
+<div class="sl-b" id="B28" style="left:1683px; top:404px; width:169px; height:66px">입고 완료 → 배정<span class="s">/allocation</span></div>
+<div class="sl-b term" id="B29" style="left:1707px; top:484px; width:120px; height:40px">종료</div>
+
+<!-- ── 레인 3 · 시스템 ─────────────────────────────────────────── -->
+<div class="sl-b auto" id="B31" style="left:248px; top:564px; width:169px; height:76px">미제출 독촉 알림<span class="s">fn_tick · 10분</span></div>
+<div class="sl-b auto" id="B32" style="left:453px; top:564px; width:169px; height:76px">물리화 뷰 갱신<span class="s">scm-refresh · 매분</span></div>
+<div class="sl-b sys" id="B33" style="left:658px; top:564px; width:169px; height:76px">자동 런<span class="s">백테스트 → 예측</span></div>
+<div class="sl-b sys" id="B34" style="left:863px; top:564px; width:169px; height:76px">발주량 계산 · 재고전개<span class="s">DoS · Flex · MOQ</span></div>
+<div class="sl-b sys" id="B36" style="left:1273px; top:564px; width:169px; height:76px">승인 반영 → 제출 OL<span class="s">ol_submission</span></div>
+<div class="sl-b auto" id="B38" style="left:1683px; top:564px; width:169px; height:76px">배정 만료 · AI 감시<span class="s">tick · 10분</span></div>
+
+<!-- ── 레인 4 · SCM팀장 ───────────────────────────────────────── -->
+<div class="sl-b appr" id="B42" style="left:453px; top:704px; width:169px; height:76px">Bulkdeal 승인<span class="s">/approvals</span></div>
+<div class="sl-b appr" id="B46" style="left:1273px; top:704px; width:169px; height:76px">발주 계획 승인 · 반려<span class="s">/approvals</span></div>
+
+<!-- ── 레인 5 · 공급처 ────────────────────────────────────────── -->
+<div class="sl-b out" id="B57" style="left:1478px; top:844px; width:169px; height:76px">공급처 포털 입력<span class="s">FX-LIVE</span></div>
+
+<div class="legend" style="left:60px; top:995px">
+  <div class="li"><span class="box" style="border-color:var(--blue);background:var(--blue-bg)"></span>시스템이 스스로</div>
+  <div class="li"><span class="box" style="border-style:dashed"></span>주기 작업</div>
+  <div class="li"><span class="box" style="border-color:var(--amber);background:var(--amber-bg)"></span>승인</div>
+  <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>사외</div>
+</div>
+<div class="foot">docs/11-system-overview.md §5 · 2026-09-14</div>
 
 <script>
-window.EDGES = [];
+window.EDGES = [
+  { from:'B21', to:'B11', fs:'top', fa:0.5, ts:'bottom', ta:0.5, thin:true },
+  { from:'B31', to:'B11', fs:'top', fa:0.95, ts:'bottom', ta:0.95, dash:true, thin:true, label:'독촉', loff:[14,0] },
+  { from:'B11', to:'B22', fs:'right', ts:'left', ta:0.5 },
+  { from:'B22', to:'B32', fs:'bottom', fa:0.5, ts:'top', ta:0.5 },
+  { from:'B22', to:'B42', fs:'left', ts:'left', via:[[435,462],[435,742]], thin:true },
+  { from:'B32', to:'B33', fs:'right', ts:'left', ta:0.5 },
+  { from:'B33', to:'B34', fs:'right', ts:'left', ta:0.5 },
+  { from:'B24', to:'B34', fs:'bottom', fa:0.5, ts:'top', ta:0.5, label:'생성 요청', loff:[0,0] },
+  { from:'B34', to:'B25', fs:'right', ts:'left', ta:0.5 },
+  { from:'B25', to:'B46', fs:'right', ts:'left', ta:0.5, mid:1255 },
+  { from:'B46', to:'B36', fs:'top', fa:0.5, ts:'bottom', ta:0.5, cls:'green' },
+  { from:'B36', to:'B27', fs:'right', ts:'left', ta:0.5 },
+  { from:'B27', to:'B57', fs:'bottom', fa:0.5, ts:'top', ta:0.5 },
+  { from:'B57', to:'B28', fs:'right', ts:'left', ta:0.5, mid:1665 },
+  { from:'B28', to:'B38', fs:'bottom', fa:0.25, ts:'top', ta:0.25 },
+  { from:'B28', to:'B29', fs:'bottom', fa:0.75, ts:'top', ta:0.5, thin:true },
+  { from:'B18', to:'B38', fs:'right', ts:'right', via:[[1885,322],[1885,602]], thin:true, dash:true },
+];
 </script>
 </div>
 </div>

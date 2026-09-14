@@ -12,7 +12,7 @@
 </div>
 <div class="node a-blue" id="W1" style="left:85px; top:275px; width:390px; height:175px">
   <div class="ic"><svg><use href="#i-grid"/></svg></div>
-  <div class="body"><div class="t">라우트</div><div class="d mono">app/(app)/*</div><div class="d">서버 컴포넌트<br>+ *Panel / *Form (클라이언트)<br>+ actions.ts (서버 액션)</div></div>
+  <div class="body"><div class="t">라우트 28</div><div class="d mono">app/(app)/*</div><div class="d">서버 컴포넌트<br>+ *Panel / *Form (클라이언트)<br>+ actions.ts (서버 액션)</div></div>
 </div>
 <div class="node a-blue" id="W2" style="left:85px; top:470px; width:390px; height:155px">
   <div class="ic"><svg><use href="#i-search"/></svg></div>
@@ -33,11 +33,11 @@
 </div>
 <div class="node a-violet" id="E1" style="left:565px; top:275px; width:390px; height:290px">
   <div class="ic"><svg><use href="#i-trend"/></svg></div>
-  <div class="body"><div class="t">예측</div><div class="d mono">scm_engine/forecast/<br>classify · metrics<br>backtest · runner<br>store · ai_tuning · registry<br><br>methods/<br>simple · ets · intermittent<br>stat · ml · mc</div></div>
+  <div class="body"><div class="t">예측</div><div class="d mono">scm_engine/forecast/<br>classify · metrics<br>backtest · runner · store<br>ai_tuning · auto_run · registry<br><br>methods/<br>simple · ets · intermittent<br>stat · ml · mc</div></div>
 </div>
 <div class="node a-violet" id="E2" style="left:565px; top:585px; width:390px; height:215px">
   <div class="ic"><svg><use href="#i-wrench"/></svg></div>
-  <div class="body"><div class="t">적재 · 검증 · 시드 · 타입 · 알림</div><div class="d mono">export_raw · verify<br>seed_app · gen_types<br>notify · loaders · cli</div></div>
+  <div class="body"><div class="t">감시 · 적재 · 검증 · 알림</div><div class="d mono">agent · export_raw · verify<br>seed_app · gen_types<br>notify · loaders · cli</div></div>
 </div>
 <div class="node dim" id="E3" style="left:565px; top:820px; width:390px; height:140px">
   <div class="ic"><svg><use href="#i-plug"/></svg></div>
@@ -54,11 +54,11 @@
 </div>
 <div class="node a-green" id="M2" style="left:1045px; top:585px; width:390px; height:215px">
   <div class="ic"><svg><use href="#i-box"/></svg></div>
-  <div class="body"><div class="t">기능별</div><div class="d mono">forecast · order<br>allocation · schedule · ai</div><div class="d">파일명 순서가 곧 적용 순서다</div></div>
+  <div class="body"><div class="t">기능별 · 증분</div><div class="d mono">forecast · order · allocation<br>schedule · ai · dashboard<br>ol_series · auto_run · agent<br>order_feedback · retention</div><div class="d">전부 23개 · 파일명 순서가 적용 순서</div></div>
 </div>
 <div class="node hl" id="M3" style="left:1045px; top:820px; width:390px; height:140px">
   <div class="ic"><svg><use href="#i-lock"/></svg></div>
-  <div class="body"><div class="t">권한 — 항상 마지막</div><div class="d mono">grants</div></div>
+  <div class="body"><div class="t">권한</div><div class="d mono">grants</div><div class="d">스크립트가 마지막에 따로 실행</div></div>
 </div>
 
 <!-- ── docs/ ───────────────────────────────────────────────────── -->
@@ -67,7 +67,7 @@
 </div>
 <div class="node a-amber" id="D1" style="left:1525px; top:275px; width:310px; height:290px">
   <div class="ic"><svg><use href="#i-list"/></svg></div>
-  <div class="body"><div class="t">번호 문서</div><div class="d mono">00 용어<br>01 업무절차<br>02 규칙 R-*<br>03 결정 D-*<br>04 미확인<br>05 데이터 카탈로그<br>06 데이터 검증<br>07 아키텍처</div></div>
+  <div class="body"><div class="t">번호 문서</div><div class="d mono">00 용어 · 01 업무절차<br>02 규칙 R-* · 03 결정 D-*<br>04 미확인 · 05 카탈로그<br>06 데이터 검증<br>07 아키텍처<br>08 사용자 가이드<br>09 연동 계획 · 10 운영<br>11 한눈에 보기</div></div>
 </div>
 <div class="node a-amber" id="D2" style="left:1525px; top:585px; width:310px; height:215px">
   <div class="ic"><svg><use href="#i-pen"/></svg></div>
@@ -78,7 +78,7 @@
   <div class="body"><div class="t">규칙은 ID 로</div><div class="d">근거를 반복하지 않고 <span class="d mono" style="display:inline">R-*</span> · <span class="d mono" style="display:inline">D-*</span> 로만 가리킨다</div></div>
 </div>
 
-<div class="foot">docs/07-architecture.md §8 · 2026-09-13</div>
+<div class="foot">docs/07-architecture.md §8 · 2026-09-14</div>
 
 <script>
 window.EDGES = [];

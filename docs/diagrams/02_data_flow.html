@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>권한 · 보안 — 요청이 통과하는 층</title>
+<title>데이터 흐름</title>
 <style>
 /* ── 16:9 다이어그램 공통 스타일 (skill: diagram) ─────────────────── */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
@@ -244,108 +244,137 @@ svg.edges .lbl.mono text { font-family: ui-monospace, Menlo, monospace; font-siz
 <div class="wrap">
 <div class="stage">
 <div class="title">
-  <span class="kicker">SCMPRO ARCHITECTURE · §4</span>
-  <h1>권한 · 보안</h1>
-  <p>한 요청은 네 개의 관문을 차례로 지난다. 어느 하나가 막으면 그 뒤는 실행되지 않는다.</p>
+  <span class="kicker">SYSTEM OVERVIEW · §4</span>
+  <h1>데이터 흐름</h1>
+  <p>예측은 <b>출고 실적만</b> 학습한다. 실제 발주량은 순환 편향 때문에 넣지 않고, OL 시계열 · 규칙 보정 · 사후 채점에만 쓴다.</p>
 </div>
 
-<div class="actor" id="REQ" style="left:60px; top:399px; width:170px">
-  <div class="ic"><svg><use href="#i-user"/></svg></div>
-  <div class="t">요청</div>
-  <div class="d">브라우저</div>
+<!-- ── 원천 ────────────────────────────────────────────────────── -->
+<div class="zone" id="ZSRC" style="left:60px; top:230px; width:330px; height:410px">
+  <div class="zl"><svg><use href="#i-upload"/></svg>업로드 원천</div>
+</div>
+<div class="node a-gray" id="F1" style="left:85px; top:280px; width:280px; height:145px">
+  <div class="ic"><svg><use href="#i-sheet"/></svg></div>
+  <div class="body"><div class="t">출고 실적</div><div class="d">넓은 형식 · 기종 OL / 실적</div><span class="tag">→ raw · shipment_extra</span></div>
+</div>
+<div class="node a-gray" id="F2" style="left:85px; top:450px; width:280px; height:165px">
+  <div class="ic"><svg><use href="#i-sliders"/></svg></div>
+  <div class="body"><div class="t">마스터 · 운영 자료</div><div class="d">재고 · 입고예정 · 단가 · MOQ<br>공급처 · 장착률 · EOL · 공휴일</div><span class="tag">→ app 마스터</span></div>
 </div>
 
-<!-- ── 관문 4개 ────────────────────────────────────────────────── -->
-<div class="zone z-blue" id="ZGATE" style="left:275px; top:245px; width:1585px; height:360px">
-  <div class="zl"><svg><use href="#i-shield"/></svg>요청이 통과하는 관문</div>
+<!-- ── 정제 ────────────────────────────────────────────────────── -->
+<div class="db bronze" id="RAW" style="left:440px; top:280px; width:180px; height:145px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="t">raw</div>
+  <div class="d">원본 보존</div>
+</div>
+<div class="node a-blue" id="APP1" style="left:440px; top:450px; width:180px; height:165px">
+  <div class="ic"><svg><use href="#i-box"/></svg></div>
+  <div class="body"><div class="t">app 마스터</div><div class="d">재고 · 입고<br>설정 · 공급처</div></div>
 </div>
 
-<div class="node hl" id="G1" style="left:300px; top:300px; width:360px; height:300px">
-  <div class="num">1</div>
-  <div class="ic"><svg><use href="#i-key"/></svg></div>
-  <div class="body">
-    <div class="t">인증</div>
-    <div class="d">Supabase Auth 이메일 · 비밀번호<br><br>매 요청 세션 갱신<br>미로그인 → <span class="d mono" style="display:inline">/login</span><br><br>가입 트리거가 <span class="d mono" style="display:inline">app.profiles.role</span> 7종 생성</div>
-    <span class="tag">item_manager · scm_lead · admin</span>
-    <span class="tag">sales · marketing · service · biz_enable</span>
-    <span class="tag">web/proxy.ts</span>
-  </div>
+<!-- ── 학습 입력 ───────────────────────────────────────────────── -->
+<div class="node a-green" id="VM" style="left:690px; top:275px; width:270px; height:155px">
+  <div class="ic"><svg><use href="#i-sigma"/></svg></div>
+  <div class="body"><div class="t">v_item_monthly</div><div class="d">품목 × 월 · HOC 합산 · 0 채움</div><span class="tag">물리화 뷰</span></div>
+</div>
+<div class="node a-gray" id="CLS" style="left:690px; top:460px; width:270px; height:100px">
+  <div class="ic"><svg><use href="#i-grid"/></svg></div>
+  <div class="body"><div class="t">ABC-XYZ · 수요패턴</div><div class="d mono">item_class</div></div>
+</div>
+<div class="node a-blue" id="XD" style="left:690px; top:590px; width:270px; height:100px">
+  <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
+  <div class="body"><div class="t">추가수요 승인분</div><div class="d mono">extra_demand</div></div>
 </div>
 
-<div class="node hl" id="G2" style="left:695px; top:300px; width:360px; height:300px">
-  <div class="num">2</div>
-  <div class="ic"><svg><use href="#i-list"/></svg></div>
-  <div class="body">
-    <div class="t">화면 접근</div>
-    <div class="d">역할별 메뉴 구성<br><br>각 page 가 역할을 다시 검사<br>불일치 시 redirect</div>
-    <span class="tag">web/lib/auth/roles.ts</span>
-  </div>
+<!-- ── 예측 ────────────────────────────────────────────────────── -->
+<div class="node hl" id="BT" style="left:1020px; top:250px; width:270px; height:100px">
+  <div class="ic"><svg><use href="#i-target"/></svg></div>
+  <div class="body"><div class="t">백테스트 · 챔피언 선택</div></div>
+</div>
+<div class="node a-green" id="FC" style="left:1020px; top:400px; width:270px; height:105px">
+  <div class="ic"><svg><use href="#i-trend"/></svg></div>
+  <div class="body"><div class="t">forecast_result</div><div class="d">최신 예측 · 밴드</div></div>
 </div>
 
-<div class="node hl" id="G3" style="left:1090px; top:300px; width:360px; height:300px">
-  <div class="num">3</div>
-  <div class="ic"><svg><use href="#i-lock"/></svg></div>
-  <div class="body">
-    <div class="t">데이터 — RLS</div>
-    <div class="d"><span class="d mono" style="display:inline">raw</span> 폐쇄<br><span class="d mono" style="display:inline">core · analytics</span> 로그인 사용자 읽기<br><span class="d mono" style="display:inline">app</span> 테이블별 정책<br>본인 대화 · 본인 승인 · 단가는 관리 역할만</div>
-    <span class="tag">Row Level Security</span>
-  </div>
+<!-- ── 계산 · 결과 ─────────────────────────────────────────────── -->
+<div class="node hl" id="CALC" style="left:1340px; top:380px; width:280px; height:145px">
+  <div class="ic"><svg><use href="#i-fx"/></svg></div>
+  <div class="body"><div class="t">발주량 계산</div><div class="d">DoS · Flex · MOQ</div><span class="tag">web/lib/order/calc.ts</span></div>
+</div>
+<div class="node hl" id="PLAN" style="left:1340px; top:565px; width:280px; height:145px">
+  <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
+  <div class="body"><div class="t">order_plan / line</div><div class="d">재고전개 · 근거 · 오버라이드</div></div>
+</div>
+<div class="node a-green" id="OL" style="left:1340px; top:750px; width:280px; height:145px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="body"><div class="t">ol_submission</div><div class="d">승인된 제출 OL<br>다음 달 Flex 기준값</div></div>
 </div>
 
-<div class="node hl" id="G4" style="left:1485px; top:300px; width:350px; height:300px">
-  <div class="num">4</div>
+<!-- ── 배정 ────────────────────────────────────────────────────── -->
+<div class="node a-blue" id="AV" style="left:440px; top:730px; width:270px; height:110px">
+  <div class="ic"><svg><use href="#i-scale"/></svg></div>
+  <div class="body"><div class="t">가용재고</div><div class="d">현재고 − 임시 − 확정 − 승인대기</div></div>
+</div>
+<div class="node a-blue" id="ALLOC" style="left:760px; top:730px; width:290px; height:110px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body"><div class="t">주문 · 배정 상태머신</div><div class="d mono">sales_order · allocation</div></div>
+</div>
+
+<!-- ── AI 되먹임 ───────────────────────────────────────────────── -->
+<div class="node ext" id="SIG" style="left:1680px; top:250px; width:180px; height:195px">
+  <div class="ic"><svg><use href="#i-bell"/></svg></div>
+  <div class="body"><div class="t">AI 감시</div><div class="d">신호 감지 → 판단</div><span class="tag">agent_event</span></div>
+</div>
+<div class="node ext" id="SC" style="left:1680px; top:490px; width:180px; height:195px">
+  <div class="ic"><svg><use href="#i-scale"/></svg></div>
+  <div class="body"><div class="t">사후 채점</div><div class="d">지난 계획 vs 실제<br>오버라이드 패턴</div></div>
+</div>
+<div class="node ext" id="TUNE" style="left:1680px; top:730px; width:180px; height:195px">
+  <div class="ic"><svg><use href="#i-sparkles"/></svg></div>
+  <div class="body"><div class="t">AI 오차 분석</div><div class="d">파라미터 · 목표 DoS 제안</div></div>
+</div>
+
+<div class="node dim" id="LOOP" style="left:60px; top:930px; width:1240px">
   <div class="ic"><svg><use href="#i-swap"/></svg></div>
   <div class="body">
-    <div class="t">쓰기 — RPC</div>
-    <div class="d">쓰기는 대부분 RPC 로만<br><br>security definer 함수 안에서<br>역할을 다시 검사한다</div>
-    <span class="tag">app.fn_* · RPC 43</span>
+    <div class="t">되먹임 — 이번 달 결과가 다음 달 입력이 된다</div>
+    <div class="d">제출 OL → 다음 달 Flex 기준값 · 품목 SCM OL 시계열 &nbsp;·&nbsp; 채점 · 오차 분석 → 예측 파라미터와 목표 DoS 제안</div>
   </div>
 </div>
 
-<!-- ── 예외와 보조 규칙 ────────────────────────────────────────── -->
-<div class="note" style="left:60px; top:660px; width:900px"><b>관문 밖의 규칙 — 비밀값은 저장소 밖에, 예외 권한은 함수 안에서 다시 검사한다</b></div>
-
-<div class="node a-orange" id="X1" style="left:1290px; top:705px; width:570px; height:170px">
-  <div class="ic"><svg><use href="#i-server"/></svg></div>
-  <div class="body">
-    <div class="t">service_role — 서버 전용</div>
-    <div class="d">admin 클라이언트는 <b>두 가지에만</b> 쓴다.<br>대량 저장(발주 라인 청크) · 물리화 뷰 refresh<br>호출자를 <span class="d mono" style="display:inline">p_user</span> 로 넘겨 함수 안에서 역할 검사</div>
-    <span class="tag">D-022</span>
-  </div>
+<div class="legend" style="left:1340px; top:945px">
+  <div class="li"><span class="box hl"></span>사람이 확정</div>
+  <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>AI 가 붙는 지점</div>
 </div>
-
-<div class="node a-blue" id="X2" style="left:675px; top:705px; width:580px; height:170px">
-  <div class="ic"><svg><use href="#i-bot"/></svg></div>
-  <div class="body">
-    <div class="t">AI 도구 — 사용자 세션으로 실행</div>
-    <div class="d">도구는 관리자 권한이 아니라 <b>그 사용자</b> 의 세션 클라이언트로 실행한다.<br>사용자가 못 보는 데이터는 AI 도 못 본다.</div>
-    <span class="tag">R-AI-05</span>
-  </div>
-</div>
-
-<div class="node dim" id="X3" style="left:60px; top:705px; width:580px; height:170px">
-  <div class="ic"><svg><use href="#i-key"/></svg></div>
-  <div class="body">
-    <div class="t">비밀값</div>
-    <div class="d mono">web/.env.local · engine/.env → git 제외<br>.env.example 은 빈 값<br>OpenAI API 키는 서버 env 에만</div>
-  </div>
-</div>
-
-<div class="legend" style="left:60px; top:945px">
-  <div class="li"><span class="box hl"></span>모든 요청이 지나는 관문</div>
-  <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>권한을 넘겨받는 예외</div>
-  <div class="li"><span class="box" style="border-style:dashed"></span>저장소 밖 비밀값</div>
-</div>
-<div class="foot">docs/07-architecture.md §4 · 2026-09-13</div>
+<div class="foot">docs/11-system-overview.md §4 · 2026-09-14</div>
 
 <script>
 window.EDGES = [
-  { from:'REQ', to:'G1', ts:'left', ta:0.5 },
-  { from:'G1', to:'G2', fs:'right', ts:'left', ta:0.5, label:'세션' },
-  { from:'G2', to:'G3', fs:'right', ts:'left', ta:0.5, label:'역할' },
-  { from:'G3', to:'G4', fs:'right', ts:'left', ta:0.5, label:'정책' },
-  { from:'X1', to:'G4', fs:'top', fa:0.5, ts:'bottom', ta:0.5, cls:'orange', dash:true, label:'p_user 전달' },
-  { from:'X2', to:'G3', fs:'top', fa:0.5, ts:'bottom', ta:0.5, dash:true, label:'같은 RLS 적용' },
+  { from:'F1', to:'RAW', fs:'right', ts:'left', ta:0.5 },
+  { from:'F2', to:'APP1', fs:'right', ts:'left', ta:0.5 },
+  { from:'RAW', to:'VM', fs:'right', ts:'left', ta:0.5 },
+  { from:'VM', to:'CLS', fs:'bottom', fa:0.5, ts:'top', ta:0.5 },
+  { from:'VM', to:'BT', fs:'right', fa:0.35, ts:'left', ta:0.5 },
+  { from:'BT', to:'FC', fs:'bottom', fa:0.5, ts:'top', ta:0.5, label:'챔피언' },
+
+  { from:'FC',   to:'CALC', fs:'right', ts:'left', ta:0.25 },
+  { from:'APP1', to:'CALC', fs:'right', fa:0.72, ts:'left', ta:0.55, mid:1310, dash:true, label:'재고 · 입고 · 설정', lat:0.64 },
+  { from:'XD',   to:'CALC', fs:'right', ts:'left', ta:0.85, mid:1310 },
+
+  { from:'CALC', to:'PLAN', fs:'bottom', fa:0.5, ts:'top', ta:0.5 },
+  { from:'PLAN', to:'OL',   fs:'bottom', fa:0.5, ts:'top', ta:0.5, cls:'green', label:'승인' },
+
+  { from:'APP1', to:'AV', fs:'bottom', fa:0.5, ts:'top', ta:0.5 },
+  { from:'AV', to:'ALLOC', fs:'right', ts:'left', ta:0.5 },
+
+  { from:'PLAN', to:'SIG', fs:'right', ts:'left', ta:0.8, mid:1650, dash:true, cls:'orange' },
+  { from:'PLAN', to:'SC',  fs:'right', ts:'left', ta:0.2, mid:1650, dash:true, cls:'orange' },
+  { from:'SC', to:'TUNE', fs:'bottom', fa:0.5, ts:'top', ta:0.5, cls:'orange' },
+
+  // 되먹임 — 구역·노드를 피해 아래 회랑으로 돌아 v_item_monthly 왼쪽으로 들어간다
+  { from:'OL', to:'VM', fs:'left', ts:'left', cls:'green', dash:true,
+    via:[[1315,822],[1315,885],[655,885],[655,352]], label:'다음 달 Flex 기준 · OL 시계열', lat:0.46 },
 ];
 </script>
 </div>

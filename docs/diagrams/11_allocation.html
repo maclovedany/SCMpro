@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>주문 · 배정 — SP4</title>
+<style>
+/* ── 16:9 다이어그램 공통 스타일 (skill: diagram) ─────────────────── */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+
+:root {
+  --ink: #0f172a;
+  --ink-2: #334155;
+  --ink-3: #64748b;
+  --line: #cbd5e1;
+  --edge: #475569;
+  --edge-soft: #94a3b8;
+
+  --blue: #1d4ed8;   --blue-bg: #eff6ff;  --blue-soft: #dbeafe;
+  --green: #047857;  --green-bg: #ecfdf5; --green-soft: #d1fae5;
+  --violet: #6d28d9; --violet-bg: #f5f3ff;--violet-soft: #ede9fe;
+  --orange: #c2410c; --orange-bg: #fff7ed;--orange-soft: #ffedd5;
+  --amber: #b45309;  --amber-bg: #fffbeb; --amber-soft: #fef3c7;
+  --gray: #475569;   --gray-bg: #f8fafc;  --gray-soft: #e2e8f0;
+  --teal: #0f766e;   --teal-bg: #f0fdfa;  --teal-soft: #ccfbf1;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #ffffff; height: 100%; }
+body {
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+.wrap { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+.stage {
+  position: relative; width: 1920px; height: 1080px; background: #ffffff;
+  transform-origin: top left; overflow: hidden; flex: none;
+}
+
+/* ── 제목 ── */
+.title { position: absolute; left: 60px; top: 36px; }
+.title h1 { margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+.title p  { margin: 8px 0 0; font-size: 17px; color: var(--ink-3); font-weight: 500; }
+.title .kicker { display: inline-block; font-size: 13px; font-weight: 700; letter-spacing: .12em; color: var(--blue); margin-bottom: 8px; }
+.foot { position: absolute; right: 60px; bottom: 28px; font-size: 13px; color: var(--ink-3); font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+
+/* ── 범례 ── */
+.legend { position: absolute; display: flex; gap: 22px; align-items: center; font-size: 14px; color: var(--ink-2); }
+.legend .li { display: flex; align-items: center; gap: 8px; }
+.legend .sw { width: 34px; height: 0; border-top: 2.5px solid var(--edge); }
+.legend .sw.dash { border-top-style: dashed; }
+.legend .box { width: 18px; height: 14px; border-radius: 3px; border: 1.5px solid var(--line); background: #fff; }
+.legend .box.hl { border-color: var(--blue); background: var(--blue-bg); }
+
+/* ── 구역(zone) ── */
+.zone {
+  position: absolute; border: 1.5px dashed var(--gray); border-radius: 18px; background: var(--gray-bg);
+}
+.zone .zl {
+  position: absolute; left: 18px; top: -16px; display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 14px 5px 10px; border-radius: 8px; background: var(--gray); color: #fff;
+  font-size: 15px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap;
+}
+.zone .zl svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.zone .zl .tag { font-family: ui-monospace, Menlo, monospace; font-weight: 600; font-size: 12px; opacity: .85; margin-left: 4px; }
+.zone.solid { border-style: solid; }
+.zone.z-blue   { border-color: var(--blue);   background: var(--blue-bg); }   .zone.z-blue .zl   { background: var(--blue); }
+.zone.z-green  { border-color: var(--green);  background: var(--green-bg); }  .zone.z-green .zl  { background: var(--green); }
+.zone.z-violet { border-color: var(--violet); background: var(--violet-bg); } .zone.z-violet .zl { background: var(--violet); }
+.zone.z-orange { border-color: var(--orange); background: var(--orange-bg); } .zone.z-orange .zl { background: var(--orange); }
+.zone.z-amber  { border-color: var(--amber);  background: var(--amber-bg); }  .zone.z-amber .zl  { background: var(--amber); }
+.zone.z-teal   { border-color: var(--teal);   background: var(--teal-bg); }   .zone.z-teal .zl   { background: var(--teal); }
+.zone.z-plain  { background: #fff; }
+
+/* ── 노드 ── */
+.node {
+  position: absolute; display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px; background: #fff; border: 1.5px solid var(--line); border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 4px 12px rgba(15, 23, 42, .05);
+}
+.node .ic {
+  flex: none; width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center;
+  background: var(--gray-soft); color: var(--gray);
+}
+.node .ic svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.node .body { min-width: 0; flex: 1; }
+.node .t { font-size: 19px; font-weight: 700; line-height: 1.25; letter-spacing: -0.015em; word-break: keep-all; }
+.node .d { margin-top: 5px; font-size: 14.5px; color: var(--ink-2); line-height: 1.4; word-break: keep-all; }
+.node .d.mono { font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: var(--ink-3); }
+.node .tag {
+  display: inline-block; margin-top: 7px; font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px; font-weight: 600; color: var(--ink-3); background: #f1f5f9; padding: 2px 8px; border-radius: 6px;
+}
+.node.center { align-items: center; }
+.node.center .body { text-align: left; }
+.node.stack { flex-direction: column; align-items: center; text-align: center; justify-content: center; gap: 8px; }
+.node.stack .body { text-align: center; }
+.node.plain { box-shadow: none; }
+
+/* 강조(이번 회차 범위) */
+.node.hl { border-color: var(--blue); border-width: 2px; background: var(--blue-bg); }
+.node.hl .ic { background: var(--blue); color: #fff; }
+.node.hl .tag { background: var(--blue-soft); color: var(--blue); }
+
+/* 액센트 */
+.node.a-blue   .ic { background: var(--blue-soft);   color: var(--blue); }
+.node.a-green  .ic { background: var(--green-soft);  color: var(--green); }
+.node.a-violet .ic { background: var(--violet-soft); color: var(--violet); }
+.node.a-orange .ic { background: var(--orange-soft); color: var(--orange); }
+.node.a-amber  .ic { background: var(--amber-soft);  color: var(--amber); }
+.node.a-teal   .ic { background: var(--teal-soft);   color: var(--teal); }
+.node.a-gray   .ic { background: var(--gray-soft);   color: var(--gray); }
+.node.dim { border-style: dashed; background: #fff; }
+.node.dim .t { color: var(--ink-2); }
+.node.dim .ic { background: #f1f5f9; color: var(--ink-3); }
+
+/* 외부(구름) 노드 */
+.node.ext { border-color: var(--orange); background: var(--orange-bg); }
+.node.ext .ic { background: var(--orange); color: #fff; }
+.node.ext .tag { background: var(--orange-soft); color: var(--orange); }
+
+/* ── 데이터베이스(실린더) ── */
+.db {
+  position: absolute; background: #fff; border: 1.5px solid var(--green); border-radius: 50% / 22px;
+  padding: 36px 16px 20px; text-align: center;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 4px 12px rgba(15, 23, 42, .05);
+}
+.db::before {
+  content: ""; position: absolute; left: -1.5px; right: -1.5px; top: -1.5px; height: 44px;
+  border: 1.5px solid var(--green); border-radius: 50%; background: var(--green-soft);
+}
+.db .ic { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); z-index: 1; color: var(--green); }
+.db .ic svg { width: 26px; height: 26px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.db .t { position: relative; z-index: 1; margin-top: 8px; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+.db .t .layer { display: inline-block; margin-left: 6px; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--green); color: #fff; vertical-align: middle; }
+.db .d { margin-top: 8px; font-size: 14.5px; color: var(--ink-2); line-height: 1.45; word-break: keep-all; }
+.db .tag {
+  display: inline-block; margin-top: 10px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 600;
+  color: var(--green); background: var(--green-soft); padding: 2px 8px; border-radius: 6px;
+}
+.db.hl { border-color: var(--blue); border-width: 2px; background: var(--blue-bg); }
+.db.hl::before { border-color: var(--blue); border-width: 2px; background: var(--blue-soft); }
+.db.hl .ic { color: var(--blue); }
+.db.hl .t .layer { background: var(--blue); }
+.db.hl .tag { color: var(--blue); background: var(--blue-soft); }
+.db.bronze { border-color: #a16207; } .db.bronze::before { border-color: #a16207; background: #fef3c7; } .db.bronze .ic { color: #a16207; } .db.bronze .t .layer { background: #a16207; } .db.bronze .tag { color: #a16207; background: #fef3c7; }
+.db.silver { border-color: #64748b; } .db.silver::before { border-color: #64748b; background: #e2e8f0; } .db.silver .ic { color: #64748b; } .db.silver .t .layer { background: #64748b; } .db.silver .tag { color: #475569; background: #e2e8f0; }
+.db.gold   { border-color: #b45309; } .db.gold::before   { border-color: #b45309; background: #fde68a; } .db.gold .ic   { color: #b45309; } .db.gold .t .layer   { background: #b45309; } .db.gold .tag   { color: #b45309; background: #fef3c7; }
+
+/* ── 사용자/사람 노드 ── */
+.actor { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.actor .ic { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--amber-soft); color: var(--amber); border: 1.5px solid var(--amber); }
+.actor .ic svg { width: 28px; height: 28px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.actor .t { font-size: 16px; font-weight: 700; }
+.actor .d { font-size: 13.5px; color: var(--ink-3); }
+
+/* ── 번호 배지 ── */
+.num {
+  position: absolute; left: -12px; top: -12px; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--ink); color: #fff; font-size: 14px; font-weight: 800; display: grid; place-items: center;
+  font-family: ui-monospace, Menlo, monospace; box-shadow: 0 0 0 3px #fff;
+}
+.node.hl .num { background: var(--blue); }
+
+/* ── 주석 ── */
+.note { position: absolute; font-size: 14px; color: var(--ink-3); line-height: 1.45; }
+.note b { color: var(--ink-2); }
+
+/* ── 커넥터 레이어 ── */
+svg.edges { position: absolute; inset: 0; width: 1920px; height: 1080px; pointer-events: none; overflow: visible; }
+svg.edges path.e { fill: none; stroke: var(--edge); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+svg.edges path.e.dash { stroke-dasharray: 8 7; stroke: var(--edge-soft); }
+svg.edges path.e.thin { stroke-width: 2; }
+svg.edges path.e.blue { stroke: var(--blue); }
+svg.edges path.e.green { stroke: var(--green); }
+svg.edges path.e.orange { stroke: var(--orange); }
+svg.edges path.e.violet { stroke: var(--violet); }
+svg.edges .lbl rect { fill: #fff; stroke: #e2e8f0; stroke-width: 1; rx: 6; }
+svg.edges .lbl text { font-size: 14px; font-weight: 600; fill: var(--ink-2); dominant-baseline: middle; text-anchor: middle; }
+svg.edges .lbl.mono text { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+
+@media print {
+  @page { size: 508mm 285.75mm; margin: 0; }
+  body { overflow: visible; }
+  .wrap { width: 1920px; height: 1080px; display: block; }
+  .stage { transform: none !important; }
+}
+
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></symbol>
+  <symbol id="i-laptop" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M17 21a8 8 0 0 0-16 0"/><path d="M16 4a4 4 0 0 1 0 8"/><path d="M21 21a8 8 0 0 0-5-7.4"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></symbol>
+  <symbol id="i-sheet" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="10" y1="3" x2="10" y2="21"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a6 6 0 0 1-12 0V8Z"/></symbol>
+  <symbol id="i-git" viewBox="0 0 24 24"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
+  <symbol id="i-bot" viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="11" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v3"/><circle cx="8.5" cy="15.5" r="1"/><circle cx="15.5" cy="15.5" r="1"/><path d="M9 19h6"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.9 5.6 5.6 1.9-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9L12 3z"/><path d="M19 2l.6 1.6 1.6.6-1.6.6L19 6.4l-.6-1.6-1.6-.6 1.6-.6L19 2z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/><polyline points="2 17 12 22 22 17"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></symbol>
+  <symbol id="i-sigma" viewBox="0 0 24 24"><path d="M18 7V4H6l6 8-6 8h12v-3"/></symbol>
+  <symbol id="i-fx" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17c2 0 2-2 2-4V9c0-2 1-3 3-3"/><line x1="8" y1="12" x2="14" y2="12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></symbol>
+  <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><line x1="12" y1="11" x2="16" y2="11"/><line x1="12" y1="16" x2="16" y2="16"/><line x1="8" y1="11" x2="8.01" y2="11"/><line x1="8" y1="16" x2="8.01" y2="16"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+  <symbol id="i-flow" viewBox="0 0 24 24"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><path d="M9 6h4a2 2 0 0 1 2 2v7"/><path d="M12 12l3 3 3-3"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M3 12l2-5 2 5a2 2 0 0 1-4 0z"/><path d="M17 12l2-5 2 5a2 2 0 0 1-4 0z"/><path d="M8 21h8"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M12 14l3.5-3.5"/><path d="M20.3 17.3a9 9 0 1 0-16.6 0"/><path d="M12 5v1"/><path d="M19 12h1"/><path d="M4 12h1"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></symbol>
+  <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="5" cy="6" r="3"/><circle cx="19" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><path d="M5 9v2a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V9"/><path d="M12 14v1"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.2a2 2 0 0 0-.6-1.4L12 12l-4.4 4.4a2 2 0 0 0-.6 1.4V22"/><path d="M7 2v4.2a2 2 0 0 0 .6 1.4L12 12l4.4-4.4a2 2 0 0 0 .6-1.4V2"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+</svg>
+
+<div class="wrap">
+<div class="stage">
+<div class="title">
+  <span class="kicker">SCMPRO ARCHITECTURE · §5.3</span>
+  <h1>주문 · 배정 상태 흐름</h1>
+  <p>여러 사람이 같은 품목을 동시에 건드린다. 그래서 상태를 바꾸는 일은 전부 RPC 안에서만 일어난다.</p>
+</div>
+
+<div class="note" style="left:60px; top:185px; width:1800px">
+  <b>전부 RPC 안 트랜잭션 · 품목 단위 advisory lock</b> — 화면은 상태를 직접 쓰지 않는다. 아래 함수 이름이 곧 트랜잭션 경계다.
+</div>
+
+<!-- ── 주문 생성 ───────────────────────────────────────────────── -->
+<div class="node hl" id="CRE" style="left:60px; top:400px; width:290px; height:180px">
+  <div class="ic"><svg><use href="#i-pen"/></svg></div>
+  <div class="body"><div class="t">주문 생성</div><div class="d">재고 상황에 따라 셋 중 하나로 떨어진다</div><span class="tag">fn_create_sales_order</span></div>
+</div>
+
+<!-- ── 초기 상태 ───────────────────────────────────────────────── -->
+<div class="node a-blue" id="TEMP" style="left:430px; top:250px; width:280px; height:150px">
+  <div class="ic"><svg><use href="#i-hourglass"/></svg></div>
+  <div class="body"><div class="t">temp</div><div class="d">가배정 30일<br>재고가 충분할 때</div></div>
+</div>
+<div class="node a-blue" id="PART" style="left:430px; top:430px; width:280px; height:150px">
+  <div class="ic"><svg><use href="#i-scale"/></svg></div>
+  <div class="body"><div class="t">partial</div><div class="d">일부 수량만 잡힌 상태</div></div>
+</div>
+<div class="node a-blue" id="WAIT" style="left:430px; top:610px; width:280px; height:150px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body"><div class="t">waiting</div><div class="d">재고가 없어 입고를 기다린다</div></div>
+</div>
+
+<!-- ── 다음 동작 ───────────────────────────────────────────────── -->
+<div class="node a-green" id="CONF" style="left:780px; top:250px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="body"><div class="t">확정</div><div class="d">temp → firm</div><span class="tag">fn_confirm_sales_order</span></div>
+</div>
+<div class="node a-orange" id="CANC" style="left:780px; top:430px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body"><div class="t">취소</div><div class="d">배정 해제 · 주문 취소 · 알림</div><span class="tag">fn_cancel_sales_order</span></div>
+</div>
+<div class="node a-green" id="RECV" style="left:780px; top:610px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-inbox"/></svg></div>
+  <div class="body"><div class="t">입고</div><div class="d">재고 반영 후 품목 설정대로 갈린다</div><span class="tag">fn_receive_inbound</span></div>
+</div>
+
+<!-- ── 배정 실행 ───────────────────────────────────────────────── -->
+<div class="node hl" id="AUTO" style="left:1180px; top:500px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-cpu"/></svg></div>
+  <div class="body"><div class="t">자동 배정</div><div class="d">우선순위 → 요청순</div><span class="tag">fn_auto_allocate</span></div>
+</div>
+<div class="node hl" id="MAN" style="left:1180px; top:680px; width:320px; height:150px">
+  <div class="ic"><svg><use href="#i-user"/></svg></div>
+  <div class="body"><div class="t">수동 배정</div><div class="d">담당자에게 알림 후 처리</div><span class="tag">fn_manual_allocate</span></div>
+</div>
+
+<!-- ── 최종 상태 ───────────────────────────────────────────────── -->
+<div class="node a-green" id="FIRM" style="left:1580px; top:490px; width:280px; height:160px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="body"><div class="t">firm</div><div class="d">확정 배정<br>더 이상 만료되지 않는다</div></div>
+</div>
+<div class="node a-amber" id="HOLD" style="left:1580px; top:690px; width:280px; height:160px">
+  <div class="ic"><svg><use href="#i-shield"/></svg></div>
+  <div class="body"><div class="t">hold</div><div class="d">큐 선두를 건너뛴 배정<br>승인을 받아야 풀린다</div><span class="tag">approval · priority_alloc</span></div>
+</div>
+
+<!-- ── 주기 스윕 ───────────────────────────────────────────────── -->
+<div class="node dim" id="TICK" style="left:60px; top:890px; width:1800px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body">
+    <div class="t">10분마다 전체를 훑는다 <span class="d mono" style="display:inline;font-size:13px">fn_allocation_tick</span></div>
+    <div class="d">만료된 가배정 해제 &nbsp;·&nbsp; 만료 예고 알림 10 · 5 · 3 · 2 · 1일 전 &nbsp;·&nbsp; 승인 대기 건 반복 알림</div>
+  </div>
+</div>
+
+<div class="legend" style="left:60px; top:820px">
+  <div class="li"><span class="box hl"></span>배정을 실행하는 RPC</div>
+  <div class="li"><span class="box" style="border-color:var(--amber);background:var(--amber-bg)"></span>사람 승인이 필요한 상태</div>
+</div>
+<div class="foot">docs/07-architecture.md §5.3 · 2026-09-14</div>
+
+<script>
+window.EDGES = [
+  { from:'CRE', to:'TEMP', ts:'left', ta:0.5 },
+  { from:'CRE', to:'PART', ts:'left', ta:0.5 },
+  { from:'CRE', to:'WAIT', ts:'left', ta:0.5 },
+
+  { from:'TEMP', to:'CONF', fs:'right', ts:'left', ta:0.5 },
+  { from:'PART', to:'CANC', fs:'right', ts:'left', ta:0.5 },
+  { from:'WAIT', to:'RECV', fs:'right', ts:'left', ta:0.5 },
+
+  { from:'RECV', to:'AUTO', fs:'right', fa:0.5, ts:'left', ta:0.5, label:'auto' },
+  { from:'RECV', to:'MAN',  fs:'right', fa:0.5, ts:'left', ta:0.5, label:'manual' },
+
+  { from:'CONF', to:'FIRM', fs:'right', ts:'left', ta:0.25, mid:1540 },
+  { from:'AUTO', to:'FIRM', fs:'right', ts:'left', ta:0.6 },
+  { from:'MAN',  to:'FIRM', fs:'right', ts:'left', ta:0.85, label:'큐 선두' },
+  { from:'MAN',  to:'HOLD', fs:'right', fa:0.75, ts:'left', ta:0.5, label:'건너뜀', loff:[-28,0] },
+  { from:'HOLD', to:'FIRM', fs:'top', fa:0.5, ts:'bottom', ta:0.5, cls:'green', label:'승인 시' },
+];
+</script>
+</div>
+</div>
+<script>
+/* ── 직교 커넥터 엔진 (skill: diagram) ─────────────────────────────
+   edges 배열 형식:
+   { from:'id', to:'id', fs:'right', ts:'left', fa:0.5, ta:0.5,
+     label:'텍스트', dash:true, both:false, mid:숫자(중간 세그먼트 좌표), cls:'blue',
+     lat:0.5 (라벨 위치 비율), loff:[dx,dy] (라벨 오프셋), mono:true }
+   fs/ts: 'left' | 'right' | 'top' | 'bottom'   fa/ta: 그 변 위의 위치(0~1)
+────────────────────────────────────────────────────────────────────── */
+(function () {
+  const NS = 'http://www.w3.org/2000/svg';
+
+  function rectOf(id) {
+    const el = document.getElementById(id);
+    if (!el) throw new Error('노드 없음: ' + id);
+    let x = 0, y = 0, e = el;
+    while (e && !e.classList.contains('stage')) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; }
+    return { x, y, w: el.offsetWidth, h: el.offsetHeight };
+  }
+
+  function port(r, side, at) {
+    at = at == null ? 0.5 : at;
+    switch (side) {
+      case 'left':   return { x: r.x,          y: r.y + r.h * at, dx: -1, dy: 0 };
+      case 'right':  return { x: r.x + r.w,    y: r.y + r.h * at, dx: 1,  dy: 0 };
+      case 'top':    return { x: r.x + r.w * at, y: r.y,          dx: 0,  dy: -1 };
+      case 'bottom': return { x: r.x + r.w * at, y: r.y + r.h,    dx: 0,  dy: 1 };
+    }
+  }
+
+  // 직교 경로 계산
+  function route(p0, p1, e) {
+    const hs0 = p0.dx !== 0, hs1 = p1.dx !== 0;
+    const pts = [p0];
+    if (e.via) { e.via.forEach(v => pts.push({ x: v[0], y: v[1] })); pts.push(p1); return dedupe(pts); }
+    if (hs0 && hs1) {
+      if (p0.dx === -p1.dx) { // 마주보는 좌우변
+        if (Math.abs(p0.y - p1.y) < 1) { pts.push(p1); return pts; }
+        const mx = e.mid != null ? e.mid : (p0.x + p1.x) / 2;
+        pts.push({ x: mx, y: p0.y }, { x: mx, y: p1.y }, p1);
+      } else { // 같은 방향(U자)
+        const mx = e.mid != null ? e.mid : (p0.dx > 0 ? Math.max(p0.x, p1.x) + 40 : Math.min(p0.x, p1.x) - 40);
+        pts.push({ x: mx, y: p0.y }, { x: mx, y: p1.y }, p1);
+      }
+    } else if (!hs0 && !hs1) {
+      if (p0.dy === -p1.dy) {
+        if (Math.abs(p0.x - p1.x) < 1) { pts.push(p1); return pts; }
+        const my = e.mid != null ? e.mid : (p0.y + p1.y) / 2;
+        pts.push({ x: p0.x, y: my }, { x: p1.x, y: my }, p1);
+      } else {
+        const my = e.mid != null ? e.mid : (p0.dy > 0 ? Math.max(p0.y, p1.y) + 40 : Math.min(p0.y, p1.y) - 40);
+        pts.push({ x: p0.x, y: my }, { x: p1.x, y: my }, p1);
+      }
+    } else if (hs0 && !hs1) { // 좌우 → 상하 : L자
+      pts.push({ x: p1.x, y: p0.y }, p1);
+    } else {                   // 상하 → 좌우 : L자
+      pts.push({ x: p0.x, y: p1.y }, p1);
+    }
+    return dedupe(pts);
+  }
+
+  function dedupe(pts) {
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length; i++) {
+      const a = out[out.length - 1], b = pts[i];
+      if (Math.abs(a.x - b.x) > 0.5 || Math.abs(a.y - b.y) > 0.5) out.push(b);
+    }
+    return out;
+  }
+
+  // 모서리 둥근 폴리라인 → path d
+  function toPath(pts, r) {
+    r = r == null ? 10 : r;
+    if (pts.length === 2) return `M${pts[0].x},${pts[0].y} L${pts[1].x},${pts[1].y}`;
+    let d = `M${pts[0].x},${pts[0].y}`;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const p = pts[i - 1], c = pts[i], n = pts[i + 1];
+      const l1 = Math.hypot(c.x - p.x, c.y - p.y), l2 = Math.hypot(n.x - c.x, n.y - c.y);
+      const rr = Math.min(r, l1 / 2, l2 / 2);
+      const a = { x: c.x - (c.x - p.x) / l1 * rr, y: c.y - (c.y - p.y) / l1 * rr };
+      const b = { x: c.x + (n.x - c.x) / l2 * rr, y: c.y + (n.y - c.y) / l2 * rr };
+      d += ` L${a.x},${a.y} Q${c.x},${c.y} ${b.x},${b.y}`;
+    }
+    const last = pts[pts.length - 1];
+    d += ` L${last.x},${last.y}`;
+    return d;
+  }
+
+  // 경로 위 비율 t 지점 (직선 기준)
+  function pointAt(pts, t) {
+    const segs = []; let total = 0;
+    for (let i = 0; i < pts.length - 1; i++) { const l = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y); segs.push(l); total += l; }
+    let dist = total * t;
+    for (let i = 0; i < segs.length; i++) {
+      if (dist <= segs[i] || i === segs.length - 1) {
+        const k = segs[i] === 0 ? 0 : dist / segs[i];
+        return { x: pts[i].x + (pts[i + 1].x - pts[i].x) * k, y: pts[i].y + (pts[i + 1].y - pts[i].y) * k };
+      }
+      dist -= segs[i];
+    }
+    return pts[0];
+  }
+
+  // 라벨 기본 위치: 가장 긴 세그먼트의 중점
+  function labelPoint(pts, e) {
+    if (e.lat != null) return pointAt(pts, e.lat);
+    let best = 0, bi = 0;
+    for (let i = 0; i < pts.length - 1; i++) { const l = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y); if (l > best) { best = l; bi = i; } }
+    return { x: (pts[bi].x + pts[bi + 1].x) / 2, y: (pts[bi].y + pts[bi + 1].y) / 2 };
+  }
+
+  function el(name, attrs) { const n = document.createElementNS(NS, name); for (const k in attrs) n.setAttribute(k, attrs[k]); return n; }
+
+  function markers(svg) {
+    const defs = el('defs', {});
+    const colors = { '': '#475569', dash: '#94a3b8', blue: '#1d4ed8', green: '#047857', orange: '#c2410c', violet: '#6d28d9' };
+    for (const k in colors) {
+      for (const dir of ['end', 'start']) {
+        const m = el('marker', { id: `arr-${dir}${k ? '-' + k : ''}`, viewBox: '0 0 10 10', refX: dir === 'end' ? 9 : 1, refY: 5, markerWidth: 7, markerHeight: 7, orient: dir === 'end' ? 'auto' : 'auto-start-reverse' });
+        m.appendChild(el('path', { d: 'M1,1 L9,5 L1,9 Z', fill: colors[k], stroke: colors[k], 'stroke-width': 1, 'stroke-linejoin': 'round' }));
+        defs.appendChild(m);
+      }
+    }
+    svg.appendChild(defs);
+  }
+
+  window.drawEdges = function (edges) {
+    const stage = document.querySelector('.stage');
+    let svg = stage.querySelector('svg.edges');
+    if (svg) svg.remove();
+    svg = el('svg', { class: 'edges', viewBox: '0 0 1920 1080' });
+    markers(svg);
+    stage.appendChild(svg);
+    const labels = [];
+    edges.forEach(e => {
+      const r0 = rectOf(e.from), r1 = rectOf(e.to);
+      const p0 = port(r0, e.fs || 'right', e.fa), p1 = port(r1, e.ts || 'left', e.ta);
+      const pts = route(p0, p1, e);
+      const cls = ['e', e.dash ? 'dash' : '', e.cls || '', e.thin ? 'thin' : ''].filter(Boolean).join(' ');
+      const mk = e.dash ? 'dash' : (e.cls || '');
+      const path = el('path', { class: cls, d: toPath(pts, e.r) });
+      path.setAttribute('marker-end', `url(#arr-end${mk ? '-' + mk : ''})`);
+      if (e.both) path.setAttribute('marker-start', `url(#arr-start${mk ? '-' + mk : ''})`);
+      svg.appendChild(path);
+      if (e.label) labels.push({ e, pt: labelPoint(pts, e) });
+    });
+    labels.forEach(({ e, pt }) => {
+      const g = el('g', { class: 'lbl' + (e.mono ? ' mono' : '') });
+      const off = e.loff || [0, 0];
+      const lines = String(e.label).split('\n');
+      const t = el('text', { x: pt.x + off[0], y: pt.y + off[1] });
+      lines.forEach((ln, i) => {
+        const ts = el('tspan', { x: pt.x + off[0], dy: i === 0 ? (-(lines.length - 1) * 9) : 18 });
+        ts.textContent = ln; t.appendChild(ts);
+      });
+      const bg = el('rect', {});
+      g.appendChild(bg); g.appendChild(t); svg.appendChild(g);
+      const bb = t.getBBox();
+      bg.setAttribute('x', bb.x - 8); bg.setAttribute('y', bb.y - 4);
+      bg.setAttribute('width', bb.width + 16); bg.setAttribute('height', bb.height + 8);
+    });
+  };
+
+  function fit() {
+    const stage = document.querySelector('.stage'), wrap = document.querySelector('.wrap');
+    const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    stage.style.transform = `scale(${s})`;
+    wrap.style.width = (1920 * s) + 'px'; wrap.style.height = (1080 * s) + 'px';
+    wrap.style.margin = 'auto';
+    wrap.style.position = 'absolute'; wrap.style.inset = '0';
+  }
+  window.addEventListener('resize', fit);
+  window.addEventListener('load', () => {
+    fit();
+    if (window.EDGES) window.drawEdges(window.EDGES);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (window.EDGES) window.drawEdges(window.EDGES); });
+  });
+})();
+
+</script>
+</body>
+</html>

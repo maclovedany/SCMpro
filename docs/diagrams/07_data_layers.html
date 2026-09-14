@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Agent — SP6</title>
+<title>데이터 계층 — Supabase 스키마</title>
 <style>
 /* ── 16:9 다이어그램 공통 스타일 (skill: diagram) ─────────────────── */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
@@ -244,104 +244,92 @@ svg.edges .lbl.mono text { font-family: ui-monospace, Menlo, monospace; font-siz
 <div class="wrap">
 <div class="stage">
 <div class="title">
-  <span class="kicker">SCMPRO ARCHITECTURE · §5.4</span>
-  <h1>AI Agent</h1>
-  <p>모델은 DB 를 직접 보지 않는다. 도구가 사용자 세션으로 대신 조회하고, 모델은 그 결과만 받는다.</p>
+  <span class="kicker">SCMPRO ARCHITECTURE · §3</span>
+  <h1>데이터 계층</h1>
+  <p>원본은 손대지 않는다. 정제 규칙은 한 번만 적용하고, 화면과 엔진은 가장 바깥 층만 읽는다.</p>
 </div>
 
-<div class="actor" id="USR" style="left:70px; top:288px; width:180px">
-  <div class="ic"><svg><use href="#i-user"/></svg></div>
-  <div class="t">사용자</div>
-  <div class="d">아무 화면에서나</div>
+<!-- ── raw → core → analytics 파이프라인 ───────────────────────── -->
+<div class="zone z-green" id="ZPIPE" style="left:60px; top:230px; width:1120px; height:370px">
+  <div class="zl"><svg><use href="#i-layers"/></svg>읽기 전용 파이프라인</div>
 </div>
 
-<!-- ── 진입 ────────────────────────────────────────────────────── -->
-<div class="node a-blue" id="ENTRY" style="left:310px; top:258px; width:320px; height:190px">
+<div class="db bronze" id="RAW" style="left:90px; top:290px; width:290px; height:270px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="t">raw</div>
+  <div class="d">CSV 원본 그대로 적재<br>원본 10 테이블<br><br><b>수정 금지</b><br>앱 역할 USAGE 없음<br>(fail-closed)</div>
+  <span class="tag">브론즈</span>
+</div>
+
+<div class="db silver" id="CORE" style="left:475px; top:290px; width:290px; height:270px">
+  <div class="ic"><svg><use href="#i-layers"/></svg></div>
+  <div class="t">core</div>
+  <div class="d">정제 규칙 1회 적용<br>정제 뷰 8</div>
+  <span class="tag">v_shipment_by_hoc</span>
+  <span class="tag">v_option_model_link</span>
+  <span class="tag">v_item · v_model</span>
+</div>
+
+<div class="db gold" id="AN" style="left:860px; top:290px; width:290px; height:270px">
+  <div class="ic"><svg><use href="#i-sigma"/></svg></div>
+  <div class="t">analytics</div>
+  <div class="d">화면 · 엔진이 읽는 층<br>뷰 23 + 물리화 2</div>
+  <span class="tag">물리화 v_item_monthly</span>
+  <span class="tag">물리화 mv_item_stats</span>
+  <span class="tag">실시간 v_item_master</span>
+</div>
+
+<!-- ── app 업무 스키마 ─────────────────────────────────────────── -->
+<div class="zone z-blue" id="ZAPP" style="left:1230px; top:230px; width:630px; height:500px">
+  <div class="zl"><svg><use href="#i-box"/></svg>app — 업무 데이터 33 테이블</div>
+</div>
+<div class="node a-blue" id="A1" style="left:1255px; top:285px; width:290px; height:120px">
+  <div class="ic"><svg><use href="#i-sliders"/></svg></div>
+  <div class="body"><div class="t">설정 · 마스터</div><div class="d mono">system_settings · supplier<br>item_setting · inventory_snapshot<br>mc_plan_extra</div></div>
+</div>
+<div class="node a-blue" id="A2" style="left:1565px; top:285px; width:270px; height:120px">
+  <div class="ic"><svg><use href="#i-shield"/></svg></div>
+  <div class="body"><div class="t">공통 메커니즘</div><div class="d mono">profiles · approval<br>notification · audit_log</div></div>
+</div>
+<div class="node a-blue" id="A3" style="left:1255px; top:425px; width:290px; height:120px">
+  <div class="ic"><svg><use href="#i-trend"/></svg></div>
+  <div class="body"><div class="t">예측</div><div class="d mono">forecast_method/policy/run<br>result · accuracy · item_class<br>tuning_proposal · auto_run_log</div></div>
+</div>
+<div class="node a-blue" id="A4" style="left:1565px; top:425px; width:270px; height:120px">
+  <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
+  <div class="body"><div class="t">발주</div><div class="d mono">extra_demand · order_plan<br>order_plan_line · ol_submission</div></div>
+</div>
+<div class="node a-blue" id="A5" style="left:1255px; top:565px; width:290px; height:120px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body"><div class="t">배정</div><div class="d mono">sales_order<br>allocation</div></div>
+</div>
+<div class="node a-blue" id="A6" style="left:1565px; top:565px; width:270px; height:120px">
   <div class="ic"><svg><use href="#i-chat"/></svg></div>
-  <div class="body">
-    <div class="t">Topbar 버튼 → 우측 패널</div>
-    <div class="d">폭을 끌어 조절하는 리사이즈 패널</div>
-    <span class="tag">components/ai/AiPanel</span>
-  </div>
+  <div class="body"><div class="t">일정 · AI</div><div class="d mono">demand_submission<br>ai_conversation · ai_message<br>agent_event</div></div>
 </div>
 
-<div class="node hl" id="API" style="left:700px; top:258px; width:340px; height:190px">
-  <div class="ic"><svg><use href="#i-bot"/></svg></div>
-  <div class="body">
-    <div class="t">POST /api/ai/chat</div>
-    <div class="d mono">conversation_id<br>message<br>page_context</div>
-  </div>
+<!-- ── 공통 규칙 ───────────────────────────────────────────────── -->
+<div class="node dim" id="D7" style="left:60px; top:790px; width:1800px">
+  <div class="ic"><svg><use href="#i-pen"/></svg></div>
+  <div class="body"><div class="t">모든 app 마스터 테이블의 공통 칼럼 <span style="font-weight:600;color:var(--ink-3)">· D-007</span></div><div class="d mono">source(upload/manual/seed/parsed) · is_dummy · updated_by/at &nbsp;—&nbsp; 감사 트리거 trg_audit → audit_log</div></div>
+</div>
+<div class="node dim" id="D14" style="left:60px; top:640px; width:1120px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body"><div class="t">물리화 뷰는 언제 갱신하나 <span style="font-weight:600;color:var(--ink-3)">· D-014</span></div><div class="d">출고 업로드가 <span class="d mono" style="display:inline">fn_request_refresh</span> 플래그를 세우면 pg_cron <span class="d mono" style="display:inline">scm-refresh</span> 가 매분 확인해 실행한다 (8초 제한 회피, D-030). 설정 · 재고는 실시간 뷰로 조인해 즉시 반영.</div></div>
 </div>
 
-<div class="node a-blue" id="CTX" style="left:1110px; top:258px; width:320px; height:190px">
-  <div class="ic"><svg><use href="#i-book"/></svg></div>
-  <div class="body">
-    <div class="t">문맥 구성</div>
-    <div class="d">최근 20턴 + 이전 요약<br>현재 보고 있는 화면 정보</div>
-  </div>
+<div class="legend" style="left:60px; top:945px">
+  <div class="li"><span class="sw"></span>정제 단계</div>
+  <div class="li"><span class="sw dash"></span>실시간 조인 (물리화하지 않음)</div>
 </div>
-
-<!-- ── 모델 ⇄ 도구 루프 ───────────────────────────────────────── -->
-<div class="zone z-orange" id="ZLOOP" style="left:1030px; top:518px; width:830px; height:270px">
-  <div class="zl" style="left:auto; right:18px"><svg><use href="#i-swap"/></svg>최대 5라운드</div>
-</div>
-<div class="node ext" id="LLM" style="left:1060px; top:578px; width:340px; height:170px">
-  <div class="ic"><svg><use href="#i-cloud"/></svg></div>
-  <div class="body">
-    <div class="t">OpenAI — gpt-5-nano</div>
-    <div class="d">tools 스펙을 받고<br>어떤 도구를 부를지 고른다</div>
-  </div>
-</div>
-<div class="node hl" id="TOOLS" style="left:1490px; top:578px; width:340px; height:170px">
-  <div class="ic"><svg><use href="#i-wrench"/></svg></div>
-  <div class="body">
-    <div class="t">도구 9종 실행</div>
-    <div class="d"><b>사용자 세션</b> 클라이언트로 조회<br>사용자가 못 보는 건 AI 도 못 본다</div>
-    <span class="tag">lib/ai/tools.ts · R-AI-05</span>
-  </div>
-</div>
-
-<!-- ── 마무리 ──────────────────────────────────────────────────── -->
-<div class="node a-green" id="SAVE" style="left:620px; top:578px; width:320px; height:170px">
-  <div class="ic"><svg><use href="#i-box"/></svg></div>
-  <div class="body">
-    <div class="t">답변 · 도구 이력 저장</div>
-    <div class="d mono">ai_conversation<br>ai_message</div>
-  </div>
-</div>
-<div class="node a-green" id="POST" style="left:210px; top:578px; width:320px; height:170px">
-  <div class="ic"><svg><use href="#i-sparkles"/></svg></div>
-  <div class="body">
-    <div class="t">사후 처리</div>
-    <div class="d">주제 분류<br>메시지 30개를 넘으면 요약으로 접는다</div>
-  </div>
-</div>
-
-<div class="node a-gray" id="STATS" style="left:210px; top:838px; width:730px">
-  <div class="ic"><svg><use href="#i-chart"/></svg></div>
-  <div class="body">
-    <div class="t">관리자 — 사용 통계</div>
-    <div class="d mono">/admin/ai-stats · fn_ai_stats · v_ai_stats_daily · v_ai_message_log</div>
-  </div>
-</div>
-
-<div class="legend" style="left:1030px; top:853px">
-  <div class="li"><span class="box hl"></span>사용자 권한 그대로 실행</div>
-  <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>외부 모델</div>
-</div>
-<div class="foot">docs/07-architecture.md §5.4 · 2026-09-13</div>
+<div class="foot">docs/07-architecture.md §3 · 2026-09-14</div>
 
 <script>
 window.EDGES = [
-  { from:'USR', to:'ENTRY', ts:'left', ta:0.5 },
-  { from:'ENTRY', to:'API', fs:'right', ts:'left', ta:0.5 },
-  { from:'API', to:'CTX', fs:'right', ts:'left', ta:0.5 },
-  { from:'CTX', to:'LLM', fs:'bottom', fa:0.5, ts:'top', ta:0.35, label:'프롬프트 + tools' },
-  { from:'LLM', to:'TOOLS', fs:'right', ts:'left', ta:0.5, both:true, cls:'orange', label:'호출 ⇄ 결과', loff:[0,-108] },
-  { from:'LLM', to:'SAVE', fs:'left', ts:'right', ta:0.5, cls:'green', label:'최종 답변' },
-  { from:'SAVE', to:'POST', fs:'left', ts:'right', ta:0.5 },
-  { from:'POST', to:'STATS', fs:'bottom', fa:0.3, ts:'top', ta:0.2, dash:true, thin:true },
-  { from:'POST', to:'ENTRY', fs:'top', fa:0.5, ts:'bottom', ta:0.5, cls:'blue', label:'패널에 렌더' },
+  { from:'RAW',  to:'CORE', label:'정제 규칙 1회 적용', loff:[0,-163] },
+  { from:'CORE', to:'AN',   label:'집계 · 조인 · 물리화', loff:[0,-163] },
+  { from:'A1', to:'AN', fs:'left', ts:'right', ta:0.25, mid:1205, dash:true, label:'실시간 조인', loff:[-25,120] },
+  { from:'A3', to:'AN', fs:'left', ts:'right', ta:0.75, mid:1205, dash:true },
 ];
 </script>
 </div>

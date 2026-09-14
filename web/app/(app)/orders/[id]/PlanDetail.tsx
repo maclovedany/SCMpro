@@ -60,7 +60,7 @@ export function PlanDetail({ plan, lines, treeRows, months, filters, canEdit, to
         {canEdit && <Button size="sm" className="ml-auto" onClick={() => setConfirmOpen(true)} disabled={pending}>확정 → 팀장 승인 요청</Button>}
       </div>
       <section className="rounded-md border p-3">
-        <h2 className="mb-2 text-sm font-medium">재고전개 (R-UI-04) — 카테고리 합계(전체) → 품목(현재 페이지) → 예측/입고/추가/기초/기말/확정 발주. 확정 발주 셀 클릭으로 오버라이드</h2>
+        <h2 className="mb-2 text-sm font-medium">재고전개 (R-UI-04) — 카테고리 합계(전체) → 품목(현재 페이지). 행은 산식 순서: 기초 ＋ 입고예정 − 예측 판매 − 추가수요 ＋ 확정 발주 ＝ 기말 (차감 행은 음수). 품목 행 값 = 기말. 확정 발주 셀 클릭으로 오버라이드</h2>
         <TreeGrid months={months} rows={treeRows} pastUntil={dataLast ? `${dataLast}-` : ""} onCellEdit={canEdit ? onCellEdit : undefined} firstColLabel="카테고리 / 품목" expandLevel={0} />
       </section>
       <section data-testid="line-grid"><h2 className="mb-2 text-sm font-medium">라인 (근거 컬럼 포함, R-OQ-41)</h2>

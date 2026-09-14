@@ -1,0 +1,136 @@
+<title>데이터 흐름</title>
+
+<div class="title">
+  <span class="kicker">SYSTEM OVERVIEW · §4</span>
+  <h1>데이터 흐름</h1>
+  <p>예측은 <b>출고 실적만</b> 학습한다. 실제 발주량은 순환 편향 때문에 넣지 않고, OL 시계열 · 규칙 보정 · 사후 채점에만 쓴다.</p>
+</div>
+
+<!-- ── 원천 ────────────────────────────────────────────────────── -->
+<div class="zone" id="ZSRC" style="left:60px; top:230px; width:330px; height:410px">
+  <div class="zl"><svg><use href="#i-upload"/></svg>업로드 원천</div>
+</div>
+<div class="node a-gray" id="F1" style="left:85px; top:280px; width:280px; height:145px">
+  <div class="ic"><svg><use href="#i-sheet"/></svg></div>
+  <div class="body"><div class="t">출고 실적</div><div class="d">넓은 형식 · 기종 OL / 실적</div><span class="tag">→ raw · shipment_extra</span></div>
+</div>
+<div class="node a-gray" id="F2" style="left:85px; top:450px; width:280px; height:165px">
+  <div class="ic"><svg><use href="#i-sliders"/></svg></div>
+  <div class="body"><div class="t">마스터 · 운영 자료</div><div class="d">재고 · 입고예정 · 단가 · MOQ<br>공급처 · 장착률 · EOL · 공휴일</div><span class="tag">→ app 마스터</span></div>
+</div>
+
+<!-- ── 정제 ────────────────────────────────────────────────────── -->
+<div class="db bronze" id="RAW" style="left:440px; top:280px; width:180px; height:145px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="t">raw</div>
+  <div class="d">원본 보존</div>
+</div>
+<div class="node a-blue" id="APP1" style="left:440px; top:450px; width:180px; height:165px">
+  <div class="ic"><svg><use href="#i-box"/></svg></div>
+  <div class="body"><div class="t">app 마스터</div><div class="d">재고 · 입고<br>설정 · 공급처</div></div>
+</div>
+
+<!-- ── 학습 입력 ───────────────────────────────────────────────── -->
+<div class="node a-green" id="VM" style="left:690px; top:275px; width:270px; height:155px">
+  <div class="ic"><svg><use href="#i-sigma"/></svg></div>
+  <div class="body"><div class="t">v_item_monthly</div><div class="d">품목 × 월 · HOC 합산 · 0 채움</div><span class="tag">물리화 뷰</span></div>
+</div>
+<div class="node a-gray" id="CLS" style="left:690px; top:460px; width:270px; height:100px">
+  <div class="ic"><svg><use href="#i-grid"/></svg></div>
+  <div class="body"><div class="t">ABC-XYZ · 수요패턴</div><div class="d mono">item_class</div></div>
+</div>
+<div class="node a-blue" id="XD" style="left:690px; top:590px; width:270px; height:100px">
+  <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
+  <div class="body"><div class="t">추가수요 승인분</div><div class="d mono">extra_demand</div></div>
+</div>
+
+<!-- ── 예측 ────────────────────────────────────────────────────── -->
+<div class="node hl" id="BT" style="left:1020px; top:250px; width:270px; height:100px">
+  <div class="ic"><svg><use href="#i-target"/></svg></div>
+  <div class="body"><div class="t">백테스트 · 챔피언 선택</div></div>
+</div>
+<div class="node a-green" id="FC" style="left:1020px; top:400px; width:270px; height:105px">
+  <div class="ic"><svg><use href="#i-trend"/></svg></div>
+  <div class="body"><div class="t">forecast_result</div><div class="d">최신 예측 · 밴드</div></div>
+</div>
+
+<!-- ── 계산 · 결과 ─────────────────────────────────────────────── -->
+<div class="node hl" id="CALC" style="left:1340px; top:380px; width:280px; height:145px">
+  <div class="ic"><svg><use href="#i-fx"/></svg></div>
+  <div class="body"><div class="t">발주량 계산</div><div class="d">DoS · Flex · MOQ</div><span class="tag">web/lib/order/calc.ts</span></div>
+</div>
+<div class="node hl" id="PLAN" style="left:1340px; top:565px; width:280px; height:145px">
+  <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
+  <div class="body"><div class="t">order_plan / line</div><div class="d">재고전개 · 근거 · 오버라이드</div></div>
+</div>
+<div class="node a-green" id="OL" style="left:1340px; top:750px; width:280px; height:145px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="body"><div class="t">ol_submission</div><div class="d">승인된 제출 OL<br>다음 달 Flex 기준값</div></div>
+</div>
+
+<!-- ── 배정 ────────────────────────────────────────────────────── -->
+<div class="node a-blue" id="AV" style="left:440px; top:730px; width:270px; height:110px">
+  <div class="ic"><svg><use href="#i-scale"/></svg></div>
+  <div class="body"><div class="t">가용재고</div><div class="d">현재고 − 임시 − 확정 − 승인대기</div></div>
+</div>
+<div class="node a-blue" id="ALLOC" style="left:760px; top:730px; width:290px; height:110px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body"><div class="t">주문 · 배정 상태머신</div><div class="d mono">sales_order · allocation</div></div>
+</div>
+
+<!-- ── AI 되먹임 ───────────────────────────────────────────────── -->
+<div class="node ext" id="SIG" style="left:1680px; top:250px; width:180px; height:195px">
+  <div class="ic"><svg><use href="#i-bell"/></svg></div>
+  <div class="body"><div class="t">AI 감시</div><div class="d">신호 감지 → 판단</div><span class="tag">agent_event</span></div>
+</div>
+<div class="node ext" id="SC" style="left:1680px; top:490px; width:180px; height:195px">
+  <div class="ic"><svg><use href="#i-scale"/></svg></div>
+  <div class="body"><div class="t">사후 채점</div><div class="d">지난 계획 vs 실제<br>오버라이드 패턴</div></div>
+</div>
+<div class="node ext" id="TUNE" style="left:1680px; top:730px; width:180px; height:195px">
+  <div class="ic"><svg><use href="#i-sparkles"/></svg></div>
+  <div class="body"><div class="t">AI 오차 분석</div><div class="d">파라미터 · 목표 DoS 제안</div></div>
+</div>
+
+<div class="node dim" id="LOOP" style="left:60px; top:930px; width:1240px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body">
+    <div class="t">되먹임 — 이번 달 결과가 다음 달 입력이 된다</div>
+    <div class="d">제출 OL → 다음 달 Flex 기준값 · 품목 SCM OL 시계열 &nbsp;·&nbsp; 채점 · 오차 분석 → 예측 파라미터와 목표 DoS 제안</div>
+  </div>
+</div>
+
+<div class="legend" style="left:1340px; top:945px">
+  <div class="li"><span class="box hl"></span>사람이 확정</div>
+  <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>AI 가 붙는 지점</div>
+</div>
+<div class="foot">docs/11-system-overview.md §4 · 2026-09-14</div>
+
+<script>
+window.EDGES = [
+  { from:'F1', to:'RAW', fs:'right', ts:'left', ta:0.5 },
+  { from:'F2', to:'APP1', fs:'right', ts:'left', ta:0.5 },
+  { from:'RAW', to:'VM', fs:'right', ts:'left', ta:0.5 },
+  { from:'VM', to:'CLS', fs:'bottom', fa:0.5, ts:'top', ta:0.5 },
+  { from:'VM', to:'BT', fs:'right', fa:0.35, ts:'left', ta:0.5 },
+  { from:'BT', to:'FC', fs:'bottom', fa:0.5, ts:'top', ta:0.5, label:'챔피언' },
+
+  { from:'FC',   to:'CALC', fs:'right', ts:'left', ta:0.25 },
+  { from:'APP1', to:'CALC', fs:'right', fa:0.72, ts:'left', ta:0.55, mid:1310, dash:true, label:'재고 · 입고 · 설정', lat:0.64 },
+  { from:'XD',   to:'CALC', fs:'right', ts:'left', ta:0.85, mid:1310 },
+
+  { from:'CALC', to:'PLAN', fs:'bottom', fa:0.5, ts:'top', ta:0.5 },
+  { from:'PLAN', to:'OL',   fs:'bottom', fa:0.5, ts:'top', ta:0.5, cls:'green', label:'승인' },
+
+  { from:'APP1', to:'AV', fs:'bottom', fa:0.5, ts:'top', ta:0.5 },
+  { from:'AV', to:'ALLOC', fs:'right', ts:'left', ta:0.5 },
+
+  { from:'PLAN', to:'SIG', fs:'right', ts:'left', ta:0.8, mid:1650, dash:true, cls:'orange' },
+  { from:'PLAN', to:'SC',  fs:'right', ts:'left', ta:0.2, mid:1650, dash:true, cls:'orange' },
+  { from:'SC', to:'TUNE', fs:'bottom', fa:0.5, ts:'top', ta:0.5, cls:'orange' },
+
+  // 되먹임 — 구역·노드를 피해 아래 회랑으로 돌아 v_item_monthly 왼쪽으로 들어간다
+  { from:'OL', to:'VM', fs:'left', ts:'left', cls:'green', dash:true,
+    via:[[1315,822],[1315,885],[655,885],[655,352]], label:'다음 달 Flex 기준 · OL 시계열', lat:0.46 },
+];
+</script>

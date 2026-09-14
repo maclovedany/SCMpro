@@ -1,0 +1,115 @@
+<title>역할별 사용법</title>
+
+<div class="title">
+  <span class="kicker">SYSTEM OVERVIEW · §6</span>
+  <h1>역할별 사용법</h1>
+  <p>여섯 역할이 매달 무엇을 하고 어느 화면을 여는가. 권한은 역할로 DB 에서 강제되므로 보이는 메뉴가 곧 할 수 있는 일이다.</p>
+</div>
+
+<!-- ── 1행 ─────────────────────────────────────────────────────── -->
+<div class="node hl" id="R1" style="left:60px; top:210px; width:590px; height:265px">
+  <div class="ic"><svg><use href="#i-user"/></svg></div>
+  <div class="body">
+    <div class="t">SCM 품목담당자</div>
+    <div class="d"><b>매달</b> — 데이터 업로드 → 예측 확인 → 발주 계획 생성 · 검토 · 확정 → 입고 · 배정 처리 → AI 감시 알림 대응</div>
+    <div class="d" style="margin-top:12px"><b>주로 보는 화면</b></div>
+    <span class="tag">데이터 업로드</span>
+    <span class="tag">예측</span>
+    <span class="tag">발주 계획</span>
+    <span class="tag">재고 배정</span>
+    <span class="tag">AI 감시</span>
+    <span class="tag">품목</span>
+    <div class="d" style="margin-top:10px">시스템에서 가장 오래 머무는 역할. 발주량을 <b>확정</b> 하는 사람.</div>
+  </div>
+</div>
+
+<div class="node a-amber" id="R2" style="left:690px; top:210px; width:590px; height:265px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="body">
+    <div class="t">SCM팀장</div>
+    <div class="d"><b>매달</b> — 승인함 결재(발주 계획 · Bulkdeal · 우선 배정 · AI 예측 조정 · AI 감시 발주 제안), 대시보드 감독, 예측 정확도 · 사후 채점 확인</div>
+    <div class="d" style="margin-top:12px"><b>주로 보는 화면</b></div>
+    <span class="tag">승인함</span>
+    <span class="tag">대시보드</span>
+    <span class="tag">예측</span>
+    <span class="tag">발주 보고서</span>
+    <div class="d" style="margin-top:10px">승인이 나야 제출 OL 이 기록되고 다음 달 Flex 기준이 잡힌다.</div>
+  </div>
+</div>
+
+<div class="node a-blue" id="R3" style="left:1320px; top:210px; width:540px; height:265px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body">
+    <div class="t">영업</div>
+    <div class="d"><b>매달 · 수시</b> — 가용재고 조회 → 검토 요청 → 30일 안에 수주 확정, 수요자료 제출</div>
+    <div class="d" style="margin-top:12px"><b>주로 보는 화면</b></div>
+    <span class="tag">영업 주문</span>
+    <span class="tag">일정 · 제출</span>
+    <div class="d" style="margin-top:10px">가용재고 = 현재고 − 임시배정 − 확정배정 − 승인대기.<br>임시배정은 30일이 지나면 자동으로 풀린다.</div>
+  </div>
+</div>
+
+<!-- ── 2행 ─────────────────────────────────────────────────────── -->
+<div class="node a-blue" id="R4" style="left:60px; top:510px; width:590px; height:245px">
+  <div class="ic"><svg><use href="#i-users"/></svg></div>
+  <div class="body">
+    <div class="t">마케팅 · 서비스</div>
+    <div class="d"><b>매달</b> — 수요자료 제출, 추가수요(수급회의) 입력, 배정 결과 확인</div>
+    <div class="d" style="margin-top:12px"><b>주로 보는 화면</b></div>
+    <span class="tag">일정 · 제출</span>
+    <span class="tag">추가 수요</span>
+    <span class="tag">알림</span>
+    <div class="d" style="margin-top:10px">제출 마감은 전월 말일 하루 전. 미제출이면 10분마다 독촉이 간다.</div>
+  </div>
+</div>
+
+<div class="node a-blue" id="R5" style="left:690px; top:510px; width:590px; height:245px">
+  <div class="ic"><svg><use href="#i-target"/></svg></div>
+  <div class="body">
+    <div class="t">사업강화</div>
+    <div class="d"><b>매달 · 수시</b> — 주문 우선순위 지정, GC 별도 확인분 입력, 수요자료 제출</div>
+    <div class="d" style="margin-top:12px"><b>주로 보는 화면</b></div>
+    <span class="tag">배정 우선순위</span>
+    <span class="tag">추가 수요</span>
+    <div class="d" style="margin-top:10px">우선순위를 바꾸면 입고 시 자동 배정 순서가 그대로 따라간다.</div>
+  </div>
+</div>
+
+<div class="node a-violet" id="R6" style="left:1320px; top:510px; width:540px; height:245px">
+  <div class="ic"><svg><use href="#i-sliders"/></svg></div>
+  <div class="body">
+    <div class="t">관리자</div>
+    <div class="d"><b>상시</b> — 계정 · 역할, 시스템 설정(리드타임 · DoS · Flex · 알림 · 자동 런 · AI 감시 · 보존), 공급처 · 공휴일 · EOL, AI 통계</div>
+    <div class="d" style="margin-top:12px"><b>주로 보는 화면</b></div>
+    <span class="tag">관리 그룹 전체</span>
+    <div class="d" style="margin-top:10px">설정은 비개발자 UI 로 바꾼다. 코드 수정 없이 규칙 값이 바뀐다.</div>
+  </div>
+</div>
+
+<!-- ── 모든 역할 공통 ──────────────────────────────────────────── -->
+<div class="note" style="left:60px; top:790px; width:1800px"><b>역할과 무관하게 모두가 쓰는 것</b></div>
+<div class="node a-violet" id="C1" style="left:60px; top:835px; width:890px; height:130px">
+  <div class="ic"><svg><use href="#i-bot"/></svg></div>
+  <div class="body">
+    <div class="t">AI Agent 패널</div>
+    <div class="d">모든 화면 우측에서 드래그로 폭을 조절하는 채팅. 시스템 데이터를 도구로 직접 조회해 <b>근거와 함께</b> 답한다.<br>내 권한으로 조회하므로 내가 못 보는 데이터는 AI 도 답하지 않는다.</div>
+  </div>
+</div>
+<div class="node a-blue" id="C2" style="left:970px; top:835px; width:890px; height:130px">
+  <div class="ic"><svg><use href="#i-bell"/></svg></div>
+  <div class="body">
+    <div class="t">알림 · 대시보드</div>
+    <div class="d">시스템 알림은 화면과 이메일 양쪽으로. 대시보드는 역할별 KPI 5개와 재고 건전성 · 품절 리스크 ·<br>발주 사이클 · 예측 신뢰도 묶음을 보여주고 전부 드릴다운된다.</div>
+  </div>
+</div>
+
+<div class="note" style="left:60px; top:985px; width:1800px">
+  <b>역할은 가입 트리거가 만든다</b> — <span style="font-family:ui-monospace,Menlo,monospace">app.profiles.role</span> 7종 (item_manager · scm_lead · sales · marketing · service · biz_enable · admin).
+  역할별 단계별 시나리오와 FAQ 는 <span style="font-family:ui-monospace,Menlo,monospace">docs/08-user-guide.md</span>.
+</div>
+
+<div class="foot">docs/11-system-overview.md §6 · 2026-09-14</div>
+
+<script>
+window.EDGES = [];
+</script>
