@@ -19,3 +19,20 @@ def test_call_llm_uses_schema_and_parses():
     kw = fc.calls[0]
     assert kw["model"] == "gpt-5-nano" and kw["response_format"]["type"] == "json_schema"
     assert "SCM" in kw["messages"][0]["content"]
+
+
+def test_order_feedback_none_when_no_scored_plans():
+    """D-044: 채점할 실적이 없으면 order_feedback 은 None (프롬프트에 빈 섹션을 넣지 않음)"""
+    from scm_engine.forecast import ai_tuning
+    import pandas as pd
+    class DB:
+        def read_df(self, sql, params=()):
+            if "fn_recent_scorecards" in sql: return pd.DataFrame([{"s": {"plans": []}}])
+            return pd.DataFrame([{"p": {"items": []}}])
+    assert ai_tuning.order_feedback(DB()) is None
+    class DB2(DB):
+        def read_df(self, sql, params=()):
+            if "fn_recent_scorecards" in sql: return pd.DataFrame([{"s": {"plans": [{"plan_ym": "2026-09", "scored": 10}]}}])
+            return pd.DataFrame([{"p": {"items": [{"key_code": "X", "n": 3}]}}])
+    fb = ai_tuning.order_feedback(DB2()); assert fb["override_patterns"]["items"][0]["key_code"] == "X"
+    assert "dos_adjustments" in ai_tuning.SCHEMA["schema"]["required"]

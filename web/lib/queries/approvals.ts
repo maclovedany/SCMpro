@@ -6,7 +6,8 @@ const PLAN_KEYS: Record<string, string> = { lines: "라인", amount: "금액", q
 export function describeApproval(a: { kind: string; target_pk: string; payload: Record<string, unknown> | null }, current?: Record<string, unknown> | null): string {
   if (a.kind === "forecast_tuning") {
     const props = (a.payload?.proposals ?? []) as { method_key: string; param_patch?: Record<string, unknown>; enabled?: boolean | null }[];
-    return `AI 예측 조정: ` + props.map(p => `${p.method_key}${p.enabled != null ? `(${p.enabled ? "on" : "off"})` : ""} ${p.param_patch && Object.keys(p.param_patch).length ? JSON.stringify(p.param_patch) : ""}`.trim()).join(", ");
+    const dos = (a.payload?.dos_adjustments ?? []) as { scope: string; key: string; target_dos_days: number }[];
+    return `AI 예측 조정: ` + [...props.map(p => `${p.method_key}${p.enabled != null ? `(${p.enabled ? "on" : "off"})` : ""} ${p.param_patch && Object.keys(p.param_patch).length ? JSON.stringify(p.param_patch) : ""}`.trim()), ...dos.map(d => `목표 DoS ${d.scope === "cell" ? "셀 " : ""}${d.key} → ${d.target_dos_days}일`)].join(", ");
   }
   if (a.kind === "order_plan") return "발주 계획 승인: " + Object.entries(a.payload ?? {}).map(([k, v]) => `${PLAN_KEYS[k] ?? k} ${typeof v === "number" ? v.toLocaleString("ko-KR") : String(v)}`).join(", ");
   if (a.kind === "priority_alloc") { const p = a.payload ?? {}; return `우선 배정: ${p.order_no} · ${p.item_code} ${p.qty}개 (가용 ${p.available}) — 등록 순서 건너뜀`; }

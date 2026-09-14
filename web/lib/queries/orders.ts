@@ -99,3 +99,27 @@ export function planHistory(plans: PlanRow[]) {
   return { x: rows.map(r => r.plan_ym!), amount: rows.map(r => Number(r.amount)), status: rows.map(r => r.status ?? ""), stockout: rows.map(r => Number(((r.summary ?? {}) as Record<string, number>).stockout ?? 0)),
     insight: d == null ? (last ? `${last.plan_ym} 계획 ${won(Number(last.amount))} — 비교할 전월 계획 없음` : "계획 없음") : `${last.plan_ym} 는 ${prev.plan_ym} 대비 ${d >= 0 ? "+" : ""}${Math.round(d * 1000) / 10}% (${won(Number(last.amount))})` };
 }
+
+/** 지난 계획 사후 채점 (D-044): RPC fn_plan_scorecard — 필요월 실적이 있는 라인만. 없으면 scored=0 */
+export type PlanScorecard = {
+  scored: number; last_ym: string | null;
+  human: { stockout: number; excess: number; ok: number }; system: { stockout: number; excess: number; ok: number };
+  overrides: { n: number; improved: number; worsened: number; same: number };
+  by_category: { category: string; scored: number; h_stockout: number; h_excess: number; s_stockout: number; s_excess: number }[];
+  worst: { key_code: string; category: string | null; abc: string | null; need_ym: string; proposed: number; ordered: number; actual: number; realized_end: number; sys_end: number; outcome_h: string; outcome_s: string; override_reason: string | null }[];
+};
+export async function fetchPlanScorecard(sb: SB, planId: string): Promise<PlanScorecard> {
+  const { data, error } = await sb.schema("app").rpc("fn_plan_scorecard", { p_plan_id: planId });
+  if (error) throw error;
+  const d = (data ?? {}) as Partial<PlanScorecard>;
+  return { scored: Number(d.scored ?? 0), last_ym: d.last_ym ?? null, human: d.human ?? { stockout: 0, excess: 0, ok: 0 }, system: d.system ?? { stockout: 0, excess: 0, ok: 0 },
+    overrides: d.overrides ?? { n: 0, improved: 0, worsened: 0, same: 0 }, by_category: d.by_category ?? [], worst: d.worst ?? [] };
+}
+export const OUTCOME_LABEL: Record<string, string> = { stockout: "결품", excess: "과잉", ok: "적정" };
+/** 채점 해석 한 줄 (순수 함수) */
+export function scorecardInsight(s: PlanScorecard): string {
+  if (!s.scored) return "필요월 실적이 아직 없어 채점 전 — 실적이 쌓이면 자동으로 채점됩니다";
+  const hs = Math.round(100 * (s.human.stockout + s.human.excess) / s.scored), ss = Math.round(100 * (s.system.stockout + s.system.excess) / s.scored);
+  const ov = s.overrides.n ? ` · 오버라이드 ${s.overrides.n}건 중 개선 ${s.overrides.improved} / 악화 ${s.overrides.worsened}` : "";
+  return `${s.scored}라인 채점 (실적 ${s.last_ym} 까지): 실제 발주 결품·과잉 ${hs}% vs 시스템 제안대로면 ${ss}%${ov}`;
+}

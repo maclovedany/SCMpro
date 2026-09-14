@@ -145,7 +145,7 @@ Topbar 버튼 → 우측 리사이즈 패널 → POST /api/ai/chat {conversation
 - 마이그레이션: `supabase/scripts/migrate.sh` 가 파일명 순 psql 적용(재실행 안전, grants 가 항상 마지막). **엔진 런 중 실행 금지**(물리화 뷰 재생성).
 - 타입: `engine gen-types` → `web/lib/types/database.ts` (supabase CLI 는 Docker 필요해 자체 생성기).
 - Supabase PostgREST 는 요청당 `statement_timeout` 8s — 파라미터 집계 RPC 는 `plan_cache_mode=force_custom_plan`, 대량 저장은 청크 (D-027).
-- 운영 이관 시 결정할 것: Web 호스팅(Vercel 등), Engine 실행 서버(cron — 지금은 개발 Mac 의 launchd), SMTP, OpenAI 키 관리, Supabase 요금제.
+- 운영 이관 시 결정할 것: Web 호스팅(Vercel 등), Engine 실행 서버(cron — 지금은 개발 Mac 의 launchd), SMTP, OpenAI 키 관리, Supabase 요금제 → 상세는 `10-operations.md`, ERP/MES 연동은 `09-integration-plan.md`.
 
 ## 8. 디렉터리 지도
 

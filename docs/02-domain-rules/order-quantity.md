@@ -1,6 +1,6 @@
 # 규칙: 발주량 산출 (R-OQ)
 
-최종 갱신: 2026-09-13 · 출처: stage1.md §4 §5 §6 §7 §9, 데이터 설명.docx, 회의록, D-007, D-022 · 구현: web/lib/order/calc.ts (R-OQ-01/03/04/10~13/20/30/31), migrations/20260913002000_order.sql (R-OQ-20~25 extra_demand, R-OQ-40/41 order_plan·승인·ol_submission), 화면 /orders, /extra-demand
+최종 갱신: 2026-09-14 · D-044(사후 채점·규칙 보정) · 출처: stage1.md §4 §5 §6 §7 §9, 데이터 설명.docx, 회의록, D-007, D-022 · 구현: web/lib/order/calc.ts (R-OQ-01/03/04/10~13/20/30/31), migrations/20260913002000_order.sql (R-OQ-20~25 extra_demand, R-OQ-40/41 order_plan·승인·ol_submission), 화면 /orders, /extra-demand
 
 ## DoS
 
@@ -48,6 +48,8 @@
 |---|---|
 | R-OQ-40 | 시스템 제안 발주량 → SCM 품목담당자 확정 → SCM팀장 승인. 각 단계 담당자·시각 이력. |
 | R-OQ-41 | 산출 결과에는 근거(예측값, 재고, 입고예정, DoS, Flex 범위, MOQ 올림 전 값)를 함께 저장해 설명 가능해야 한다. |
+| R-OQ-42 | **사후 채점 (D-044)**: 승인된 계획의 라인은 필요월 실적이 들어오면 자동 채점 — 실현 기말 = 기초(필요월) + 실제 발주량 − 실제 출고; 결품(기말<0) / 과잉(기말 > 목표재고×2) / 적정. "시스템 제안대로였다면" 도 같은 식으로 계산해 사람 판단(오버라이드)이 개선/악화/동일 인지 셈한다. 계획 상세 "지난 계획 채점" 섹션, RPC `fn_plan_scorecard`. 실제 발주량은 **수요 모델 입력으로 쓰지 않는다**(자기 순환 편향, D-040). |
+| R-OQ-43 | **규칙 보정 (D-044)**: 최근 12개월 채점 요약(`fn_recent_scorecards`)과 오버라이드 패턴(`fn_override_patterns`: 같은 방향 3회 이상)을 AI 오차 분석 입력에 넣고, LLM 은 `dos_adjustments`(품목 또는 ABC-XYZ 셀의 목표 DoS, 5~180일) 를 제안한다. 적용은 예측 조정 승인(`forecast_tuning`)과 같은 결재를 거치며, 승인 시 `item_setting.target_dos_days` 를 갱신(감사 로그). 범위 밖 값은 무시. |
 
 ## 산출 순서 (요약)
 ```
