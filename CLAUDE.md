@@ -61,7 +61,7 @@ uv --directory engine run engine forecast pending                   # 웹에서 
 uv --directory engine run engine tick                               # pg_cron 대안: 배정 만료·알림·제출 알림·이메일 발송 + 월 1회 자동 런(auto_run_* 설정, D-041) + AI 감시(agent_mode 설정, D-042)
 uv --directory engine run engine agent --mode dryrun --no-llm   # AI 감시 1회 수동 실행 (규칙 판단만)
 uv --directory engine run engine notify                             # 이메일 큐 발송 (SMTP 미설정 시 skipped)
-# 이 Mac 에 launchd 잡 com.scmpro.tick 이 10분마다 `engine tick` 실행 (~/Library/LaunchAgents/com.scmpro.tick.plist, 로그 /tmp/scmpro/tick.log)
+# 이 Mac 에 launchd 잡 com.scmpro.tick 이 10분마다 `engine tick` 실행 (~/Library/LaunchAgents/com.scmpro.tick.plist, 로그 /tmp/scmpro/tick.log). 운영은 Railway Cron(engine/Dockerfile, railway.json, D-049) — 둘 다 켜 두면 중복
 # Web
 cd web && npm run dev            # http://localhost:3000  (계정: scripts/seed-users.mts — admin insightdany@naver.com, scm_lead upflash@naver.com, sales insightcha0624@gmail.com, biz_enable pro-worker@daum.net, marketing alltest@nate.com, service imagineworld@kakao.com · 초기 비밀번호 1q2w3e)
 npm test · npm run lint · npx tsc --noEmit

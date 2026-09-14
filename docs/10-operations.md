@@ -6,9 +6,17 @@
 | 구성 요소 | 지금 | 운영 권장 |
 |---|---|---|
 | Web (Next.js) | 개발 Mac `npm run dev` | **Vercel Pro** (Root Directory `web`, 리전 서울 `icn1` — `web/vercel.json`, 함수 제한 `maxDuration = 60` 은 발주 계획·업로드 페이지와 AI 채팅 라우트에 선언, D-048). 환경변수 4개: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`. Supabase Auth 의 Site/Redirect URL 에 Vercel 도메인 추가 |
-| Engine (Python) | 개발 Mac launchd `com.scmpro.tick` 10분 | 사내 Linux 서버 systemd timer 10분 (`engine tick`), 월 1회 자동 런은 tick 안에서(D-041) |
+| Engine (Python) | 개발 Mac launchd `com.scmpro.tick` 10분 | **Railway Cron 서비스** (Root Directory `engine`, `engine/Dockerfile` + `railway.json` 의 `*/10 * * * *`, 명령 `engine tick`, 메모리 2GB 이상, 리전 싱가포르/도쿄, D-049) — 또는 사내 Linux systemd timer. 월 1회 자동 런은 tick 안에서(D-041) |
 | DB (Supabase) | Pro 조직 · Micro · 디스크 8GB (2026-09-14 이전) | Small 이상 권장 — 백테스트(6 프로세스 쓰기)·물리화 뷰 refresh·e2e 를 동시에 돌리면 인스턴스가 재시작될 수 있음(2026-09-14 장애: 동시 부하 후 1시간 이상 복구 대기) |
 | SMTP / OpenAI | 네이버 SMTP, OpenAI 키 (engine/.env, web/.env.local) | 회사 메일 서버·OpenAI 조직 키, 비밀은 서버 환경변수/시크릿 매니저 |
+
+### 1-1. Railway 에 엔진 올리기 (D-049)
+1. Railway → New Project → **Deploy from GitHub repo** → `maclovedany/SCMpro` 선택.
+2. 서비스 Settings → **Root Directory** = `engine` (Dockerfile·railway.json 자동 인식). Build 는 첫 회 3~5분(prophet·lightgbm).
+3. **Variables** 에 `engine/.env` 의 값 그대로: `SUPABASE_DB_URL`, `OPENAI_API_KEY`, `SMTP_HOST/PORT/USER/PASS/FROM`. (`SQLITE_PATH` 불필요)
+4. Settings → **Cron Schedule** 이 `*/10 * * * *` 인지 확인(railway.json 이 넣음). Deploy 후 첫 실행 로그에 `tick={...} auto_run=... agent=... email=...` 가 찍히면 정상.
+5. 이 Mac 의 launchd 는 중복 실행이므로 끈다: `launchctl unload ~/Library/LaunchAgents/com.scmpro.tick.plist`.
+6. 자동 런이 도는 달(설정 켠 경우)은 tick 이 3~5분 걸리므로 서비스 메모리 2GB 이상. 실패 시 Railway 로그 + `app.forecast_run.error`.
 
 ## 2. 정기 작업 달력
 | 시점 | 작업 | 자동/수동 | 확인 |

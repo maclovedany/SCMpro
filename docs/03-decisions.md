@@ -312,3 +312,6 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 
 ## D-048 (2026-09-14) Vercel 배포 준비
 - 웹은 Vercel Pro 에 배포 가능: `maxDuration = 60` 을 발주 계획 페이지(계획 생성 서버 액션 ~20s)·업로드 페이지(대량 반영)·AI 채팅 라우트에 선언, `web/vercel.json` 으로 서울 리전 고정(메뉴 전환 1초 규칙). 엔진(tick·자동 런·AI 감시·이메일·런 처리)은 Vercel 에서 돌 수 없어 별도 서버(현재 개발 Mac launchd, 운영은 Linux systemd timer) 가 계속 필요하다 — 10-operations §1.
+
+## D-049 (2026-09-14) 엔진 실행 서버 = Railway Cron
+- `engine/Dockerfile`(python 3.12-slim + uv, libgomp1) + `engine/railway.json`(cron `*/10 * * * *`, 재시작 없음). tick 1회 = 컨테이너 1회 실행. 환경변수는 engine/.env 항목 그대로 Railway Variables. 절차는 10-operations §1-1. Mac launchd 와 동시 실행 금지(중복 알림).
