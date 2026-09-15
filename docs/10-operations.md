@@ -37,6 +37,7 @@
 1. 규칙 변경 → `docs/02-domain-rules` 갱신 → 참조 코드 grep → 테스트(pytest·vitest·e2e) → `03-decisions.md` D-번호 → 배포.
 2. 마이그레이션은 파일 추가만(기존 파일 수정은 재실행 안전할 때만), `migrate.sh` 로 적용, `engine gen-types` 로 타입 재생성.
 3. 설정 변경(리드타임·DoS·Flex·자동 런·AI 감시)은 관리자 화면에서 — 코드 배포 없음. 모든 변경은 `app.audit_log`.
+4. **의존성**: `web/package.json` 의 `xlsx` 는 npm 이 아니라 SheetJS 공식 CDN tarball(`https://cdn.sheetjs.com/xlsx-0.20.3/...`) 이다 — npm 배포판 0.18.5 는 CVE-2023-30533 이 남아 있어 쓰지 않는다 (D-055). 설치·빌드 시 해당 CDN 접속이 필요하므로 **사내 폐쇄망 이관 시에는 사내 npm 레지스트리(Verdaccio/Nexus)를 프록시 모드로 세우고 tarball 을 1회 publish** 한다 (Q-021). 버전 올릴 때도 CDN 주소를 바꿔 재설치하고 `npm audit` 0건을 확인한다.
 
 ## 5. 백업·복구
 - Supabase 자동 백업(요금제에 따라 일 1회) + 월 1회 `pg_dump` 를 사내 보관. `raw` 는 원본 파일이 있으므로 `load-raw.sh` 로 재적재 가능.

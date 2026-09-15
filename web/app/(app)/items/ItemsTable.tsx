@@ -26,5 +26,5 @@ export function ItemsTable({ rows }: { rows: ItemMasterRow[] }) {
     { id: "abcxyz", header: "ABC-XYZ", accessorFn: r => `${r.abc ?? "-"}${r.xyz ?? "-"}` },
     { accessorKey: "champion_method", header: "챔피언 기법" },
   ], []);
-  return <DataGrid columns={columns} rows={rows} rowKey={r => r.key_code!} onRowClick={r => router.push(`/items/${encodeURIComponent(r.key_code!)}`)} csvName="items" />;
+  return <DataGrid columns={columns} rows={rows} rowKey={r => r.key_code!} onRowClick={r => router.push(`/items/${encodeURIComponent(r.key_code!)}`)} exportName="items" />;
 }

@@ -56,6 +56,7 @@ export const UPLOAD_TARGETS: Record<TargetKey, TargetDef> = {
     { key: "act", label: "실적", required: false, type: "number" } ] },
 };
 export const TARGET_KEYS = Object.keys(UPLOAD_TARGETS) as TargetKey[];
-export function templateCsv(target: TargetKey): string {
-  return "﻿" + UPLOAD_TARGETS[target].columns.map(c => c.label).join(",") + "\n";
+/** 빈 템플릿의 헤더 행 (CSV·xlsx 공통, D-055) */
+export function templateHeaders(target: TargetKey): string[] {
+  return UPLOAD_TARGETS[target].columns.map(c => c.label);
 }

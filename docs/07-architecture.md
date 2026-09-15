@@ -103,7 +103,7 @@ app        업무 데이터 33 테이블: 설정/마스터(system_settings, supp
 ⑥ 소요량 산출   engine forecast run → /orders 계획 생성: fn_order_inputs → calc.ts(R-OQ) → fn_save/append/finalize
    담당자 검토   /orders/[id] 재고전개 그리드·오버라이드(사유) → 확정 → approval(order_plan)
    팀장 승인     /approvals → fn_decide_approval → ol_submission(제출 OL, 다음 Flex 기준)
-⑦⑧ 보고         /orders/[id]/report (CSV·인쇄)
+⑦⑧ 보고         /orders/[id]/report (CSV·Excel·인쇄)
 ⑩ 입고 확인     /allocation 입고 완료 → v_inbound_gap(계획 vs 실제)
 ```
 

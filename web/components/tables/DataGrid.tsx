@@ -2,10 +2,12 @@
 import { useMemo, useRef, useState } from "react";
 import { flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef, type SortingState } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ArrowDown, ArrowUp, Download, Columns3 } from "lucide-react";
+import { ArrowDown, ArrowUp, Columns3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ExportMenu } from "@/components/export/ExportMenu";
+import { exportRows, normalizeCell, type ExportFormat } from "@/lib/export/sheet";
 import { cn } from "@/lib/utils";
 
 declare module "@tanstack/react-table" {
@@ -14,9 +16,9 @@ declare module "@tanstack/react-table" {
 }
 const alignCls = (a?: string) => a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left";
 
-type Props<T> = { columns: ColumnDef<T, unknown>[]; rows: T[]; rowKey: (r: T) => string; onRowClick?: (r: T) => void; csvName?: string; toolbar?: React.ReactNode; height?: number; emptyText?: string };
-/** 정렬·검색·컬럼 숨김·CSV·가상 스크롤 (R-UI-05) */
-export function DataGrid<T>({ columns, rows, rowKey, onRowClick, csvName = "export", toolbar, height = 560, emptyText = "데이터가 없습니다" }: Props<T>) {
+type Props<T> = { columns: ColumnDef<T, unknown>[]; rows: T[]; rowKey: (r: T) => string; onRowClick?: (r: T) => void; exportName?: string; toolbar?: React.ReactNode; height?: number; emptyText?: string };
+/** 정렬·검색·컬럼 숨김·내보내기(CSV·Excel)·가상 스크롤 (R-UI-05) */
+export function DataGrid<T>({ columns, rows, rowKey, onRowClick, exportName = "export", toolbar, height = 560, emptyText = "데이터가 없습니다" }: Props<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const table = useReactTable({ data: rows, columns, state: { sorting, globalFilter }, onSortingChange: setSorting, onGlobalFilterChange: setGlobalFilter,
@@ -27,13 +29,13 @@ export function DataGrid<T>({ columns, rows, rowKey, onRowClick, csvName = "expo
   const items = virt.getVirtualItems();
   const padTop = items.length ? items[0].start : 0;
   const padBottom = items.length ? virt.getTotalSize() - items[items.length - 1].end : 0;
-  const csv = useMemo(() => () => {
+  // 정렬·검색·컬럼 숨김이 적용된 현재 화면 그대로 내보낸다 (R-UI-05)
+  const exportAs = useMemo(() => (format: ExportFormat) => {
     const cols = table.getVisibleLeafColumns();
-    const head = cols.map(c => JSON.stringify(String(c.columnDef.header ?? c.id))).join(",");
-    const body = tRows.map(r => cols.map(c => JSON.stringify(String(r.getValue(c.id) ?? ""))).join(",")).join("\n");
-    const blob = new Blob(["﻿" + head + "\n" + body], { type: "text/csv;charset=utf-8" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${csvName}.csv`; a.click(); URL.revokeObjectURL(a.href);
-  }, [table, tRows, csvName]);
+    const headers = cols.map(c => String(c.columnDef.header ?? c.id));
+    const rows = tRows.map(r => cols.map(c => normalizeCell(r.getValue(c.id))));
+    exportRows(exportName, headers, rows, format);
+  }, [table, tRows, exportName]);
   return (
     <div className="rounded-md border">
       <div className="flex items-center gap-2 border-b p-2">
@@ -48,7 +50,7 @@ export function DataGrid<T>({ columns, rows, rowKey, onRowClick, csvName = "expo
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm" onClick={csv}><Download className="mr-1 h-4 w-4" />CSV</Button>
+          <ExportMenu onExport={exportAs} disabled={tRows.length === 0} />
         </div>
       </div>
       <div ref={parentRef} className="overflow-auto" style={{ maxHeight: height }}>

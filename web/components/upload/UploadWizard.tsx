@@ -4,18 +4,17 @@ import { toast } from "sonner";
 import { applyUpload, type ApplyResult } from "@/app/(app)/upload/actions";
 import { parseFile } from "@/lib/upload/parse";
 import { autoMap, normalizeRows, type RowError } from "@/lib/upload/validate";
-import { UPLOAD_TARGETS, TARGET_KEYS, templateCsv, type TargetKey } from "@/lib/upload/templates";
+import { UPLOAD_TARGETS, TARGET_KEYS, templateHeaders, type TargetKey } from "@/lib/upload/templates";
 import { ColumnMapper } from "./ColumnMapper";
 import { detectWide, wideToLong, type WideInfo } from "@/lib/upload/wide";
 import { Button } from "@/components/ui/button";
+import { ExportMenu } from "@/components/export/ExportMenu";
+import { exportRows, type ExportFormat } from "@/lib/export/sheet";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { fmtInt } from "@/lib/format";
 import { cn } from "@/lib/utils";
 type Step = 1 | 2 | 3 | 4;
-function downloadCsv(name: string, content: string) {
-  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([content], { type: "text/csv;charset=utf-8" })); a.download = name; a.click(); URL.revokeObjectURL(a.href);
-}
 export function UploadWizard({ initialTarget }: { initialTarget?: string }) {
   const [target, setTarget] = useState<TargetKey>((initialTarget && initialTarget in UPLOAD_TARGETS ? initialTarget : "inventory_snapshot") as TargetKey);
   const [step, setStep] = useState<Step>(1);
@@ -44,7 +43,9 @@ export function UploadWizard({ initialTarget }: { initialTarget?: string }) {
     setResult(r); setStep(4);
     if (r.ok) toast.success(`반영 완료: 성공 ${r.ok_count} / 오류 ${r.error_count}`); else toast.error(r.error);
   });
-  const errorCsv = (errs: RowError[]) => downloadCsv(`errors-${target}.csv`, "﻿행,오류\n" + errs.map(e => `${e.row},"${e.message.replace(/"/g, '""')}"`).join("\n"));
+  const exportErrors = (errs: RowError[], format: ExportFormat) =>
+    exportRows(`errors-${target}`, ["행", "오류"], errs.map(e => [e.row, e.message]), format, "오류");
+  const exportTemplate = (format: ExportFormat) => exportRows(`template-${target}`, templateHeaders(target), [], format, def.label);
   const reset = () => { setStep(1); setFile(null); setParsed(null); setMapping({}); setResult(null); setWide(null); };
   return (
     <div className="space-y-4">
@@ -54,7 +55,7 @@ export function UploadWizard({ initialTarget }: { initialTarget?: string }) {
           <div className="flex flex-wrap items-end gap-3">
             <label className="text-sm">대상<br /><select name="target" className="mt-1 h-9 rounded-md border bg-background px-2" value={target} onChange={e => setTarget(e.target.value as TargetKey)}>
               {TARGET_KEYS.map(k => <option key={k} value={k}>{UPLOAD_TARGETS[k].label}</option>)}</select></label>
-            <Button variant="outline" size="sm" onClick={() => downloadCsv(`template-${target}.csv`, templateCsv(target))}>템플릿 다운로드</Button>
+            <ExportMenu onExport={exportTemplate} label="템플릿 다운로드" />
           </div>
           <p className="text-sm text-muted-foreground">{def.description} · 필수: {def.columns.filter(c => c.required).map(c => c.label).join(", ")} · 모드: {def.mode === "replace" ? "같은 기준일 교체" : "upsert"}</p>
           <label className="block cursor-pointer rounded-md border-2 border-dashed p-8 text-center text-sm hover:bg-muted/30"
@@ -91,7 +92,7 @@ export function UploadWizard({ initialTarget }: { initialTarget?: string }) {
           </div>
           {errorFilter === "errors" && validated.errors.length > 0 && (
             <div><ul className="max-h-60 overflow-auto rounded-md border p-2 text-xs">{validated.errors.map(e => <li key={e.row}>행 {e.row}: {e.message}</li>)}</ul>
-              <Button variant="link" size="sm" onClick={() => errorCsv(validated.errors)}>오류 CSV 다운로드</Button></div>)}
+              <ExportMenu variant="link" label="오류 내보내기" onExport={f => exportErrors(validated.errors, f)} /></div>)}
           <div className="flex gap-2"><Button variant="outline" onClick={() => setStep(2)}>매핑 수정</Button><Button onClick={apply} disabled={pending || validated.rows.length === 0}>{pending ? "반영 중…" : "반영"}</Button></div>
         </Card>
       )}
@@ -100,7 +101,7 @@ export function UploadWizard({ initialTarget }: { initialTarget?: string }) {
           {result.ok ? (<>
             <div className="text-lg font-semibold">반영 완료</div>
             <div className="flex gap-2"><Badge>성공 {fmtInt(result.ok_count)}</Badge>{result.error_count > 0 && <Badge variant="destructive">서버 오류 {fmtInt(result.error_count)}</Badge>}</div>
-            {result.errors.length > 0 && <div><ul className="max-h-60 overflow-auto rounded-md border p-2 text-xs">{result.errors.map(e => <li key={e.row}>행 {e.row}: {e.message}</li>)}</ul><Button variant="link" size="sm" onClick={() => errorCsv(result.errors)}>오류 CSV 다운로드</Button></div>}
+            {result.errors.length > 0 && <div><ul className="max-h-60 overflow-auto rounded-md border p-2 text-xs">{result.errors.map(e => <li key={e.row}>행 {e.row}: {e.message}</li>)}</ul><ExportMenu variant="link" label="오류 내보내기" onExport={f => exportErrors(result.errors, f)} /></div>}
             {target === "shipment_extra" && <p className="text-sm text-muted-foreground">출고 통계·품목 차트는 1분 이내에 갱신됩니다(대량 재계산은 백그라운드). 그 다음 예측 화면에서 백테스트·프로덕션 예측을 다시 요청하세요.</p>}
             <a className="text-sm underline" href="/upload?tab=log">업로드 이력 보기</a>
           </>) : <div className="text-red-600">{result.error}</div>}

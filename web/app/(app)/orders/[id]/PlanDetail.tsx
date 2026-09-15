@@ -64,7 +64,7 @@ export function PlanDetail({ plan, lines, treeRows, months, filters, canEdit, to
         <TreeGrid months={months} rows={treeRows} pastUntil={dataLast ? `${dataLast}-` : ""} onCellEdit={canEdit ? onCellEdit : undefined} firstColLabel="카테고리 / 품목" expandLevel={0} />
       </section>
       <section data-testid="line-grid"><h2 className="mb-2 text-sm font-medium">라인 (근거 컬럼 포함, R-OQ-41)</h2>
-        <DataGrid columns={columns} rows={lines} rowKey={r => String(r.id)} csvName={`order-plan-${plan.plan_ym}`} onRowClick={canEdit ? r => setEdit({ line: r, qty: Number(r.override_qty ?? r.final_qty) }) : undefined} /></section>
+        <DataGrid columns={columns} rows={lines} rowKey={r => String(r.id)} exportName={`order-plan-${plan.plan_ym}`} onRowClick={canEdit ? r => setEdit({ line: r, qty: Number(r.override_qty ?? r.final_qty) }) : undefined} /></section>
       <Dialog open={!!edit} onOpenChange={o => !o && setEdit(null)}>
         <DialogContent><DialogHeader><DialogTitle>발주량 오버라이드 — {edit?.line.key_code}</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">제안 {fmtInt(edit?.line.final_qty)} (필요량 {fmtInt(edit?.line.required_qty)}, MOQ {edit?.line.moq}{edit?.line.flex_base != null ? `, Flex ${fmtInt(edit.line.flex_min)}~${fmtInt(edit.line.flex_max)}` : ""})</p>

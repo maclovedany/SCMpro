@@ -343,3 +343,13 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 ## D-054 (2026-09-14) 필터·페이지 링크의 스크롤 유지
 - 배경: 발주 계획 상세의 필터(전체/품절 위험/차단/Flex 도달)·이전/다음을 누르면 페이지 맨 위로 이동해 다시 내려와야 했다(사용자 지적). Next `Link` 기본 동작.
 - 결정: 같은 화면의 검색 파라미터만 바꾸는 링크 전부 `scroll={false}` — 발주 계획 상세, 품목 목록(카테고리·페이지), 승인함 상태 탭, AI 감시 탭, AI 통계 기간, 업로드 탭. 규칙 R-UI-14 신설.
+
+## D-055 (2026-09-15) 표·템플릿 내보내기에 Excel(xlsx) 추가 + SheetJS 를 CDN 배포판으로 교체
+- 배경: 다운로드가 CSV 뿐이었다(사용자 요청). 또 `xlsx@0.18.5`(npm) 는 CVE-2023-30533(프로토타입 오염, `sheet_to_json` 읽기 경로) 이 남아 있는 마지막 npm 배포판인데, 업로드 파싱(`lib/upload/parse.ts`)이 정확히 그 경로를 쓰고 있었다 — 내보내기와 무관하게 이미 노출 상태였다(사용자 지적).
+- 결정:
+  - **의존성**: `xlsx` 를 SheetJS 공식 CDN tarball 로 교체 — `package.json` 의 `"xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"`. SheetJS 는 0.19.3 이후를 npm 에 올리지 않으므로 CDN 이 유일한 정식 경로. `import * as XLSX from "xlsx"` 는 그대로라 기존 코드 수정 없음. `npm audit` 취약점 0건 확인.
+  - **UI**: 화면마다 있던 CSV 버튼을 `components/export/ExportMenu.tsx` 드롭다운 하나로 통일(`[⭳ 내보내기 ▾] → CSV / Excel (.xlsx)`). 툴바 버튼 개수를 늘리지 않는다.
+  - **생성**: `lib/export/sheet.ts` 단일 소스(`exportRows`). 숫자는 숫자 셀(엑셀 합계 가능), CSV 는 BOM + RFC 4180 따옴표(기존 `JSON.stringify` 방식은 `"` 를 `\"` 로 잘못 escape 했다), xlsx 는 헤더 행 고정 + 열 너비 자동(한글 2칸 계산), 시트명은 엑셀 제약(31자·`[]:*?/\` 금지)으로 정제.
+  - **적용 4곳**: `DataGrid`(품목·발주 계획 상세 등 전체 — 정렬·검색·컬럼 숨김이 반영된 화면 그대로 내보냄), 발주 리포트, 업로드 템플릿, 검증 오류. `DataGrid` 의 `csvName` prop 은 `exportName` 으로 개명.
+- 사내 이관 시 주의: CDN tarball 은 설치 시 `cdn.sheetjs.com` 접속이 필요하다. 폐쇄망으로 옮기면 사내 npm 레지스트리(Verdaccio/Nexus)에 미러링한다 — `xlsx` 만의 문제가 아니라 전 의존성에 필요한 인프라이므로 이관 과제로 둔다(Q-021).
+- 규칙 반영: R-UI-05 개정.
