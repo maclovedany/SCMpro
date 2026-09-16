@@ -6,7 +6,7 @@
 | 구성 요소 | 현재 (2026-09-14) | 비고 |
 |---|---|---|
 | Web (Next.js) | **Vercel Pro 배포됨** (https://sc-mpro.vercel.app) | 설정: **Framework Preset = Next.js**(Other 로 잡히면 전 경로 404) (Root Directory `web`, 리전 서울 `icn1` — `web/vercel.json`, 함수 제한 `maxDuration = 60` 은 발주 계획·업로드 페이지와 AI 채팅 라우트에 선언, D-048). 환경변수 4개: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`. Supabase Auth 의 Site/Redirect URL 에 Vercel 도메인 추가 |
-| Engine (Python) | **Railway Cron 배포됨** (개발 Mac launchd 는 중복이라 중지) | **Railway Cron 서비스** (Root Directory `engine`, `engine/Dockerfile` + `railway.json` 의 `*/10 * * * *`, 명령 `engine tick`, 메모리 2GB 이상, 리전 싱가포르/도쿄, D-049) — 또는 사내 Linux systemd timer. 월 1회 자동 런은 tick 안에서(D-041) |
+| Engine (Python) | **Railway Cron 배포됨** (개발 Mac launchd 와 pg_cron `scm-tick` 은 중복이라 중지 — D-057. pg_cron 에는 물리화 뷰 갱신 `scm-refresh` 만 남긴다) | **Railway Cron 서비스** (Root Directory `engine`, `engine/Dockerfile` + `railway.json` 의 `*/10 * * * *`, 명령 `engine tick`, 메모리 2GB 이상, 리전 싱가포르/도쿄, D-049) — 또는 사내 Linux systemd timer. 월 1회 자동 런은 tick 안에서(D-041) |
 | DB (Supabase) | Pro 조직 · Micro · 디스크 8GB (2026-09-14 Free/nano 에서 이전) | 부하가 늘면 Small 이상 — 백테스트(6 프로세스 쓰기)·물리화 뷰 refresh·e2e 를 동시에 돌리면 인스턴스가 재시작될 수 있음(2026-09-14 장애: 동시 부하 후 1시간 이상 복구 대기) |
 | SMTP / OpenAI | 네이버 SMTP, OpenAI 키 — 로컬은 `engine/.env`·`web/.env.local`, 운영은 Railway Variables · Vercel Environment Variables | 회사 메일 서버·OpenAI 조직 키로 교체 예정 |
 

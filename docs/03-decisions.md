@@ -353,3 +353,13 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
   - **적용 4곳**: `DataGrid`(품목·발주 계획 상세 등 전체 — 정렬·검색·컬럼 숨김이 반영된 화면 그대로 내보냄), 발주 리포트, 업로드 템플릿, 검증 오류. `DataGrid` 의 `csvName` prop 은 `exportName` 으로 개명.
 - 사내 이관 시 주의: CDN tarball 은 설치 시 `cdn.sheetjs.com` 접속이 필요하다. 폐쇄망으로 옮기면 사내 npm 레지스트리(Verdaccio/Nexus)에 미러링한다 — `xlsx` 만의 문제가 아니라 전 의존성에 필요한 인프라이므로 이관 과제로 둔다(Q-021).
 - 규칙 반영: R-UI-05 개정.
+
+## D-056 (2026-09-16) 화면의 core 직접 조회 3곳을 analytics pass-through 뷰로 이전
+- 배경: CLAUDE.md 데이터 원칙("앱/화면은 analytics 뷰만 읽는다")과 달리 `web/lib/queries/items.ts`(`core.v_part_linkage`, `core.v_option_model_link`)·`admin.ts`(`core.v_model`) 가 core 를 직접 읽고 있었다. DB 권한(`grant select … core to authenticated`)이 막지 않아 동작은 했지만 원칙 위반이고, Exposed schemas 에서 core 를 빼는 순간 해당 화면(품목 상세 연결 기종, 관리자 EOL 기종 목록)이 오류 없이 빈 목록이 되는 구조였다(쿼리가 `?? []` 로 오류를 삼킴).
+- 결정: `analytics.v_model`, `analytics.v_option_model_link` pass-through 뷰 신설(migration `20260916009000_analytics_passthrough.sql`). 정제 로직은 여전히 core 한 곳에만 둔다. `v_part_linkage` 는 기존 `analytics.v_part_linkage` 로 교체. `tests/unit/schemaGuard.test.ts` 가 두 조회 함수의 `schema()` 호출을 기록해 raw·core 가 없음을 강제한다.
+- 규칙 반영: 새 규칙 ID 없음(CLAUDE.md 데이터 원칙 그대로). 05-data-catalog 의 마이그레이션 표·analytics 뷰 목록 갱신.
+
+## D-057 (2026-09-16) pg_cron `scm-tick` 해제 — fn_tick 실행 주체는 Railway Cron 하나
+- 배경: D-049 로 엔진을 Railway Cron 에 올리면서 `engine tick` 이 `app.fn_tick()` 을 10분마다 호출하게 됐는데, 004000_schedule.sql 이 등록한 pg_cron `scm-tick`(같은 주기, 같은 함수)이 그대로 살아 있었다. 9/14~16 사이 pg_cron 쪽만 349회 실행 — 10분마다 두 번. D-049 는 Mac launchd 중복만 언급했다. 실제 중복 알림은 없었다(`fn_allocation_tick`·`fn_submission_reminder_tick` 의 `not exists` 가드) — 다만 정각 동시 발화 시 가드 경합 창과 두 배 부하가 남는다.
+- 결정: migration `20260916009100_unschedule_scm_tick.sql` 이 `scm-tick` 을 해제한다(멱등, pg_cron 없으면 no-op). `schedule.sql` 이 재실행마다 재등록하므로 이 파일이 항상 뒤에 와서 다시 해제한다. `scm-refresh`(물리화 뷰 매분 갱신)는 Railway tick 이 대신하지 않으므로 **유지**. fn_tick 의 유일한 정기 호출자는 Railway `engine tick`.
+- 규칙 반영: 07-architecture §6 배치 표, 10-operations §1 갱신. 새 규칙 ID 없음.

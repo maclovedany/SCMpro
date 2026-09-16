@@ -1,4 +1,5 @@
-/** 발주량 산출 단일 구현 (spec SP3 §2). 규칙: R-OQ-01/03/04/10~13/20/30/31, R-INV-02. 서버 액션(계획 생성)과 화면(what-if) 공용. */
+/** 발주량 산출 단일 구현 (spec SP3 §2). 규칙: R-OQ-01/03/04/10~13/20/30/31, R-INV-02.
+ *  호출처는 계획 생성 서버 액션(orders/actions.ts) 하나. 화면 what-if(라인 편집)는 fn_override_line RPC 가 재계산한다 — 07-architecture §2. */
 export type Settings = { flex_ranges: { offset: number; pct: number }[]; default_lead_time_days: number; projection_future_months: number; dos_avg_months: number };
 export type ItemInput = { key_code: string; category: string | null; avg_6m: number | null; on_hand: number | null; target_dos_days: number | null; moq: number | null; unit_price: number | null;
   supplier_id: number | null; lead_time_days: number | null; forecast: Record<string, number>; inbound: Record<string, number>; extras: Record<string, number>; flex_base: Record<string, number> };

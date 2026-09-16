@@ -58,6 +58,8 @@
 | `20260914008300_order_feedback.sql` | 사후 채점·오버라이드 패턴·DoS 조정 적용 (D-044) |
 | `20260914008500_notify_switch.sql` | 알림 on/off 게이트·이메일 복제·tick 가드 (D-046) |
 | `20260914008400_retention.sql` | 보존 정책 `fn_prune_runs`·설정·감사 트리거 축소 (D-045) |
+| `20260916009000_analytics_passthrough.sql` | `analytics.v_model`·`analytics.v_option_model_link` pass-through — 화면의 core 직접 조회 3곳 제거 (D-056) |
+| `20260916009100_unschedule_scm_tick.sql` | pg_cron `scm-tick` 해제 — fn_tick 은 Railway `engine tick` 만 호출. `scm-refresh` 유지 (D-057) |
 | `20260913999900_grants.sql` | 권한. **항상 마지막** — 파일명 순서상 앞서지만 `migrate.sh` 가 마지막에 따로 실행한다. 그래도 새 마이그레이션은 자기 객체에 직접 `grant` 를 쓴다 |
 
 raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `supabase/scripts/load-raw.sh` (\copy). 구 `02-data-*.sql`, `03-verify.sql`, `07-*.sql` 은 `supabase/legacy/` 참고용.
@@ -90,8 +92,8 @@ raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `
 
 ### analytics 뷰 (화면·Tool 전용)
 
-`v_shipment_trend`, `v_item_demand_profile`, `v_item_demand_kpi`, `v_ol_accuracy`, `v_ol_accuracy_fy`, `v_bom_requirement`, `v_bom_requirement_x`, `v_part_linkage`, `v_realdata_kpi`
-(5회차 더미 뷰 `v_stockout_risk`·`v_stockout_kpi`·`v_leadtime_gap` 은 **삭제 완료**. 현재 analytics 는 뷰 23 + 물리화 뷰 2)
+`v_shipment_trend`, `v_item_demand_profile`, `v_item_demand_kpi`, `v_ol_accuracy`, `v_ol_accuracy_fy`, `v_bom_requirement`, `v_bom_requirement_x`, `v_part_linkage`, `v_realdata_kpi`, `v_model`·`v_option_model_link`(core pass-through — 화면은 이것만, D-056)
+(5회차 더미 뷰 `v_stockout_risk`·`v_stockout_kpi`·`v_leadtime_gap` 은 **삭제 완료**. 현재 analytics 는 뷰 25 + 물리화 뷰 2)
 
 ## 3. `app` 스키마 (SP1 구현, migrations 000400~000700)
 

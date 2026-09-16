@@ -59,7 +59,7 @@ uv --directory engine run engine forecast backtest --eval-fy 2025   # FY 롤링 
 uv --directory engine run engine forecast run --horizon 6           # 프로덕션 예측
 uv --directory engine run engine forecast tune                      # gpt-5-nano 오차 분석 → 제안 (승인은 /approvals)
 uv --directory engine run engine forecast pending                   # 웹에서 요청한 런·AI 분석 요청 처리 (tick 이 10분마다 자동 호출, D-052)
-uv --directory engine run engine tick                               # pg_cron 대안: 배정 만료·알림·제출 알림·이메일 발송 + 월 1회 자동 런(auto_run_* 설정, D-041) + AI 감시(agent_mode 설정, D-042)
+uv --directory engine run engine tick                               # fn_tick 의 유일한 정기 호출자(pg_cron scm-tick 은 D-057 로 해제, pg_cron 은 scm-refresh 만): 배정 만료·알림·제출 알림·이메일 발송 + 월 1회 자동 런(auto_run_* 설정, D-041) + AI 감시(agent_mode 설정, D-042)
 uv --directory engine run engine agent --mode dryrun --no-llm   # AI 감시 1회 수동 실행 (규칙 판단만)
 uv --directory engine run engine notify                             # 이메일 큐 발송 (SMTP 미설정 시 skipped)
 # 주기 실행은 **Railway Cron**(engine/Dockerfile + railway.json, `*/10 * * * *`, D-049). 이 Mac 의 launchd `com.scmpro.tick` 은 중복이라 중지 상태 — 둘 다 켜면 알림·이메일이 두 번 나간다 (로컬만 쓰려면 `launchctl load ~/Library/LaunchAgents/com.scmpro.tick.plist`, 로그 /tmp/scmpro/tick.log)

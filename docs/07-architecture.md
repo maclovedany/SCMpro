@@ -24,7 +24,7 @@ flowchart LR
     CORE[(core<br/>정제 뷰 8)]
     AN[(analytics<br/>뷰 23 + 물리화 뷰 2)]
     APP[(app<br/>업무 33 테이블 · 함수 59)]
-    CRON[pg_cron<br/>scm-tick */10분<br/>scm-refresh 매분]
+    CRON[pg_cron<br/>scm-refresh 매분<br/>(scm-tick 은 D-057 로 해제)]
   end
   subgraph Eng["Engine — Python (uv) · Railway Cron */10분"]
     CLI[engine CLI]
@@ -65,7 +65,7 @@ flowchart LR
 | SMTP | 네이버 SMTP (환경변수, D-029) | 이메일 채널 발송. 설정 `notify_email_enabled` 로 on/off, 미설정 시 `skipped:no_smtp` (D-046) | 외부 |
 
 **책임 분리 원칙 (D-011, D-022)**
-- 즉시 반응이 필요한 계산(발주량 DoS/Flex/MOQ, 재고전개 what-if)은 **TS 단일 구현** — 서버 액션과 화면이 같은 함수를 쓴다.
+- 즉시 반응이 필요한 계산(발주량 DoS/Flex/MOQ, 재고전개)은 **TS 단일 구현** `web/lib/order/calc.ts` — 계획 생성 서버 액션(`orders/actions.ts`)만 호출한다. 화면의 what-if(확정 발주 편집)는 `fn_override_line` RPC 가 해당 라인의 기말·DoS·금액을 다시 계산하고, 화면은 그 결과를 읽는다(설계 당시 "화면도 같은 함수를 쓴다"고 적었으나 구현은 이렇게 갈라졌다 — 2026-09-16 실제에 맞게 정정).
 - 여러 사용자가 동시에 건드리는 상태 변경(주문·배정·승인·업로드)은 **DB RPC** — 트랜잭션·advisory lock·RLS 가 한 곳에서 보장.
 - 분 단위 이상 걸리는 계산(예측)은 **Python 배치** — 결과를 버전(run)으로 저장하고 화면은 읽기만.
 
@@ -136,7 +136,7 @@ Topbar 버튼 → 우측 리사이즈 패널 → POST /api/ai/chat {conversation
 
 | 작업 | 실행 주체 | 주기 |
 |---|---|---|
-| `app.fn_tick()` (배정 만료·예고·승인 반복 알림·미제출 알림 — 반복 알림은 `notify_reminders_enabled`, D-046) | pg_cron `scm-tick` | 10분 |
+| `app.fn_tick()` (배정 만료·예고·승인 반복 알림·미제출 알림 — 반복 알림은 `notify_reminders_enabled`, D-046) | Railway Cron `engine tick` (pg_cron `scm-tick` 은 중복이라 D-057 로 해제) | 10분 |
 | `engine tick` = fn_tick + **자동 런**(월 1회, `auto_run_*`, D-041) + **AI 감시**(`agent_mode`, D-042) + **웹 요청 런·AI 분석 요청 처리**(`process_pending`, D-052) + 이메일 발송(`notify_email_enabled`) + 런 결과 정리(`fn_prune_runs`, D-045) | **Railway Cron 서비스**(`engine/Dockerfile`+`railway.json`, D-049). 개발 Mac 의 launchd `com.scmpro.tick` 은 중복이라 중지 — 둘 중 하나만 | 10분 |
 | 예측 백테스트·프로덕션 | 자동 런(설정 켜면 매월 지정일) 또는 `engine forecast backtest/run`·웹 요청 후 `engine forecast pending` | 월 1회 + 수동 |
 | 물리화 뷰 refresh | 출고 업로드 시 `fn_request_refresh` 플래그 → pg_cron `scm-refresh`(매분) 가 `fn_refresh_matviews` 실행 (8초 제한 회피, D-030) | 1분 |
