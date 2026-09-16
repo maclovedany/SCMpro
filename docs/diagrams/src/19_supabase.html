@@ -1,0 +1,120 @@
+<title>Supabase 데이터 계층 상세</title>
+
+<div class="title">
+  <span class="kicker">PART 3 · SUPABASE</span>
+  <h1>Supabase — PostgreSQL 17</h1>
+  <p>원본은 손대지 않고 뷰로만 정제해 올린다. 쓰기는 업무 테이블에만 — 상태 변경은 반드시 RPC 를 거쳐서</p>
+</div>
+
+<!-- ── raw ──────────────────────────────────────────────────── -->
+<div class="zone" id="ZRAW" style="left:55px; top:200px; width:505px; height:300px">
+  <div class="zl"><svg><use href="#i-lock"/></svg>raw — 원본 그대로 · 수정 금지</div>
+</div>
+<div class="db bronze" id="RAWDB" style="left:80px; top:255px; width:180px; height:215px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="t">raw</div>
+  <div class="d">벤더 CSV 적재<br>앱 역할은 USAGE 없음<br>(fail-closed)</div>
+</div>
+<div class="node dim" id="RAWL" style="left:280px; top:255px; width:260px; height:215px">
+  <div class="ic"><svg><use href="#i-sheet"/></svg></div>
+  <div class="body"><div class="t">테이블 10</div><div class="d mono">dim_item · dim_model</div><div class="d mono">fact_shipment</div><div class="d mono">fact_mc_plan_actual</div><div class="d mono">bridge_bom · _xcn · _mc_cap</div><div class="d mono">_cap_option · _option_model</div><div class="d mono">_scc_config</div></div>
+</div>
+
+<!-- ── core ─────────────────────────────────────────────────── -->
+<div class="zone z-teal" id="ZCORE" style="left:600px; top:200px; width:490px; height:300px">
+  <div class="zl"><svg><use href="#i-swap"/></svg>core — 정제 규칙 1회 적용</div>
+</div>
+<div class="db silver" id="COREDB" style="left:625px; top:255px; width:180px; height:215px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="t">core</div>
+  <div class="d">뷰 8개<br>정제는 여기서 한 번만</div>
+</div>
+<div class="node a-teal" id="COREL" style="left:825px; top:255px; width:245px; height:215px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body"><div class="t">핵심 정제</div><div class="d mono">v_shipment_by_hoc</div><div class="d">XCN 연계 코드 합산 — 부품 출고의 유일한 기준</div><div class="d mono">v_option_model_link · v_item</div><div class="d mono">v_ym_calendar</div><div class="d">0인 달을 메우는 달력</div></div>
+</div>
+
+<!-- ── analytics ────────────────────────────────────────────── -->
+<div class="zone z-green" id="ZANA" style="left:1130px; top:200px; width:735px; height:300px">
+  <div class="zl"><svg><use href="#i-sigma"/></svg>analytics — 화면이 읽는 유일한 층 · 엔진 입력</div>
+</div>
+<div class="db gold" id="ANADB" style="left:1155px; top:255px; width:180px; height:215px">
+  <div class="ic"><svg><use href="#i-sigma"/></svg></div>
+  <div class="t">analytics</div>
+  <div class="d">뷰 25<br>+ 물리화 뷰 2</div>
+</div>
+<div class="node a-green" id="ANA1" style="left:1355px; top:255px; width:245px; height:215px">
+  <div class="ic"><svg><use href="#i-gauge"/></svg></div>
+  <div class="body"><div class="t">물리화 뷰 2</div><div class="d mono">v_item_monthly</div><div class="d">품목×월 0 채움 — 예측 입력</div><div class="d mono">mv_item_stats</div><div class="d">품목 통계. fn_refresh_matviews 로 갱신</div></div>
+</div>
+<div class="node a-green" id="ANA2" style="left:1620px; top:255px; width:225px; height:215px">
+  <div class="ic"><svg><use href="#i-chart"/></svg></div>
+  <div class="body"><div class="t">화면용 뷰</div><div class="d mono">v_item_master</div><div class="d mono">v_forecast_latest</div><div class="d mono">v_mc_compare · v_item_ol</div><div class="d mono">v_order_plan_summary</div><div class="d mono">v_inbound_gap · v_ai_stats_daily</div></div>
+</div>
+
+<!-- ── app 테이블 ───────────────────────────────────────────── -->
+<div class="zone z-blue" id="ZAPP" style="left:55px; top:540px; width:1035px; height:350px">
+  <div class="zl"><svg><use href="#i-layers"/></svg>app — 업무 테이블 33 · 상태 변경은 RPC · 설정·마스터는 직접 쓰기 · RLS</div>
+</div>
+<div class="node a-blue" id="APPSET" style="left:80px; top:600px; width:330px; height:140px">
+  <div class="ic"><svg><use href="#i-sliders"/></svg></div>
+  <div class="body"><div class="t">설정 · 마스터</div><div class="d mono">system_settings · supplier · item_setting · inventory_snapshot</div><div class="d">리드타임 · 목표 DoS · MOQ 가 전부 여기</div></div>
+</div>
+<div class="node a-blue" id="APPCOM" style="left:435px; top:600px; width:330px; height:140px">
+  <div class="ic"><svg><use href="#i-shield"/></svg></div>
+  <div class="body"><div class="t">공통 메커니즘</div><div class="d mono">profiles · approval · notification · audit_log · upload_log</div><div class="d">권한 · 승인 · 알림 · 감사를 한 벌로 공유</div></div>
+</div>
+<div class="node a-blue" id="APPFC" style="left:790px; top:600px; width:275px; height:140px">
+  <div class="ic"><svg><use href="#i-trend"/></svg></div>
+  <div class="body"><div class="t">예측</div><div class="d mono">forecast_run · _result · _accuracy · _method · _policy · tuning_proposal · item_class</div></div>
+</div>
+<div class="node a-blue" id="APPAI" style="left:80px; top:755px; width:330px; height:118px">
+  <div class="ic"><svg><use href="#i-bot"/></svg></div>
+  <div class="body"><div class="t">AI</div><div class="d mono">ai_conversation · ai_message · agent_event</div><div class="d">대화 이력과 감시 이벤트</div></div>
+</div>
+<div class="node a-blue" id="APPAL" style="left:435px; top:755px; width:330px; height:118px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body"><div class="t">배정 · 일정</div><div class="d mono">sales_order · allocation · demand_submission</div><div class="d">임시 30일 → 확정. 부서 제출 현황</div></div>
+</div>
+<div class="node hl" id="APPORD" style="left:790px; top:755px; width:275px; height:118px">
+  <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
+  <div class="body"><div class="t">발주</div><div class="d mono">order_plan · order_plan_line · extra_demand · ol_submission</div></div>
+</div>
+
+<!-- ── RPC ──────────────────────────────────────────────────── -->
+<div class="zone z-violet" id="ZRPC" style="left:1130px; top:540px; width:735px; height:350px">
+  <div class="zl"><svg><use href="#i-fx"/></svg>RPC · 집계 함수 60 — 57개가 SECURITY DEFINER</div>
+</div>
+<div class="node a-violet" id="RAUTH" style="left:1155px; top:600px; width:345px; height:140px">
+  <div class="ic"><svg><use href="#i-shield"/></svg></div>
+  <div class="body"><div class="t">인증 · 승인 · 알림 · 감사</div><div class="d mono">current_role · fn_audit · fn_request_approval · fn_decide_approval · notify_role · fn_notification_gate</div></div>
+</div>
+<div class="node a-violet" id="RDASH" style="left:1515px; top:600px; width:330px; height:140px">
+  <div class="ic"><svg><use href="#i-gauge"/></svg></div>
+  <div class="body"><div class="t">대시보드 · 집계 · AI 감시</div><div class="d mono">fn_dashboard_v2 · fn_sidebar_badges · fn_forecast_overview · fn_agent_signals · fn_refresh_matviews</div></div>
+</div>
+<div class="node hl" id="RORD" style="left:1155px; top:755px; width:345px; height:118px">
+  <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
+  <div class="body"><div class="t">발주 확정 · 배정 상태머신</div><div class="d mono">fn_save_order_plan · fn_confirm_order_plan · fn_auto_allocate · fn_receive_inbound</div></div>
+</div>
+<div class="node a-violet" id="RTICK" style="left:1515px; top:755px; width:330px; height:118px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body"><div class="t">일정 · tick</div><div class="d mono">fn_business_day · fn_sailing_dates · fn_order_calendar · fn_tick</div></div>
+</div>
+
+<div class="legend" style="left:55px; top:930px">
+  <div class="li"><span class="sw"></span>정제되어 올라가는 흐름</div>
+  <div class="li"><span class="box hl"></span>월간 발주의 중심</div>
+  <div class="li"><span class="box" style="border-style:dashed"></span>앱이 직접 못 읽는 층</div>
+</div>
+<div class="foot">SCMpro · supabase/migrations 26 · 2026-09-16</div>
+
+<script>
+window.EDGES = [
+  { from:'RAWL',  to:'COREDB', fs:'right', fa:0.5, ts:'left', ta:0.5, label:'정제 · XCN 합산' },
+  { from:'COREL', to:'ANADB',  fs:'right', fa:0.5, ts:'left', ta:0.5, label:'집계 · 0 채움' },
+  { from:'APPFC',  to:'ANADB',  fs:'right', fa:0.35, ts:'bottom', ta:0.5,
+    via:[[1108,649],[1108,520],[1245,520]], label:'업무 데이터도 뷰로 노출', lat:0.45, loff:[0,-13] },
+  { from:'RORD',   to:'APPORD', fs:'left', fa:0.5, ts:'right', ta:0.5, mid:1108 },
+];
+</script>

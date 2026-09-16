@@ -1,0 +1,91 @@
+<title>인프라 · 빌드 설정 상세</title>
+
+<div class="title">
+  <span class="kicker">PART 5 · INFRASTRUCTURE</span>
+  <h1>인프라 · 빌드 설정</h1>
+  <p>웹은 Vercel, 엔진은 Railway Cron, 데이터는 Supabase — 세 곳에 나눠 배포하고 스크립트로 정합</p>
+</div>
+
+<!-- ── 배포 대상 ────────────────────────────────────────────── -->
+<div class="zone z-blue" id="ZDEP" style="left:55px; top:200px; width:1810px; height:300px">
+  <div class="zl"><svg><use href="#i-cloud"/></svg>배포 대상 세 곳</div>
+</div>
+<div class="node hl" id="VERCEL" style="left:80px; top:258px; width:570px; height:196px">
+  <div class="ic"><svg><use href="#i-monitor"/></svg></div>
+  <div class="body"><div class="t">Vercel — Web</div><div class="d mono">Root: web · Framework Preset: Next.js</div><div class="d">Preset 이 Other 로 잡히면 전 경로 404. 발주 계획 · 업로드 · AI 채팅은 maxDuration = 60 (D-048)</div><div class="d">서버리스 리전은 서울 icn1 고정 — 국내 사용자와 Supabase 사이 지연 최소화</div><div class="d mono">sc-mpro.vercel.app</div></div>
+</div>
+<div class="node a-blue" id="RAILWAY" style="left:665px; top:258px; width:570px; height:196px">
+  <div class="ic"><svg><use href="#i-cpu"/></svg></div>
+  <div class="body"><div class="t">Railway Cron — Engine</div><div class="d mono">Root: engine · */10 * * * * · uv run engine tick — fn_tick 의 유일한 호출자</div><div class="d">Dockerfile: python:3.12-slim + libgomp1(lightgbm 런타임) + uv. 의존성·소스 레이어 분리로 캐시 유지</div><div class="d">크론 잡이라 restartPolicyType = NEVER. 자동 런이 도는 달은 메모리 2GB 이상 (D-049)</div></div>
+</div>
+<div class="node a-blue" id="SUPA" style="left:1250px; top:258px; width:590px; height:196px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="body"><div class="t">Supabase — DB</div><div class="d">Pro / Micro 8GB. 2026-09-14 디스크 장애 후 이전 (D-045)</div><div class="d">Data API → Exposed schemas 에 <b>app · analytics · core</b>  등록 필수 — 없으면 웹 조회 불가</div><div class="d">PostgREST statement_timeout 8초 — 파라미터 집계 RPC 는 분할 호출 (D-027)</div></div>
+</div>
+
+<!-- ── 빌드 · 품질 ──────────────────────────────────────────── -->
+<div class="zone z-violet" id="ZB" style="left:55px; top:570px; width:625px; height:320px">
+  <div class="zl"><svg><use href="#i-wrench"/></svg>빌드 · 품질 도구</div>
+</div>
+<div class="node a-violet" id="WEBPKG" style="left:80px; top:628px; width:290px; height:122px">
+  <div class="ic"><svg><use href="#i-box"/></svg></div>
+  <div class="body"><div class="t">web 의존성</div><div class="d mono">package.json · tsconfig.json · postcss(Tailwind v4) · components.json</div></div>
+</div>
+<div class="node a-violet" id="PYPKG" style="left:385px; top:628px; width:270px; height:122px">
+  <div class="ic"><svg><use href="#i-cpu"/></svg></div>
+  <div class="body"><div class="t">engine 의존성</div><div class="d mono">pyproject.toml — statsmodels · statsforecast · prophet · lightgbm</div></div>
+</div>
+<div class="node a-violet" id="QUAL" style="left:80px; top:765px; width:575px; height:110px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="body"><div class="t">품질 도구</div><div class="d mono">eslint · vitest(jsdom) · playwright · pytest</div><div class="d">E2E 는 global-setup 이 주문·배정·더미 입고를 매번 초기화 (D-036)</div></div>
+</div>
+
+<!-- ── 환경변수 ─────────────────────────────────────────────── -->
+<div class="zone z-amber" id="ZE" style="left:720px; top:570px; width:460px; height:320px">
+  <div class="zl"><svg><use href="#i-key"/></svg>환경변수 — git 제외</div>
+</div>
+<div class="node a-amber" id="ENGENV" style="left:745px; top:628px; width:410px; height:122px">
+  <div class="ic"><svg><use href="#i-terminal"/></svg></div>
+  <div class="body"><div class="t">engine/.env</div><div class="d mono">SUPABASE_DB_URL · SQLITE_PATH · OPENAI_API_KEY · SMTP_HOST / PORT / USER / PASS / FROM</div></div>
+</div>
+<div class="node a-amber" id="WEBENV" style="left:745px; top:765px; width:410px; height:110px">
+  <div class="ic"><svg><use href="#i-monitor"/></svg></div>
+  <div class="body"><div class="t">web/.env.local</div><div class="d mono">NEXT_PUBLIC_SUPABASE_URL · NEXT_PUBLIC_SUPABASE_ANON_KEY · SUPABASE_SERVICE_ROLE_KEY · OPENAI_API_KEY</div></div>
+</div>
+
+<!-- ── 운영 스크립트 ────────────────────────────────────────── -->
+<div class="zone z-green" id="ZS" style="left:1220px; top:570px; width:645px; height:320px">
+  <div class="zl" style="left:auto;right:18px"><svg><use href="#i-terminal"/></svg>운영 스크립트 — supabase/scripts</div>
+</div>
+<div class="node hl" id="MIG" style="left:1245px; top:628px; width:300px; height:122px">
+  <div class="ic"><svg><use href="#i-git"/></svg></div>
+  <div class="body"><div class="t">migrate.sh</div><div class="d">migrations/*.sql 을 파일명 순으로 적용. <b>grants 는 항상 마지막</b> — 뒤에 생긴 객체까지 권한을 부여</div></div>
+</div>
+<div class="node a-green" id="LOADR" style="left:1560px; top:628px; width:285px; height:122px">
+  <div class="ic"><svg><use href="#i-upload"/></svg></div>
+  <div class="body"><div class="t">load-raw.sh</div><div class="d">CSV 9개를 raw.* 에 truncate 후 \copy. scc_config 는 seed SQL 로</div></div>
+</div>
+<div class="node a-green" id="SEED" style="left:1245px; top:765px; width:300px; height:110px">
+  <div class="ic"><svg><use href="#i-inbox"/></svg></div>
+  <div class="body"><div class="t">seed-app.sh</div><div class="d">더미 시드(is_dummy) 적용 + 물리화 뷰 refresh</div></div>
+</div>
+<div class="node a-green" id="VERS" style="left:1560px; top:765px; width:285px; height:110px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="body"><div class="t">verify.sql · seed-users.mts</div><div class="d">행수 대조 · XCN 리포트 · 테스트 계정 6개</div></div>
+</div>
+
+<div class="legend" style="left:55px; top:930px">
+  <div class="li"><span class="sw"></span>배포 · 적용 대상</div>
+  <div class="li"><span class="box hl"></span>순서를 틀리면 깨지는 곳</div>
+</div>
+<div class="foot">SCMpro · 배포 완료 2026-09-14 · 2026-09-16</div>
+
+<script>
+window.EDGES = [
+  { from:'WEBPKG', to:'VERCEL',  fs:'top', fa:0.5,  ts:'bottom', ta:0.3 },
+  { from:'WEBENV', to:'VERCEL',  fs:'left', fa:0.5, ts:'bottom', ta:0.62,
+    via:[[700,820],[700,556],[433,556]] },
+  { from:'ENGENV', to:'RAILWAY', fs:'top', fa:0.7,  ts:'bottom', ta:0.64 },
+  { from:'MIG',    to:'SUPA',    fs:'top', fa:0.5,  ts:'bottom', ta:0.25, label:'스키마 적용' },
+];
+</script>

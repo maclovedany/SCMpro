@@ -12,3 +12,6 @@ docs/reports/*.tmp
 data/export/
 test-results/
 playwright-report/
+
+# Understand-Anything 분석 산출물 (파생 스냅샷, 커밋하지 않음)
+.ua/

@@ -1,0 +1,175 @@
+<title>SCMpro 프로젝트 구조</title>
+
+<div class="title">
+  <span class="kicker">PROJECT STRUCTURE · KNOWLEDGE GRAPH</span>
+  <h1>SCMpro 프로젝트 구조</h1>
+  <p>문서가 규칙을 정하고, 4단 스키마가 데이터를 나르며, 예측 엔진과 웹이 그 위에서 작동</p>
+</div>
+
+<!-- ── 사용자 ────────────────────────────────────────────────── -->
+<div class="actor" id="USR" style="left:1555px; top:44px; width:290px">
+  <div class="ic"><svg><use href="#i-users"/></svg></div>
+  <div class="t">사용자</div>
+  <div class="d">품목담당 · 팀장 · 영업 · 마케팅<br>서비스 · 사업강화 · 관리자</div>
+</div>
+
+<!-- ── 문서 · 규칙 ───────────────────────────────────────────── -->
+<div class="zone z-amber" id="ZDOC" style="left:55px; top:210px; width:300px; height:680px">
+  <div class="zl"><svg><use href="#i-book"/></svg>문서 · 규칙</div>
+</div>
+<div class="node a-amber" id="RULE" style="left:75px; top:266px; width:260px; height:112px">
+  <div class="ic"><svg><use href="#i-scale"/></svg></div>
+  <div class="body"><div class="t">도메인 규칙</div><div class="d mono">02-domain-rules · 9개</div><div class="d">R-FC · R-OQ · R-AL · R-UI 등</div></div>
+</div>
+<div class="node a-amber" id="DEC" style="left:75px; top:390px; width:260px; height:112px">
+  <div class="ic"><svg><use href="#i-check"/></svg></div>
+  <div class="body"><div class="t">결정 로그</div><div class="d mono">03-decisions.md</div><div class="d">append-only</div></div>
+</div>
+<div class="node a-amber" id="SPEC" style="left:75px; top:514px; width:260px; height:112px">
+  <div class="ic"><svg><use href="#i-pen"/></svg></div>
+  <div class="body"><div class="t">설계 · 계획</div><div class="d mono">docs/specs · docs/plans</div><div class="d">서브프로젝트</div></div>
+</div>
+<div class="node a-amber" id="GLOS" style="left:75px; top:638px; width:260px; height:112px">
+  <div class="ic"><svg><use href="#i-grid"/></svg></div>
+  <div class="body"><div class="t">용어 · 데이터 카탈로그</div><div class="d">업무 흐름 · 파일→테이블 매핑</div></div>
+</div>
+<div class="node a-amber" id="OPS" style="left:75px; top:762px; width:260px; height:112px">
+  <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
+  <div class="body"><div class="t">사용 · 연동 · 운영</div><div class="d">역할별 가이드 · ERP 연동 계획</div></div>
+</div>
+
+<!-- ── 예측 · 배치 엔진 ──────────────────────────────────────── -->
+<div class="zone z-violet" id="ZENG" style="left:395px; top:210px; width:545px; height:250px">
+  <div class="zl"><svg><use href="#i-cpu"/></svg>Engine — Python · Railway Cron</div>
+</div>
+<div class="node a-violet" id="FC" style="left:420px; top:260px; width:250px; height:97px">
+  <div class="ic"><svg><use href="#i-trend"/></svg></div>
+  <div class="body"><div class="t">forecast</div><div class="d">기법 13 · 백테스트 · 프로덕션 런 · AI 오차 튜닝</div></div>
+</div>
+<div class="node a-violet" id="AGT" style="left:695px; top:260px; width:220px; height:97px">
+  <div class="ic"><svg><use href="#i-bot"/></svg></div>
+  <div class="body"><div class="t">agent</div><div class="d">감지 → 판단 → 알림 · 발주 제안</div></div>
+</div>
+<div class="node a-violet" id="CLI" style="left:420px; top:370px; width:250px; height:80px">
+  <div class="ic"><svg><use href="#i-terminal"/></svg></div>
+  <div class="body"><div class="t">engine CLI</div><div class="d mono">export-raw · verify · gen-types</div></div>
+</div>
+<div class="node a-violet" id="TICK" style="left:695px; top:370px; width:220px; height:80px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body"><div class="t">tick · notify</div><div class="d">배정 만료 · 알림 · 이메일</div></div>
+</div>
+
+<!-- ── 외부 LLM ─────────────────────────────────────────────── -->
+<div class="node ext" id="OPENAI" style="left:985px; top:262px; width:250px; height:130px">
+  <div class="ic"><svg><use href="#i-sparkles"/></svg></div>
+  <div class="body"><div class="t">OpenAI gpt-5-nano</div><div class="d">AI 어시스턴트 · 오차 분석 · 자율 감시 판단</div><span class="tag">D-017 · R-AI</span></div>
+</div>
+
+<!-- ── Supabase ─────────────────────────────────────────────── -->
+<div class="zone z-green" id="ZSB" style="left:395px; top:495px; width:655px; height:395px">
+  <div class="zl"><svg><use href="#i-db"/></svg>Supabase — PostgreSQL 17 · RLS · pg_cron</div>
+</div>
+<div class="db bronze" id="RAW" style="left:420px; top:552px; width:190px; height:140px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="t">raw</div>
+  <div class="d">원본 10 테이블<br>수정 금지 · 앱 차단</div>
+</div>
+<div class="db silver" id="CORE" style="left:625px; top:552px; width:190px; height:140px">
+  <div class="ic"><svg><use href="#i-db"/></svg></div>
+  <div class="t">core</div>
+  <div class="d">정제 뷰 8<br>XCN 합산 · 옵션 연결</div>
+</div>
+<div class="db gold" id="ANA" style="left:830px; top:552px; width:195px; height:140px">
+  <div class="ic"><svg><use href="#i-sigma"/></svg></div>
+  <div class="t">analytics</div>
+  <div class="d">뷰 25 + 물리화 2<br>화면·엔진이 읽는 층</div>
+</div>
+<div class="node a-green" id="APPT" style="left:420px; top:742px; width:290px; height:118px">
+  <div class="ic"><svg><use href="#i-layers"/></svg></div>
+  <div class="body"><div class="t">app 33개 테이블</div><div class="d">예측 런 · 발주 계획 · 배정 · 승인 · 알림</div></div>
+</div>
+<div class="node hl" id="RPC" style="left:735px; top:742px; width:290px; height:118px">
+  <div class="ic"><svg><use href="#i-fx"/></svg></div>
+  <div class="body"><div class="t">RPC 함수</div><div class="d">함수 60개 · 57개가 SECURITY DEFINER · 트랜잭션 · advisory lock</div></div>
+</div>
+
+<!-- ── Web ──────────────────────────────────────────────────── -->
+<div class="zone z-blue" id="ZWEB" style="left:1275px; top:210px; width:590px; height:445px">
+  <div class="zl"><svg><use href="#i-monitor"/></svg>Web — Next.js 16 · Vercel</div>
+</div>
+<div class="node a-blue" id="AICHAT" style="left:1300px; top:272px; width:265px; height:90px">
+  <div class="ic"><svg><use href="#i-chat"/></svg></div>
+  <div class="body"><div class="t">/api/ai/chat</div><div class="d">도구 9종 · 사용자 세션으로 조회</div></div>
+</div>
+<div class="node a-blue" id="PROXY" style="left:1583px; top:272px; width:262px; height:90px">
+  <div class="ic"><svg><use href="#i-lock"/></svg></div>
+  <div class="body"><div class="t">proxy.ts</div><div class="d">세션 갱신 · 미로그인 리다이렉트</div></div>
+</div>
+<div class="node hl" id="QRY" style="left:1300px; top:378px; width:265px; height:115px">
+  <div class="ic"><svg><use href="#i-sigma"/></svg></div>
+  <div class="body"><div class="t">도메인 로직 · 조회</div><div class="d mono">lib/queries · order/calc.ts</div><div class="d">DoS · Flex · MOQ 즉시 계산</div></div>
+</div>
+<div class="node a-blue" id="UI" style="left:1583px; top:378px; width:262px; height:115px">
+  <div class="ic"><svg><use href="#i-monitor"/></svg></div>
+  <div class="body"><div class="t">화면 · 라우트</div><div class="d mono">app/(app)/** · 28개 라우트</div><div class="d">KPI → 차트 → 근거 표</div></div>
+</div>
+<div class="node hl" id="ACT" style="left:1300px; top:510px; width:265px; height:108px">
+  <div class="ic"><svg><use href="#i-flow"/></svg></div>
+  <div class="body"><div class="t">서버 액션</div><div class="d">확정 · 승인 · 배정 · 업로드는 RPC<br>설정 · 마스터는 직접 쓰기</div></div>
+</div>
+<div class="node a-blue" id="DS" style="left:1583px; top:510px; width:262px; height:108px">
+  <div class="ic"><svg><use href="#i-grid"/></svg></div>
+  <div class="body"><div class="t">디자인 시스템</div><div class="d">KpiTile · DrillCard · ChartCard · MiniCharts</div></div>
+</div>
+
+<!-- ── 인프라 ───────────────────────────────────────────────── -->
+<div class="zone" id="ZINF" style="left:1275px; top:690px; width:590px; height:200px">
+  <div class="zl"><svg><use href="#i-wrench"/></svg>인프라 · 빌드 설정</div>
+</div>
+<div class="node a-gray" id="DEPLOY" style="left:1300px; top:745px; width:265px; height:115px">
+  <div class="ic"><svg><use href="#i-cloud"/></svg></div>
+  <div class="body"><div class="t">배포 대상</div><div class="d mono">vercel.json · railway.json</div><div class="d">Dockerfile · 10분 주기 Cron</div></div>
+</div>
+<div class="node a-gray" id="SCRIPT" style="left:1583px; top:745px; width:262px; height:115px">
+  <div class="ic"><svg><use href="#i-terminal"/></svg></div>
+  <div class="body"><div class="t">운영 스크립트</div><div class="d mono">migrate.sh · load-raw.sh</div><div class="d mono">seed-app.sh · verify.sql</div></div>
+</div>
+
+<div class="legend" style="left:395px; top:925px">
+  <div class="li"><span class="sw"></span>데이터 · 호출 흐름</div>
+  <div class="li"><span class="sw dash"></span>규칙 참조</div>
+  <div class="li"><span class="box hl"></span>업무 로직이 사는 곳</div>
+  <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>외부 서비스</div>
+</div>
+<div class="foot">SCMpro · 커밋 0329fb5 · 2026-09-16</div>
+
+<script>
+window.EDGES = [
+  // 데이터 파이프라인
+  { from:'RAW',  to:'CORE', label:'정제 · XCN 합산' },
+  { from:'CORE', to:'ANA',  label:'집계 · 0 채움' },
+
+  // 엔진
+  { from:'CLI', to:'FC',   fs:'top',   fa:0.5, ts:'bottom', ta:0.5 },
+  { from:'CLI', to:'TICK', fs:'right', fa:0.5, ts:'left',   ta:0.5 },
+  { from:'ANA', to:'FC', fs:'top', fa:0.5, ts:'right', ta:0.5,
+    via:[[927,477],[682,477],[682,308]], label:'분석 뷰 읽기', lat:0.5 },
+  { from:'FC', to:'APPT', fs:'left', fa:0.8, ts:'left', ta:0.45, mid:372 },
+
+  // 규칙 (점선 — 범례 참조)
+  { from:'RULE', to:'FC', fs:'right', fa:0.3, ts:'left', ta:0.28, dash:true, thin:true },
+
+  // 외부 LLM
+  { from:'AGT',    to:'OPENAI', fs:'right', fa:0.5, ts:'left',  ta:0.45, cls:'orange', both:true },
+  { from:'AICHAT', to:'OPENAI', fs:'left',  fa:0.5, ts:'right', ta:0.7,  cls:'orange', both:true },
+
+  // 웹
+  { from:'USR',   to:'PROXY', fs:'bottom', fa:0.45, ts:'top',  ta:0.4, label:'로그인 · 작업', loff:[64,6] },
+  { from:'PROXY', to:'UI',    fs:'bottom', fa:0.5,  ts:'top',  ta:0.5 },
+  { from:'UI',    to:'ACT',   fs:'left',   fa:0.75, ts:'right', ta:0.45, mid:1574 },
+  { from:'QRY',   to:'UI',    fs:'right',  fa:0.25, ts:'left',  ta:0.25 },
+  { from:'ANA',   to:'QRY',   fs:'right',  fa:0.4,  ts:'left',  ta:0.4, mid:1220, label:'뷰 조회 · RLS' },
+  { from:'ACT',   to:'RPC',   fs:'left',   fa:0.55, ts:'top',   ta:0.5,
+    via:[[1245,569],[1245,717],[880,717]], label:'SECURITY DEFINER 호출', lat:0.5 },
+];
+</script>

@@ -1,0 +1,150 @@
+<title>웹 앱 상세</title>
+
+<div class="title">
+  <span class="kicker">PART 4 · WEB</span>
+  <h1>Web — Next.js 16 App Router</h1>
+  <p>모든 요청은 proxy 를 지나 화면으로, 화면은 조회는 lib 로 쓰기는 서버 액션으로 나뉨</p>
+</div>
+
+<div class="node ext" id="OPENAI" style="left:1610px; top:52px; width:255px; height:112px">
+  <div class="ic"><svg><use href="#i-sparkles"/></svg></div>
+  <div class="body"><div class="t">OpenAI gpt-5-nano</div><div class="d">도구 9종 · 대화 요약 + 최근 20턴</div></div>
+</div>
+
+<!-- ── 요청 진입 ────────────────────────────────────────────── -->
+<div class="zone z-teal" id="ZIN" style="left:55px; top:230px; width:215px; height:660px">
+  <div class="zl"><svg><use href="#i-key"/></svg>요청 진입</div>
+</div>
+<div class="actor" id="USR" style="left:75px; top:290px; width:175px">
+  <div class="ic"><svg><use href="#i-users"/></svg></div>
+  <div class="t">사용자</div>
+  <div class="d">7역할 · 권한별 메뉴</div>
+</div>
+<div class="node a-teal" id="LOGIN" style="left:75px; top:470px; width:175px; height:140px">
+  <div class="ic"><svg><use href="#i-key"/></svg></div>
+  <div class="body"><div class="t">로그인</div><div class="d mono">(auth)/login</div><div class="d">Supabase Auth 이메일·비밀번호</div></div>
+</div>
+<div class="node hl" id="PROXY" style="left:75px; top:690px; width:175px; height:180px">
+  <div class="ic"><svg><use href="#i-lock"/></svg></div>
+  <div class="body"><div class="t">proxy.ts</div><div class="d">세션 갱신 · 미로그인 리다이렉트. 모든 요청이 반드시 지난다</div></div>
+</div>
+
+<!-- ── 화면 · 라우트 ────────────────────────────────────────── -->
+<div class="zone z-blue" id="ZUI" style="left:310px; top:230px; width:590px; height:660px">
+  <div class="zl"><svg><use href="#i-monitor"/></svg>화면 · 라우트 — app/(app)/** · 28 라우트</div>
+</div>
+<div class="node a-blue" id="DASH" style="left:330px; top:285px; width:270px; height:135px">
+  <div class="ic"><svg><use href="#i-gauge"/></svg></div>
+  <div class="body"><div class="t">대시보드</div><div class="d mono">dashboard · notifications</div><div class="d">KPI 스트립 → 차트 → 근거 표, 전부 드릴다운</div></div>
+</div>
+<div class="node a-blue" id="FCS" style="left:620px; top:285px; width:270px; height:135px">
+  <div class="ic"><svg><use href="#i-trend"/></svg></div>
+  <div class="body"><div class="t">예측</div><div class="d mono">forecast · forecast/mc · forecast/runs/[id] · items/[code]</div></div>
+</div>
+<div class="node hl" id="ORD" style="left:330px; top:435px; width:270px; height:135px">
+  <div class="ic"><svg><use href="#i-clipboard"/></svg></div>
+  <div class="body"><div class="t">발주</div><div class="d mono">orders · orders/[id] · extra-demand · approvals</div><div class="d">확정 → 팀장 승인 → 제출 OL</div></div>
+</div>
+<div class="node a-blue" id="ALC" style="left:620px; top:435px; width:270px; height:135px">
+  <div class="ic"><svg><use href="#i-swap"/></svg></div>
+  <div class="body"><div class="t">배정 · 영업 주문</div><div class="d mono">allocation · allocation/priority · sales-orders</div></div>
+</div>
+<div class="node a-blue" id="SCH" style="left:330px; top:585px; width:270px; height:135px">
+  <div class="ic"><svg><use href="#i-clock"/></svg></div>
+  <div class="body"><div class="t">일정 · 제출</div><div class="d mono">schedule</div><div class="d">발주일 달력 · 부서 수요자료 제출 현황</div></div>
+</div>
+<div class="node a-blue" id="UPL" style="left:620px; top:585px; width:270px; height:135px">
+  <div class="ic"><svg><use href="#i-upload"/></svg></div>
+  <div class="body"><div class="t">데이터 업로드</div><div class="d mono">upload</div><div class="d">xlsx/csv 마법사 · 컬럼 매핑 · 검증</div></div>
+</div>
+<div class="node a-blue" id="AGT" style="left:330px; top:735px; width:270px; height:135px">
+  <div class="ic"><svg><use href="#i-bot"/></svg></div>
+  <div class="body"><div class="t">AI 감시</div><div class="d mono">agent</div><div class="d">감지 이벤트 · 발주 제안 승인 대기</div></div>
+</div>
+<div class="node a-blue" id="ADM" style="left:620px; top:735px; width:270px; height:135px">
+  <div class="ic"><svg><use href="#i-sliders"/></svg></div>
+  <div class="body"><div class="t">관리자</div><div class="d mono">admin/settings · suppliers · item-settings · eol · holidays · forecast-methods · ai-stats</div></div>
+</div>
+
+<!-- ── 서버 로직 ────────────────────────────────────────────── -->
+<div class="zone z-violet" id="ZSRV" style="left:940px; top:230px; width:490px; height:660px">
+  <div class="zl"><svg><use href="#i-code"/></svg>서버 로직 — web/lib · 서버 액션</div>
+</div>
+<div class="node hl" id="ACT" style="left:960px; top:285px; width:225px; height:135px">
+  <div class="ic"><svg><use href="#i-flow"/></svg></div>
+  <div class="body"><div class="t">서버 액션 8</div><div class="d">발주 · 승인 · 영업주문 · 예측 · AI · 일정 · 업로드 · 관리자</div></div>
+</div>
+<div class="node a-violet" id="AICHAT" style="left:1205px; top:285px; width:205px; height:135px">
+  <div class="ic"><svg><use href="#i-chat"/></svg></div>
+  <div class="body"><div class="t">/api/ai/chat</div><div class="d">도구 호출 최대 5라운드. 사용자 세션으로 조회</div></div>
+</div>
+<div class="node a-violet" id="QRY" style="left:960px; top:435px; width:225px; height:135px">
+  <div class="ic"><svg><use href="#i-search"/></svg></div>
+  <div class="body"><div class="t">lib/queries 10</div><div class="d mono">forecast · orders · allocation · items · dashboard · admin</div></div>
+</div>
+<div class="node hl" id="CALC" style="left:1205px; top:435px; width:205px; height:135px">
+  <div class="ic"><svg><use href="#i-sigma"/></svg></div>
+  <div class="body"><div class="t">order/calc.ts</div><div class="d"><b>DoS → Flex → MOQ</b> 산출. TS 단일 구현 — orders 액션이 호출</div></div>
+</div>
+<div class="node a-violet" id="AUTHL" style="left:960px; top:585px; width:225px; height:135px">
+  <div class="ic"><svg><use href="#i-shield"/></svg></div>
+  <div class="body"><div class="t">auth</div><div class="d mono">getProfile.ts · roles.ts</div><div class="d">역할 판정 — 화면·액션·RLS 3중</div></div>
+</div>
+<div class="node a-violet" id="SBC" style="left:1205px; top:585px; width:205px; height:135px">
+  <div class="ic"><svg><use href="#i-plug"/></svg></div>
+  <div class="body"><div class="t">supabase 5</div><div class="d mono">server · client · admin · proxy · retry</div></div>
+</div>
+<div class="node a-violet" id="UPLL" style="left:960px; top:735px; width:225px; height:135px">
+  <div class="ic"><svg><use href="#i-inbox"/></svg></div>
+  <div class="body"><div class="t">upload 4</div><div class="d mono">parse · validate · templates · wide</div></div>
+</div>
+<div class="node a-violet" id="MISC" style="left:1205px; top:735px; width:205px; height:135px">
+  <div class="ic"><svg><use href="#i-wrench"/></svg></div>
+  <div class="body"><div class="t">공용 유틸</div><div class="d mono">format · fiscal · drill · export/sheet</div></div>
+</div>
+
+<!-- ── 디자인 시스템 ────────────────────────────────────────── -->
+<div class="zone z-amber" id="ZDS" style="left:1470px; top:230px; width:395px; height:660px">
+  <div class="zl" style="left:auto;right:18px"><svg><use href="#i-grid"/></svg>디자인 시스템</div>
+</div>
+<div class="node a-amber" id="CARDS" style="left:1490px; top:285px; width:355px; height:135px">
+  <div class="ic"><svg><use href="#i-box"/></svg></div>
+  <div class="body"><div class="t">카드 3종 — 이것만 쓴다</div><div class="d mono">KpiTile · DrillCard · ChartCard</div><div class="d">동일 높이 · 테두리·액센트 띠 금지</div></div>
+</div>
+<div class="node a-amber" id="CHARTS" style="left:1490px; top:435px; width:355px; height:135px">
+  <div class="ic"><svg><use href="#i-chart"/></svg></div>
+  <div class="body"><div class="t">차트</div><div class="d mono">MiniCharts · TimeSeriesChart · chartOption · theme · design/palette</div><div class="d">시리즈 의미 고정색 · 이중축 금지</div></div>
+</div>
+<div class="node a-amber" id="TABLES" style="left:1490px; top:585px; width:355px; height:135px">
+  <div class="ic"><svg><use href="#i-list"/></svg></div>
+  <div class="body"><div class="t">표 · 프리미티브</div><div class="d mono">DataGrid · TreeGrid · components/ui 14 (shadcn base-ui)</div><div class="d">숫자 우측 정렬 · 한글 단어 잘림 금지</div></div>
+</div>
+<div class="node a-amber" id="SHELL" style="left:1490px; top:735px; width:355px; height:135px">
+  <div class="ic"><svg><use href="#i-layers"/></svg></div>
+  <div class="body"><div class="t">셸 · 위젯</div><div class="d mono">Sidebar · Topbar · AiPanel 4 · UploadWizard · ColumnMapper · ExportMenu</div></div>
+</div>
+
+<div class="legend" style="left:310px; top:930px">
+  <div class="li"><span class="sw"></span>요청 · 데이터 흐름</div>
+  <div class="li"><span class="box hl"></span>업무 로직이 사는 곳</div>
+  <div class="li"><span class="box" style="border-color:var(--orange);background:var(--orange-bg)"></span>외부 서비스</div>
+</div>
+<div class="foot">SCMpro · web/ · 2026-09-16</div>
+
+<script>
+window.EDGES = [
+  { from:'USR',   to:'LOGIN', fs:'bottom', fa:0.5, ts:'top', ta:0.5 },
+  { from:'LOGIN', to:'PROXY', fs:'bottom', fa:0.5, ts:'top', ta:0.5 },
+  { from:'PROXY', to:'DASH',  fs:'right', fa:0.35, ts:'left', ta:0.5, mid:290 },
+
+  { from:'FCS', to:'ACT', fs:'right', fa:0.5, ts:'left', ta:0.5, label:'폼 제출' },
+  { from:'ALC', to:'QRY', fs:'right', fa:0.5, ts:'left', ta:0.5, label:'조회' },
+  { from:'ACT', to:'CALC', fs:'bottom', fa:0.85, ts:'top', ta:0.5 },
+
+  { from:'AICHAT', to:'OPENAI', fs:'top', fa:0.5, ts:'bottom', ta:0.5,
+    via:[[1307,208],[1737,208]], cls:'orange', both:true },
+
+  { from:'ADM', to:'SHELL', fs:'bottom', fa:0.5, ts:'bottom', ta:0.5,
+    via:[[755,910],[1667,910]], dash:true, label:'모든 화면이 공용 컴포넌트를 쓴다', lat:0.5 },
+];
+</script>
