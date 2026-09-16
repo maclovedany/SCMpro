@@ -34,7 +34,7 @@ export async function fetchHolidays(sb: SB, year: number) {
 }
 export async function fetchEol(sb: SB) {
   const [models, eol] = await Promise.all([
-    sb.schema("core").from("v_model").select("model_base,biz").order("model_base"),
+    sb.schema("analytics").from("v_model").select("model_base,biz").order("model_base"),   // D-056: 화면은 analytics 만
     sb.schema("app").from("eol_eos").select("*"),
   ]);
   const map = new Map((eol.data ?? []).map(e => [e.model_base, e]));

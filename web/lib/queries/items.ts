@@ -36,8 +36,8 @@ export async function fetchItemDetail(sb: SupabaseClient<Database>, code: string
   const [master, monthly, xcn, models, setting, inbound, snapshots] = await Promise.all([
     sb.schema("analytics").from("v_item_master").select("*").eq("key_code", code).maybeSingle(),
     sb.schema("analytics").from("v_item_monthly").select("ym,qty").eq("key_code", code).order("ym"),
-    sb.schema("core").from("v_part_linkage").select("related_item").eq("hoc_item", code),
-    sb.schema("core").from("v_option_model_link").select("model_base,link_source,is_sw").eq("item_code", code),
+    sb.schema("analytics").from("v_part_linkage").select("related_item").eq("hoc_item", code),           // D-056: 화면은 analytics 만
+    sb.schema("analytics").from("v_option_model_link").select("model_base,link_source,is_sw").eq("item_code", code),
     sb.schema("app").from("v_item_setting").select("*").eq("item_code", code).maybeSingle(),
     sb.schema("app").from("inbound").select("id,po_no,qty,planned_date,actual_date,status,is_dummy,supplier:supplier_id(code,name)").eq("item_code", code).order("planned_date"),
     sb.schema("app").from("inventory_snapshot").select("snap_date,qty,stock_class,is_dummy").eq("item_code", code).order("snap_date", { ascending: false }).limit(24),

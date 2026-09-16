@@ -1844,6 +1844,16 @@ export type Database = {
         }
         Relationships: []
       }
+      v_model: {
+        Row: {
+          model_key: string | null
+          model_base: string | null
+          biz: string | null
+          iot_code: string | null
+          sources: string | null
+        }
+        Relationships: []
+      }
       v_ol_accuracy: {
         Row: {
           model_base: string | null
@@ -1872,6 +1882,15 @@ export type Database = {
           scm_wape: number | null
           sales_bias: number | null
           scm_bias: number | null
+        }
+        Relationships: []
+      }
+      v_option_model_link: {
+        Row: {
+          item_code: string | null
+          model_base: string | null
+          link_source: string | null
+          is_sw: boolean | null
         }
         Relationships: []
       }
