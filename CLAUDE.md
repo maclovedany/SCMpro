@@ -65,7 +65,7 @@ uv --directory engine run engine agent --mode dryrun --no-llm   # AI 감시 1회
 uv --directory engine run engine notify                             # 이메일 큐 발송 (SMTP 미설정 시 skipped)
 # 주기 실행은 **Railway Cron**(engine/Dockerfile + railway.json, `*/10 * * * *`, D-049). 이 Mac 의 launchd `com.scmpro.tick` 은 중복이라 중지 상태 — 둘 다 켜면 알림·이메일이 두 번 나간다 (로컬만 쓰려면 `launchctl load ~/Library/LaunchAgents/com.scmpro.tick.plist`, 로그 /tmp/scmpro/tick.log)
 # Web
-cd web && npm run dev            # http://localhost:3000  (계정: scripts/seed-users.mts — admin insightdany@naver.com, scm_lead upflash@naver.com, sales insightcha0624@gmail.com, biz_enable pro-worker@daum.net, marketing alltest@nate.com, service imagineworld@kakao.com · 초기 비밀번호 1q2w3e)
+cd web && npm run dev            # http://localhost:3000  (계정: scripts/seed-users.mts — admin insightdany@naver.com, item_manager insightcha@daum.net, scm_lead upflash@naver.com, sales insightcha0624@gmail.com, biz_enable pro-worker@daum.net, marketing alltest@nate.com, service imagineworld@kakao.com · 초기 비밀번호 1q2w3e)
 npm test · npm run lint · npx tsc --noEmit
 E2E_BASE_URL=http://localhost:3001 npm run test:e2e   # 이미 떠 있는 dev 서버에 붙여 실행 (Next 16 은 같은 폴더에 dev 서버 2개 불가). 서버가 없으면 E2E_BASE_URL 없이 실행하면 3000 에 자동 기동
 # Engine
