@@ -20,6 +20,13 @@ export default async function globalSetup() {
     delete from app.agent_event;
     delete from app.forecast_tuning_proposal where status = 'queued';
     delete from app.notification where kind in ('agent_digest') and created_at < now() - interval '1 hour';
+    -- D-058 픽스처: e2e 강제배정 해제·더미 주문 상태 복원, E2E 수요 라인·긴급발주 요청 제거
+    update app.allocation set released_at = now(), release_reason = 'e2e reset' where forced and released_at is null and order_id in (select id from app.sales_order where is_dummy);
+    update app.sales_order o set note = null, status = (case when exists (select 1 from app.allocation a where a.order_id = o.id and a.released_at is null) then 'partial' else 'waiting' end)::app.so_status
+      where o.is_dummy and o.note like '%강제배정%';
+    delete from app.demand_line where note = 'E2E';
+    update app.approval set status = 'rejected', comment = 'e2e reset', decided_at = now() where kind = 'urgent_order' and status = 'pending' and reason like 'E2E%';
+    delete from app.extra_demand where kind = 'urgent' and reason like 'E2E%';
     select app.fn_request_refresh();
     select (select count(*) from app.sales_order where customer like 'E2E%' and status = 'cancelled') as cancelled_e2e, (select count(*) from app.inbound where item_code = '556K59129' and status <> 'received') as open_inbound;`;
   try { const out = execFileSync("psql", [url, "-At", "-v", "ON_ERROR_STOP=1", "-c", sql], { encoding: "utf8" }); console.log("[e2e] 픽스처 리셋:", out.trim().split("\n").pop()); }

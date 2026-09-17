@@ -38,6 +38,8 @@ test("영업 주문 → 임시배정 → 부족 시 부분/대기 → 입고 자
   // 주문 1 수주 확정 → 확정배정
   const rowA = page.locator("[data-testid=so-row]").filter({ hasText: "E2E-A" }).first();
   await rowA.getByRole("button", { name: "수주 확정" }).click(); await expect(page.getByText("수주 확정 → 확정배정")).toBeVisible();
+  await expect(rowA.getByRole("button", { name: "확정배정 해제" }).or(rowA.getByText("수주 확정", { exact: true }))).toBeVisible();
+  await expect(rowA.getByRole("button", { name: "수주 확정" })).toHaveCount(0);   // KPI 문구("수주 확정 → 확정배정")와 겹쳐 위 단언이 즉시 통과하던 경쟁 조건 방지 — 서버 액션 완료(버튼 사라짐)까지 기다린다
   // SCM: 큐에서 순번 2(E2E-C) 우선배정 → 승인 필요. 먼저 입고 처리로 가용 확보
   await page.context().clearCookies(); await login(page, "insightdany@naver.com");
   await page.goto("/allocation");
