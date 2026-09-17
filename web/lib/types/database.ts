@@ -158,6 +158,9 @@ export type Database = {
           release_reason: string | null
           approval_id: string | null
           created_by: string | null
+          forced: boolean
+          forced_reason: string | null
+          forced_by_dept: Database["app"]["Enums"]["role"] | null
         }
         Insert: {
           id?: number
@@ -171,6 +174,9 @@ export type Database = {
           release_reason?: string | null
           approval_id?: string | null
           created_by?: string | null
+          forced?: boolean
+          forced_reason?: string | null
+          forced_by_dept?: Database["app"]["Enums"]["role"] | null
         }
         Update: {
           id?: number
@@ -184,6 +190,9 @@ export type Database = {
           release_reason?: string | null
           approval_id?: string | null
           created_by?: string | null
+          forced?: boolean
+          forced_reason?: string | null
+          forced_by_dept?: Database["app"]["Enums"]["role"] | null
         }
         Relationships: []
       }
@@ -331,6 +340,87 @@ export type Database = {
         }
         Relationships: []
       }
+      customer: {
+        Row: {
+          code: string
+          name: string
+          segment: string | null
+          sales_rep: string | null
+          is_strategic: boolean
+          source: string
+          is_dummy: boolean
+          updated_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          code?: string
+          name?: string
+          segment?: string | null
+          sales_rep?: string | null
+          is_strategic?: boolean
+          source?: string
+          is_dummy?: boolean
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          name?: string
+          segment?: string | null
+          sales_rep?: string | null
+          is_strategic?: boolean
+          source?: string
+          is_dummy?: boolean
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      demand_line: {
+        Row: {
+          id: number
+          ym: string
+          dept: Database["app"]["Enums"]["role"]
+          customer_code: string
+          item_code: string
+          qty: number
+          note: string | null
+          submitted_by: string | null
+          source: string
+          is_dummy: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          ym?: string
+          dept?: Database["app"]["Enums"]["role"]
+          customer_code?: string
+          item_code?: string
+          qty?: number
+          note?: string | null
+          submitted_by?: string | null
+          source?: string
+          is_dummy?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          ym?: string
+          dept?: Database["app"]["Enums"]["role"]
+          customer_code?: string
+          item_code?: string
+          qty?: number
+          note?: string | null
+          submitted_by?: string | null
+          source?: string
+          is_dummy?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       demand_submission: {
         Row: {
           id: number
@@ -406,6 +496,10 @@ export type Database = {
           approval_id: string | null
           created_by: string | null
           created_at: string | null
+          need_date: string | null
+          requested_dept: Database["app"]["Enums"]["role"] | null
+          inbound_id: number | null
+          is_dummy: boolean
         }
         Insert: {
           id?: string
@@ -421,6 +515,10 @@ export type Database = {
           approval_id?: string | null
           created_by?: string | null
           created_at?: string | null
+          need_date?: string | null
+          requested_dept?: Database["app"]["Enums"]["role"] | null
+          inbound_id?: number | null
+          is_dummy?: boolean
         }
         Update: {
           id?: string
@@ -436,6 +534,10 @@ export type Database = {
           approval_id?: string | null
           created_by?: string | null
           created_at?: string | null
+          need_date?: string | null
+          requested_dept?: Database["app"]["Enums"]["role"] | null
+          inbound_id?: number | null
+          is_dummy?: boolean
         }
         Relationships: []
       }
@@ -754,6 +856,42 @@ export type Database = {
         }
         Relationships: []
       }
+      inbound_event: {
+        Row: {
+          id: number
+          inbound_id: number
+          stage: Database["app"]["Enums"]["inbound_stage"]
+          event_date: string
+          note: string | null
+          source: string
+          is_dummy: boolean
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          inbound_id?: number
+          stage?: Database["app"]["Enums"]["inbound_stage"]
+          event_date?: string
+          note?: string | null
+          source?: string
+          is_dummy?: boolean
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          inbound_id?: number
+          stage?: Database["app"]["Enums"]["inbound_stage"]
+          event_date?: string
+          note?: string | null
+          source?: string
+          is_dummy?: boolean
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       inventory_snapshot: {
         Row: {
           id: number
@@ -835,6 +973,51 @@ export type Database = {
           champion_method?: string | null
           run_id?: string | null
           computed_at?: string | null
+        }
+        Relationships: []
+      }
+      item_group: {
+        Row: {
+          code: string
+          name: string
+          owner_dept: Database["app"]["Enums"]["role"] | null
+          source: string
+          is_dummy: boolean
+          updated_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          code?: string
+          name?: string
+          owner_dept?: Database["app"]["Enums"]["role"] | null
+          source?: string
+          is_dummy?: boolean
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          name?: string
+          owner_dept?: Database["app"]["Enums"]["role"] | null
+          source?: string
+          is_dummy?: boolean
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      item_group_item: {
+        Row: {
+          item_code: string
+          group_code: string
+        }
+        Insert: {
+          item_code?: string
+          group_code?: string
+        }
+        Update: {
+          item_code?: string
+          group_code?: string
         }
         Relationships: []
       }
@@ -1204,6 +1387,8 @@ export type Database = {
           cancel_reason: string | null
           prev_order_id: string | null
           note: string | null
+          customer_code: string | null
+          is_dummy: boolean
         }
         Insert: {
           id?: string
@@ -1222,6 +1407,8 @@ export type Database = {
           cancel_reason?: string | null
           prev_order_id?: string | null
           note?: string | null
+          customer_code?: string | null
+          is_dummy?: boolean
         }
         Update: {
           id?: string
@@ -1240,6 +1427,8 @@ export type Database = {
           cancel_reason?: string | null
           prev_order_id?: string | null
           note?: string | null
+          customer_code?: string | null
+          is_dummy?: boolean
         }
         Relationships: []
       }
@@ -1398,6 +1587,8 @@ export type Database = {
           cancel_reason: string | null
           prev_order_id: string | null
           note: string | null
+          customer_code: string | null
+          is_dummy: boolean | null
           sales_rep_name: string | null
           description: string | null
           temp_qty: number | null
@@ -1480,6 +1671,8 @@ export type Database = {
           cancel_reason: string | null
           prev_order_id: string | null
           note: string | null
+          customer_code: string | null
+          is_dummy: boolean | null
           sales_rep_name: string | null
           description: string | null
           temp_qty: number | null
@@ -1493,6 +1686,7 @@ export type Database = {
     Functions: {
       current_role: { Args: Record<string, never>; Returns: unknown }
       fn_add_extra_demand: { Args: { p_kind: string; p_item: string; p_need_ym: unknown; p_qty: unknown; p_order_no: string; p_customer: string; p_model: string; p_reason: string }; Returns: Json }
+      fn_add_inbound_event: { Args: { p_inbound_id: unknown; p_stage: string; p_date: unknown; p_note: string }; Returns: undefined }
       fn_agent_feedback: { Args: { p_id: string; p_feedback: string }; Returns: undefined }
       fn_agent_order_decided: { Args: Record<string, never>; Returns: unknown }
       fn_agent_signals: { Args: { p_dos_ratio: unknown; p_lead_days: number; p_surge_pct: unknown }; Returns: Json }
@@ -1510,12 +1704,15 @@ export type Database = {
       fn_cancel_sales_order: { Args: { p_id: string; p_reason: string }; Returns: undefined }
       fn_confirm_order_plan: { Args: { p_plan_id: string; p_reason: string }; Returns: string }
       fn_confirm_sales_order: { Args: { p_id: string }; Returns: undefined }
-      fn_create_sales_order: { Args: { p_item: string; p_qty: unknown; p_customer: string; p_mode: string; p_prev: string }; Returns: Json }
+      fn_create_sales_order: { Args: { p_item: string; p_qty: unknown; p_customer: string; p_mode: string; p_prev: string; p_customer_code: string }; Returns: Json }
+      fn_dashboard_ext: { Args: Record<string, never>; Returns: Json }
       fn_dashboard_summary: { Args: Record<string, never>; Returns: Json }
       fn_dashboard_v2: { Args: Record<string, never>; Returns: Json }
       fn_decide_approval: { Args: { p_id: string; p_decision: string; p_comment: string }; Returns: undefined }
       fn_finalize_order_plan: { Args: { p_plan_id: string }; Returns: Json }
+      fn_force_allocate: { Args: { p_order: string; p_qty: unknown; p_reason: string }; Returns: Json }
       fn_forecast_overview: { Args: Record<string, never>; Returns: Json }
+      fn_link_urgent_inbound: { Args: { p_extra: string; p_inbound_id: unknown }; Returns: undefined }
       fn_manual_allocate: { Args: { p_order: string; p_qty: unknown; p_reason: string }; Returns: Json }
       fn_mark_read: { Args: { p_ids: number[] }; Returns: undefined }
       fn_notification_email_copy: { Args: Record<string, never>; Returns: unknown }
@@ -1537,7 +1734,9 @@ export type Database = {
       fn_request_refresh: { Args: Record<string, never>; Returns: undefined }
       fn_request_tuning: { Args: { p_run_id: string }; Returns: string }
       fn_request_tuning_approval: { Args: { p_proposal_id: string; p_reason: string }; Returns: string }
+      fn_request_urgent: { Args: { p_item: string; p_qty: unknown; p_need_date: unknown; p_reason: string }; Returns: Json }
       fn_sailing_dates: { Args: { p_rule: Json; p_ym: unknown }; Returns: unknown }
+      fn_save_demand_lines: { Args: { p_ym: unknown; p_dept: string; p_lines: Json }; Returns: Json }
       fn_save_order_plan: { Args: { p_plan_ym: unknown; p_note: string; p_user: string }; Returns: string }
       fn_set_priority: { Args: { p_order: string; p_priority: number; p_reason: string }; Returns: undefined }
       fn_sidebar_badges: { Args: Record<string, never>; Returns: Json }
@@ -1556,10 +1755,11 @@ export type Database = {
       alloc_kind: "temp" | "firm" | "hold"
       alloc_mode_choice: "partial" | "wait"
       allocation_mode: "auto" | "manual"
-      approval_kind: "item_setting" | "target_dos" | "allocation_mode" | "order_plan" | "priority_alloc" | "bulkdeal" | "forecast_tuning" | "agent_order"
+      approval_kind: "item_setting" | "target_dos" | "allocation_mode" | "order_plan" | "priority_alloc" | "bulkdeal" | "forecast_tuning" | "agent_order" | "urgent_order"
       approval_status: "pending" | "approved" | "rejected"
-      extra_kind: "confirmed_order" | "meeting_approval" | "bulkdeal"
+      extra_kind: "confirmed_order" | "meeting_approval" | "bulkdeal" | "urgent"
       extra_status: "pending" | "approved" | "rejected"
+      inbound_stage: "po_accepted" | "shipped" | "departed" | "arrived" | "customs" | "received"
       inbound_status: "ordered" | "shipped" | "received"
       notify_channel: "system" | "email"
       plan_status: "draft" | "confirmed" | "approved" | "rejected"
@@ -1668,6 +1868,89 @@ export type Database = {
         }
         Relationships: []
       }
+      v_customer: {
+        Row: {
+          code: string | null
+          name: string | null
+          segment: string | null
+          is_strategic: boolean | null
+          is_dummy: boolean | null
+          sales_rep: string | null
+          sales_rep_name: string | null
+        }
+        Relationships: []
+      }
+      v_customer_allocation: {
+        Row: {
+          customer_code: string | null
+          customer_name: string | null
+          segment: string | null
+          is_strategic: boolean | null
+          item_code: string | null
+          description: string | null
+          item_type: string | null
+          need_qty: number | null
+          has_demand_line: boolean | null
+          depts: string | null
+          order_qty: number | null
+          n_orders: number | null
+          temp_qty: number | null
+          firm_qty: number | null
+          hold_qty: number | null
+          forced_qty: number | null
+          allocated_qty: number | null
+          shortage_qty: number | null
+          fill_rate: number | null
+          available: number | null
+          is_dummy: boolean | null
+        }
+        Relationships: []
+      }
+      v_demand_line: {
+        Row: {
+          id: number | null
+          ym: string | null
+          dept: string | null
+          customer_code: string | null
+          customer_name: string | null
+          item_code: string | null
+          description: string | null
+          qty: number | null
+          note: string | null
+          is_dummy: boolean | null
+          updated_at: string | null
+          submitted_by_name: string | null
+        }
+        Relationships: []
+      }
+      v_force_alloc_pool: {
+        Row: {
+          order_id: string | null
+          order_no: string | null
+          item_code: string | null
+          description: string | null
+          item_type: string | null
+          customer_code: string | null
+          customer_name: string | null
+          is_strategic: boolean | null
+          qty: number | null
+          status: string | null
+          priority: number | null
+          requested_at: string | null
+          is_dummy: boolean | null
+          shortage: number | null
+          order_forced_qty: number | null
+          available: number | null
+          on_hand: number | null
+          customer_need: number | null
+          depts: string | null
+          customer_forced_qty: number | null
+          item_forced_qty: number | null
+          item_quota: number | null
+          quota_pct: number | null
+        }
+        Relationships: []
+      }
       v_forecast_latest: {
         Row: {
           key_code: string | null
@@ -1691,6 +1974,36 @@ export type Database = {
           horizon: number | null
           summary: Json | null
           finished_at: string | null
+        }
+        Relationships: []
+      }
+      v_group_stock: {
+        Row: {
+          group_code: string | null
+          group_name: string | null
+          owner_dept: string | null
+          is_dummy: boolean | null
+          item_code: string | null
+          description: string | null
+          item_type: string | null
+          on_hand: number | null
+          available: number | null
+          dos_days: number | null
+          target_dos_days: number | null
+          avg_6m: number | null
+        }
+        Relationships: []
+      }
+      v_inbound_event: {
+        Row: {
+          id: number | null
+          inbound_id: number | null
+          stage: string | null
+          event_date: string | null
+          note: string | null
+          is_dummy: boolean | null
+          po_no: string | null
+          item_code: string | null
         }
         Relationships: []
       }
@@ -1789,6 +2102,15 @@ export type Database = {
           category: string | null
           ym: string | null
           qty: number | null
+        }
+        Relationships: []
+      }
+      v_item_name: {
+        Row: {
+          item_code: string | null
+          description: string | null
+          item_type: string | null
+          family: string | null
         }
         Relationships: []
       }
@@ -1949,6 +2271,35 @@ export type Database = {
           avg_12m: number | null
           trend_3m_vs_12m: number | null
           reason_code: string | null
+        }
+        Relationships: []
+      }
+      v_urgent_progress: {
+        Row: {
+          id: string | null
+          item_code: string | null
+          description: string | null
+          qty: number | null
+          need_ym: string | null
+          need_date: string | null
+          reason: string | null
+          status: string | null
+          requested_dept: string | null
+          requested_by_name: string | null
+          created_by: string | null
+          created_at: string | null
+          is_dummy: boolean | null
+          approval_id: string | null
+          inbound_id: number | null
+          po_no: string | null
+          planned_date: string | null
+          actual_date: string | null
+          inbound_status: string | null
+          supplier_name: string | null
+          last_event_stage: string | null
+          last_event_date: string | null
+          stage: string | null
+          delayed: boolean | null
         }
         Relationships: []
       }

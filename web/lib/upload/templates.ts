@@ -2,7 +2,7 @@
 export type ColType = "text" | "int" | "number" | "date" | "ym" | "enum";
 export type ColDef = { key: string; label: string; required: boolean; type: ColType; enum?: string[] };
 export type TargetDef = { label: string; description: string; mode: "upsert" | "replace"; columns: ColDef[] };
-export type TargetKey = "inventory_snapshot" | "inbound" | "item_setting" | "attach_rate" | "supplier" | "eol_eos" | "holiday" | "shipment_extra" | "mc_plan_actual";
+export type TargetKey = "inventory_snapshot" | "inbound" | "item_setting" | "attach_rate" | "supplier" | "eol_eos" | "holiday" | "shipment_extra" | "mc_plan_actual" | "customer" | "item_group" | "demand_line" | "inbound_event";
 export const UPLOAD_TARGETS: Record<TargetKey, TargetDef> = {
   inventory_snapshot: { label: "재고 스냅샷", description: "기준일 기준 재고. 같은 기준일은 교체 (R-INV-01)", mode: "replace", columns: [
     { key: "item_code", label: "품목코드", required: true, type: "text" },
@@ -54,6 +54,28 @@ export const UPLOAD_TARGETS: Record<TargetKey, TargetDef> = {
     { key: "sales_ol", label: "Sales OL", required: false, type: "number" },
     { key: "scm_ol", label: "SCM OL", required: false, type: "number" },
     { key: "act", label: "실적", required: false, type: "number" } ] },
+  customer: { label: "고객사", description: "고객 마스터 — 영업 주문·수요자료가 가리키는 고객코드 (R-AL-51, D-058)", mode: "upsert", columns: [
+    { key: "code", label: "고객코드", required: true, type: "text" },
+    { key: "name", label: "이름", required: true, type: "text" },
+    { key: "segment", label: "세그먼트", required: false, type: "text" },
+    { key: "is_strategic", label: "전략고객", required: false, type: "enum", enum: ["true", "false"] } ] },
+  item_group: { label: "품목 그룹", description: "품목 → 제품군 → 담당 부서. 담당 부서 대시보드에 그룹 재고 표시 (R-INV-09, D-058)", mode: "upsert", columns: [
+    { key: "group_code", label: "그룹코드", required: true, type: "text" },
+    { key: "group_name", label: "그룹이름", required: false, type: "text" },
+    { key: "owner_dept", label: "담당부서", required: false, type: "enum", enum: ["marketing", "service", "sales", "biz_enable"] },
+    { key: "item_code", label: "품목코드", required: true, type: "text" } ] },
+  demand_line: { label: "수요자료 상세 (고객사별 필요 수량)", description: "부서 × 고객사 × 품목 × 필요월 × 수량 — 고객사 배정현황의 \"필요\" (R-SCH-32, D-058)", mode: "upsert", columns: [
+    { key: "ym", label: "필요월", required: true, type: "ym" },
+    { key: "dept", label: "부서", required: true, type: "enum", enum: ["sales", "marketing", "service", "biz_enable"] },
+    { key: "customer_code", label: "고객코드", required: true, type: "text" },
+    { key: "item_code", label: "품목코드", required: true, type: "text" },
+    { key: "qty", label: "수량", required: true, type: "number" },
+    { key: "note", label: "메모", required: false, type: "text" } ] },
+  inbound_event: { label: "PO 진행 이벤트", description: "PO 별 접수·출하·출항·입항·통관 일자 — 긴급발주 진행 단계 (R-SCH-33, D-058)", mode: "upsert", columns: [
+    { key: "po_no", label: "PO번호", required: true, type: "text" },
+    { key: "stage", label: "단계", required: true, type: "enum", enum: ["po_accepted", "shipped", "departed", "arrived", "customs"] },
+    { key: "event_date", label: "일자", required: true, type: "date" },
+    { key: "note", label: "메모", required: false, type: "text" } ] },
 };
 export const TARGET_KEYS = Object.keys(UPLOAD_TARGETS) as TargetKey[];
 /** 빈 템플릿의 헤더 행 (CSV·xlsx 공통, D-055) */

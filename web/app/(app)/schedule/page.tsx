@@ -4,13 +4,16 @@ import { fetchCalendar, fetchSubmissionStatus, fetchInboundGap, scheduleCharts, 
 import { KpiTile, type KpiTileProps } from "@/components/cards/KpiTile";
 import { fmtInt, fmtNum, fmtDateTime } from "@/lib/format";
 import { SchedulePanel } from "./SchedulePanel";
+import { DemandLines } from "./DemandLines";
+import { fetchItemNames, fetchCustomers, fetchDemandLines } from "@/lib/queries/customers";
 import { ScheduleCharts } from "./ScheduleCharts";
 /** 일정·제출·입고 (D-036, R-UI-13): KPI 4 + 차트 4 + 캘린더·제출·입고 차이 표 */
 export default async function SchedulePage() {
   const p = await getProfile();
   const sb = await createServerSupabase();
   const from = thisYm(); const target = nextYm();
-  const [cal, sub, gap] = await Promise.all([fetchCalendar(sb, from, 3), fetchSubmissionStatus(sb, target), fetchInboundGap(sb)]);
+  const [cal, sub, gap, customers, lines] = await Promise.all([fetchCalendar(sb, from, 3), fetchSubmissionStatus(sb, target), fetchInboundGap(sb), fetchCustomers(sb), fetchDemandLines(sb, target)]);
+  const names = await fetchItemNames(sb, gap.rows.slice(0, 50).map(r => r.item_code));
   const today = new Date().toISOString().slice(0, 10);
   const next = cal.filter(c => c.order_date! >= today).sort((a, b) => a.order_date!.localeCompare(b.order_date!))[0];
   const thisMonth = cal.filter(c => c.ym === from);
@@ -31,7 +34,8 @@ export default async function SchedulePage() {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 charts-4" data-testid="sc-charts">
         <ScheduleCharts kind="rounds" c={c} /><ScheduleCharts kind="submission" c={c} depts={sub.depts ?? []} target={target} /><ScheduleCharts kind="gap" c={c} /><ScheduleCharts kind="dist" c={c} />
       </div>
-      <SchedulePanel cal={cal} sub={sub} gap={gap} role={p?.role ?? "sales"} target={target} />
+      <DemandLines target={target} role={p?.role ?? "sales"} customers={customers} lines={lines} depts={(sub.depts ?? []).map(d => d.dept)} />
+      <SchedulePanel cal={cal} sub={sub} gap={gap} role={p?.role ?? "sales"} target={target} names={names} />
       <p className="text-xs text-muted-foreground">기준 {fmtDateTime(new Date().toISOString())}</p>
     </div>
   );

@@ -1,4 +1,5 @@
 "use client";
+import { ItemCode } from "@/components/ItemCode";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -11,7 +12,7 @@ import { fmtInt, fmtDateTime } from "@/lib/format";
 type Cal = { supplier_code: string | null; supplier_name: string | null; ym: string | null; sailing_date: string | null; order_date: string | null; eta: string | null };
 type Sub = { ym: string; deadline: string; overdue: boolean; depts: { dept: string; submitted: boolean; submitted_at: string | null; by: string | null }[] | null };
 type Gap = { summary: { supplier_code: string | null; ym: string | null; n: number | null; avg_diff: number | null; min_diff: number | null; max_diff: number | null }[]; rows: { id: number | null; item_code: string | null; supplier_name: string | null; po_no: string | null; planned_date: string | null; actual_date: string | null; diff_days: number | null }[] };
-export function SchedulePanel({ cal, sub, gap, role, target }: { cal: Cal[]; sub: Sub; gap: Gap; role: string; target: string }) {
+export function SchedulePanel({ cal, sub, gap, role, target, names = {} }: { cal: Cal[]; sub: Sub; gap: Gap; role: string; target: string; names?: Record<string, string> }) {
   const router = useRouter(); const [pending, start] = useTransition(); const [note, setNote] = useState("");
   const canSubmit = (d: string) => role === d || ["admin", "item_manager", "scm_lead"].includes(role);
   return (
@@ -27,7 +28,7 @@ export function SchedulePanel({ cal, sub, gap, role, target }: { cal: Cal[]; sub
           <td className="text-right">{canSubmit(d.dept) && !d.submitted && <span className="inline-flex items-center gap-1"><Input placeholder="메모" value={note} onChange={e => setNote(e.target.value)} className="h-8 w-40" /><Button size="sm" disabled={pending} onClick={() => start(async () => { const r = await submitDemand(target, d.dept, note); if (r.ok) { toast.success("제출 완료"); router.refresh(); } else toast.error(r.error); })}>제출</Button></span>}</td></tr>)}</tbody></table></section>
       <section id="gap" className="rounded-md border p-3"><h2 className="mb-2 text-sm font-medium">계획 vs 실제 입고일 차이 (R-SCH-10/11) — 최근 50건</h2>
         <table className="mt-2 w-full text-sm"><thead><tr className="text-left text-muted-foreground"><th className="py-1">PO</th><th>품목</th><th>공급처</th><th>계획</th><th>실제</th><th className="text-right">차이(일)</th></tr></thead>
-          <tbody>{gap.rows.slice(0, 50).map(r => <tr key={r.id} className="border-t"><td className="py-0.5 font-mono">{r.po_no}</td><td className="font-mono">{r.item_code}</td><td>{r.supplier_name}</td><td>{r.planned_date}</td><td>{r.actual_date}</td><td className="text-right tabular-nums">{fmtInt(r.diff_days)}</td></tr>)}</tbody></table></section>
+          <tbody>{gap.rows.slice(0, 50).map(r => <tr key={r.id} className="border-t"><td className="py-0.5 font-mono">{r.po_no}</td><td><ItemCode code={r.item_code} name={names[r.item_code ?? ""]} /></td><td>{r.supplier_name}</td><td>{r.planned_date}</td><td>{r.actual_date}</td><td className="text-right tabular-nums">{fmtInt(r.diff_days)}</td></tr>)}</tbody></table></section>
     </div>
   );
 }

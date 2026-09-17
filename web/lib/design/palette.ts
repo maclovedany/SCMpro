@@ -15,5 +15,5 @@ export const ACCENT = {
 } as const;
 export type AccentKey = keyof typeof ACCENT;
 /** 카테고리(PART/SUPPLY/OPTION) 고정 슬롯 — 화면 어디서나 같은 색 */
-export const CATEGORY_COLOR: Record<string, string> = { PART: SERIES_LIGHT[0], SUPPLY: SERIES_LIGHT[2], OPTION: SERIES_LIGHT[1], SW: "#9ca3af" };
+export const CATEGORY_COLOR: Record<string, string> = { PART: SERIES_LIGHT[0], SUPPLY: SERIES_LIGHT[2], OPTION: SERIES_LIGHT[1], MACHINE: SERIES_LIGHT[4], SW: "#9ca3af" };   // MACHINE = 기기(보라), D-058
 export const ABC_COLOR: Record<string, string> = { A: SEQ_BLUE[5], B: SEQ_BLUE[3], C: SEQ_BLUE[1] };

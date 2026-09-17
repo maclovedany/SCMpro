@@ -11,14 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { fmtInt, fmtDateTime, fmtDate } from "@/lib/format";
+import { ItemCode } from "@/components/ItemCode";
 type Avail = { item_code: string | null; description: string | null; on_hand: number | null; temp_allocated: number | null; firm_allocated: number | null; hold_qty: number | null; available: number | null } | null;
-export function SalesOrderPanel({ orders, avail, item, isScm, me, now }: { orders: SalesOrderRow[]; avail: Avail; item: string; isScm: boolean; me: string; now: number }) {
+export function SalesOrderPanel({ orders, avail, item, isScm, me, now, customers = [] }: { orders: SalesOrderRow[]; avail: Avail; item: string; isScm: boolean; me: string; now: number; customers?: { code: string; name: string }[] }) {
   const router = useRouter();
-  const [code, setCode] = useState(item); const [qty, setQty] = useState(""); const [customer, setCustomer] = useState(""); const [mode, setMode] = useState<"partial" | "wait">("partial");
+  const [code, setCode] = useState(item); const [qty, setQty] = useState(""); const [customer, setCustomer] = useState(""); const [custCode, setCustCode] = useState(""); const [mode, setMode] = useState<"partial" | "wait">("partial");
   const [cancel, setCancel] = useState<SalesOrderRow | null>(null); const [reason, setReason] = useState("");
   const [pending, start] = useTransition();
   const submit = () => start(async () => {
-    const r = await createSalesOrder(code, Number(qty), customer, mode);
+    const r = await createSalesOrder(code, Number(qty), customer, mode, undefined, custCode || undefined);   // 고객코드 (R-AL-51)
     if (r.ok) { const d = r.data as { status: string; allocated: number; shortage: number }; toast.success(`등록: ${SO_STATUS[d.status]} · 배정 ${fmtInt(d.allocated)} / 부족 ${fmtInt(d.shortage)}`); setQty(""); router.push(`/sales-orders?item=${encodeURIComponent(code)}`); router.refresh(); } else toast.error(r.error); });
   const confirm = (o: SalesOrderRow) => start(async () => { const r = await confirmSalesOrder(o.id!); if (r.ok) { toast.success("수주 확정 → 확정배정"); router.refresh(); } else toast.error(r.error); });
   const doCancel = () => cancel && start(async () => { const r = await cancelSalesOrder(cancel.id!, reason); if (r.ok) { toast.success("취소 · 배정 해제"); setCancel(null); setReason(""); router.refresh(); } else toast.error(r.error); });
@@ -39,7 +40,8 @@ export function SalesOrderPanel({ orders, avail, item, isScm, me, now }: { order
         </div>
         <div className="flex flex-wrap items-end gap-2 text-sm">
           <label>수량<br /><Input name="qty" type="number" value={qty} onChange={e => setQty(e.target.value)} className="mt-1 h-9 w-24" /></label>
-          <label>고객<br /><Input name="customer" value={customer} onChange={e => setCustomer(e.target.value)} className="mt-1 h-9 w-40" /></label>
+          {customers.length > 0 && <label>고객사<br /><select name="customer_code" className="mt-1 h-9 rounded-md border bg-background px-2" value={custCode} onChange={e => { setCustCode(e.target.value); const c = customers.find(x => x.code === e.target.value); if (c) setCustomer(c.name); }}><option value="">(마스터에서 선택)</option>{customers.map(c => <option key={c.code} value={c.code}>{c.name} ({c.code})</option>)}</select></label>}
+          <label>고객{customers.length > 0 ? " (직접 입력)" : ""}<br /><Input name="customer" value={customer} onChange={e => { setCustomer(e.target.value); if (custCode && customers.find(x => x.code === custCode)?.name !== e.target.value) setCustCode(""); }} className="mt-1 h-9 w-40" /></label>
           <label>가용 부족 시<br /><select name="alloc_mode" className="mt-1 h-9 rounded-md border bg-background px-2" value={mode} onChange={e => setMode(e.target.value as "partial" | "wait")}><option value="partial">부분 임시배정 (가능 수량만)</option><option value="wait">전체 배정 대기</option></select></label>
           <Button size="sm" onClick={submit} disabled={pending || !code || !qty}>검토 요청 등록</Button>
         </div>
@@ -47,7 +49,7 @@ export function SalesOrderPanel({ orders, avail, item, isScm, me, now }: { order
       <table className="w-full text-sm"><thead><tr className="text-left text-muted-foreground"><th className="py-2">주문번호</th><th>품목</th><th>고객</th><th className="text-right">수량</th><th className="text-right">임시/확정/부족</th><th>상태</th><th>우선순위</th><th>만료</th><th>담당</th><th></th></tr></thead>
         <tbody>{orders.map(o => (
           <tr key={o.id} className="border-t" data-testid="so-row">
-            <td className="py-1 font-mono">{o.order_no}</td><td className="font-mono">{o.item_code}</td><td>{o.customer}</td><td className="text-right tabular-nums">{fmtInt(Number(o.qty))}</td>
+            <td className="py-1 font-mono">{o.order_no}</td><td><ItemCode code={o.item_code} name={o.description} /></td><td>{o.customer}</td><td className="text-right tabular-nums">{fmtInt(Number(o.qty))}</td>
             <td className="text-right tabular-nums">{fmtInt(Number(o.temp_qty))} / {fmtInt(Number(o.firm_qty))} / <span className={Number(o.shortage) > 0 ? "text-amber-700" : ""}>{fmtInt(Number(o.shortage))}</span></td>
             <td><Badge variant={o.status === "confirmed" ? "default" : ["cancelled", "rejected", "expired"].includes(o.status!) ? "destructive" : "secondary"}>{SO_STATUS[o.status!]}</Badge></td>
             <td className="tabular-nums">{o.priority}</td><td className="text-xs">{o.expires_at ? fmtDate(o.expires_at) : "-"}</td><td className="text-xs">{o.sales_rep_name}</td>

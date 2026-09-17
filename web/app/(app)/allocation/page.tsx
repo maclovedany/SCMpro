@@ -7,6 +7,7 @@ import { fetchQueue, fetchOpenInbound, fetchPendingPriority, fetchAllocationOver
 import { KpiTile, type KpiTileProps } from "@/components/cards/KpiTile";
 import { fmtInt } from "@/lib/format";
 import { AllocationPanel } from "./AllocationPanel";
+import { fetchItemNames } from "@/lib/queries/customers";
 import { AllocationCharts } from "./AllocationCharts";
 /** 재고 배정 (D-036, R-UI-13): KPI 4 + 차트 4 + 큐·입고·승인 패널 */
 export default async function AllocationPage() {
@@ -29,7 +30,7 @@ export default async function AllocationPage() {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 charts-4" data-testid="al-charts">
         <AllocationCharts kind="mix" c={c} /><AllocationCharts kind="queue" c={c} /><AllocationCharts kind="expiring" c={c} /><AllocationCharts kind="inbound" c={c} />
       </div>
-      <AllocationPanel queue={queue} inbound={inbound as never} pending={pending} />
+      <AllocationPanel queue={queue} inbound={inbound as never} pending={pending} names={await fetchItemNames(sb, inbound.map(i => i.item_code))} />
     </div>
   );
 }

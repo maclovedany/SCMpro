@@ -28,7 +28,7 @@ export async function fetchDashboardV2(sb: SupabaseClient<Database>): Promise<Da
 export type CardSpec = { label: string; value: string; hint?: string; href: string; tone?: "default" | "warn" | "danger" };
 export type Section = { key: string; title: string; cards: CardSpec[]; accent: "stock" | "risk" | "cycle" | "forecast" | "ops" | "data" };
 const STATUS: Record<string, string> = { draft: "초안", confirmed: "승인 대기", approved: "승인", rejected: "반려" };
-const KIND: Record<string, string> = { item_setting: "설정", order_plan: "계획", bulkdeal: "Bulkdeal", priority_alloc: "우선배정", forecast_tuning: "AI" };
+const KIND: Record<string, string> = { item_setting: "설정", order_plan: "계획", bulkdeal: "Bulkdeal", priority_alloc: "우선배정", forecast_tuning: "AI", urgent_order: "긴급발주", agent_order: "AI 발주" };
 const pct = (v: string | number | null | undefined) => (v == null ? null : Number(v));
 const won = (n: number | null | undefined) => (n == null ? "-" : `₩${fmtInt(n)}`);
 /** 큰 금액 축약 (KPI 타일용): 234.4억 / 4,821만 */

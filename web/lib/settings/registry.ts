@@ -37,6 +37,7 @@ export const SETTINGS: Record<string, SettingSpec> = {
   agent_max_per_tick: { kind: "int", label: "한 번에 판단하는 최대 건수", unit: "건", min: 1, max: 200, help: "주기 작업 한 번에 AI 가 판단·알림하는 상한 (비용·소음 제한)" },
   run_retention: { kind: "int", label: "예측 런 결과 보존", unit: "개 (종류별)", min: 1, max: 20, help: "백테스트·프로덕션 각각 최근 N개만 결과를 보관. 런 1개 ≈ 50~100MB — 디스크 한도 안에서 (D-045)" },
   audit_retention_days: { kind: "int", label: "감사 로그 보존", unit: "일", min: 7, max: 3650, help: "설정·승인·주문 변경 이력 보관 기간" },
+  force_alloc_max_pct: { kind: "int", label: "강제배정 품목 한도", unit: "% (현재고 대비)", min: 0, max: 100, help: "사업강화부가 큐 순서를 건너뛰어 고객사에 강제배정할 수 있는 수량의 상한 — 품목 현재고의 몇 %까지 (R-AL-53). 0 이면 강제배정 중지" },
   engine_n_jobs: { kind: "int", label: "엔진 병렬 프로세스", unit: "개", min: 1, max: 8, help: "백테스트 병렬도. DB 가 작으면 2~3 (D-045)" },
   auto_run_tune: { kind: "select", label: "자동 실행 후 AI 오차 분석", options: [{ value: true, label: "생성 — 조정 제안을 결재함에 올림" }, { value: false, label: "생성 안 함" }], help: "제안은 팀장 승인 전까지 적용되지 않습니다 (D-021)" },
 };

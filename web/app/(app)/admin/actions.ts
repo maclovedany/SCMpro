@@ -61,3 +61,38 @@ export async function upsertEol(model_base: string, launch_date: string | null, 
   if (error) return fail(error);
   revalidatePath("/admin/eol"); return { ok: true };
 }
+
+// ── 고객사 마스터 (R-AL-51) · 품목 그룹 (R-INV-09) — D-058. 마스터 쓰기 권한(관리자·품목담당), RLS 가 한 번 더 막는다
+export async function upsertCustomer(row: { code: string; name: string; segment: string; is_strategic: boolean }): Promise<R> {
+  const p = await getProfile(); if (!p || !canWriteMaster(p.role)) return { ok: false, error: "권한이 없습니다" };
+  if (!row.code.trim() || !row.name.trim()) return { ok: false, error: "고객코드와 이름은 필수입니다" };
+  const sb = await createServerSupabase();
+  const { error } = await sb.schema("app").from("customer").upsert({ code: row.code.trim(), name: row.name.trim(), segment: row.segment.trim() || null, is_strategic: row.is_strategic, source: "manual", is_dummy: false, updated_by: p.user_id, updated_at: new Date().toISOString() });
+  if (error) return fail(error); revalidatePath("/admin/customers"); revalidatePath("/sales-orders/customers"); return { ok: true };
+}
+export async function deleteCustomer(code: string): Promise<R> {
+  const p = await getProfile(); if (!p || !canWriteMaster(p.role)) return { ok: false, error: "권한이 없습니다" };
+  const sb = await createServerSupabase(); const { error } = await sb.schema("app").from("customer").delete().eq("code", code);
+  if (error) return { ok: false, error: error.message.includes("foreign key") ? "주문·수요자료에서 쓰는 고객사는 지울 수 없습니다" : error.message };
+  revalidatePath("/admin/customers"); return { ok: true };
+}
+export async function upsertItemGroup(row: { code: string; name: string; owner_dept: string }): Promise<R> {
+  const p = await getProfile(); if (!p || !canWriteMaster(p.role)) return { ok: false, error: "권한이 없습니다" };
+  if (!row.code.trim() || !row.name.trim()) return { ok: false, error: "그룹 코드와 이름은 필수입니다" };
+  const sb = await createServerSupabase();
+  const { error } = await sb.schema("app").from("item_group").upsert({ code: row.code.trim(), name: row.name.trim(), owner_dept: (row.owner_dept || null) as never, source: "manual", is_dummy: false, updated_by: p.user_id, updated_at: new Date().toISOString() });
+  if (error) return fail(error); revalidatePath("/admin/item-groups"); revalidatePath("/dashboard"); return { ok: true };
+}
+export async function addGroupItem(groupCode: string, itemCode: string): Promise<R> {
+  const p = await getProfile(); if (!p || !canWriteMaster(p.role)) return { ok: false, error: "권한이 없습니다" };
+  const sb = await createServerSupabase(); const code = itemCode.trim();
+  const { data: hit } = await sb.schema("analytics").from("v_item_name").select("item_code").eq("item_code", code).maybeSingle();
+  if (!hit) return { ok: false, error: "품목 코드를 찾을 수 없습니다" };
+  const { error } = await sb.schema("app").from("item_group_item").upsert({ item_code: code, group_code: groupCode });
+  if (error) return fail(error); revalidatePath("/admin/item-groups"); revalidatePath("/items/groups"); revalidatePath("/dashboard"); return { ok: true };
+}
+export async function removeGroupItem(itemCode: string): Promise<R> {
+  const p = await getProfile(); if (!p || !canWriteMaster(p.role)) return { ok: false, error: "권한이 없습니다" };
+  const sb = await createServerSupabase(); const { error } = await sb.schema("app").from("item_group_item").delete().eq("item_code", itemCode);
+  if (error) return fail(error); revalidatePath("/admin/item-groups"); revalidatePath("/items/groups"); revalidatePath("/dashboard"); return { ok: true };
+}

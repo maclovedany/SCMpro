@@ -23,8 +23,10 @@ export const MENU_GROUPS: MenuGroup[] = [
   ] },
   { key: "ops", label: "운영", items: [
     { href: "/sales-orders", label: "영업 주문", icon: "ShoppingCart", roles: ALL },
+    { href: "/sales-orders/customers", label: "고객사 배정현황", icon: "Building2", roles: ALL },          // R-AL-52 (D-058)
     { href: "/allocation", label: "재고 배정", icon: "Boxes", roles: SCM },
     { href: "/allocation/priority", label: "배정 우선순위", icon: "ListOrdered", roles: ["biz_enable", "scm_lead", "admin"] },
+    { href: "/allocation/force", label: "강제 배정", icon: "Zap", roles: ["biz_enable", "scm_lead", "admin"] },   // R-AL-53 (D-058)
     { href: "/schedule", label: "일정·제출", icon: "CalendarClock", roles: ALL },
   ] },
   { key: "approve", label: "결재", items: [
@@ -38,6 +40,8 @@ export const MENU_GROUPS: MenuGroup[] = [
   { key: "admin", label: "관리", bottom: true, items: [
     { href: "/admin/settings", label: "시스템 설정", icon: "Settings", roles: ["admin"] },
     { href: "/admin/suppliers", label: "공급처", icon: "Truck", roles: MASTER },
+    { href: "/admin/customers", label: "고객사", icon: "Building", roles: MASTER },                     // R-AL-51 (D-058)
+    { href: "/admin/item-groups", label: "품목 그룹", icon: "Tags", roles: MASTER },                   // R-INV-09 (D-058)
     { href: "/admin/holidays", label: "공휴일", icon: "Calendar", roles: MASTER },
     { href: "/admin/eol", label: "EOL/EOS", icon: "Clock", roles: MASTER },
     { href: "/admin/ai-stats", label: "AI 질문 통계", icon: "BarChart3", roles: ["admin"] },
