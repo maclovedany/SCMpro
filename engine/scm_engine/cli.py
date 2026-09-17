@@ -56,6 +56,10 @@ def seed_app_cmd(snap_date: str = "2026-08-31", target: str = "postgres",
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(seed_app.build_seed_sql(db, snap_date), encoding="utf-8")
     typer.echo(f"생성: {out}")
+    if target == "postgres":                     # 고객사·수요 라인 등 D-058 더미 (analytics·app 뷰가 필요해 postgres 전용)
+        out2 = out.with_name("app_seed_customer.sql")
+        out2.write_text(seed_app.build_customer_seed_sql(db, snap_date), encoding="utf-8")
+        typer.echo(f"생성: {out2}")
 
 @app.command("gen-types")
 def gen_types_cmd(out: Path = ROOT / "web" / "lib" / "types" / "database.ts"):

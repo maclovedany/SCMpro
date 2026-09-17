@@ -52,6 +52,7 @@ supabase/scripts/migrate.sh                 # migrations 순서 적용 (재실�
 uv --directory engine run engine export-raw # scm.db → data/export/*.csv
 supabase/scripts/load-raw.sh                # raw 적재 (+ bridge_scc_config 시드)
 uv --directory engine run engine seed-app && supabase/scripts/seed-app.sh   # 더미 시드 (D-007) + 물리화 뷰 refresh
+#   seed-app 은 app_seed.sql 과 app_seed_customer.sql(고객사·수요 라인·기기 재고·품목 그룹·긴급발주 더미, D-058) 두 파일을 만들고 seed-app.sh 가 순서대로 적용한다
 uv --directory engine run engine verify --target postgres                  # 행수 대조·XCN 리포트 → docs/reports/
 uv --directory engine run engine gen-types  # web/lib/types/database.ts 생성 (스키마 변경 시)
 # 예측 (SP2)

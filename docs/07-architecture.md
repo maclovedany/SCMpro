@@ -13,7 +13,7 @@ flowchart LR
     U3[관리자]
   end
   subgraph Web["Web — Next.js 16 (App Router) · Vercel"]
-    P[화면 28 라우트<br/>서버 컴포넌트 + 클라이언트 위젯]
+    P[화면 33 라우트<br/>서버 컴포넌트 + 클라이언트 위젯]
     SA[서버 액션 / API<br/>(권한 검사 → RPC 호출)]
     AI[/api/ai/chat<br/>gpt-5-nano + 도구 9종/]
     PX[proxy.ts<br/>세션 갱신·미로그인 리다이렉트]
@@ -22,8 +22,8 @@ flowchart LR
     AUTH[Auth<br/>이메일/비밀번호]
     RAW[(raw<br/>원본 10 테이블<br/>앱 접근 차단)]
     CORE[(core<br/>정제 뷰 8)]
-    AN[(analytics<br/>뷰 23 + 물리화 뷰 2)]
-    APP[(app<br/>업무 33 테이블 · 함수 59)]
+    AN[(analytics<br/>뷰 33 + 물리화 뷰 2)]
+    APP[(app<br/>업무 38 테이블 · 함수 66)]
     CRON[pg_cron<br/>scm-refresh 매분<br/>(scm-tick 은 D-057 로 해제)]
   end
   subgraph Eng["Engine — Python (uv) · Railway Cron */10분"]
@@ -75,7 +75,7 @@ flowchart LR
 raw        원본 그대로(CSV 적재). 앱 역할은 USAGE 없음(fail-closed). 수정 금지.
   └─ core      정제 규칙 1회 적용: XCN 합산(v_shipment_by_hoc), 다중 HOC 귀속, 옵션↔기종 연결(v_option_model_link), 기종 마스터 정리
        └─ analytics  화면·엔진이 읽는 뷰. 물리화: v_item_monthly(품목×월 0채움), mv_item_stats. 일반 뷰: v_item_master(설정·재고 실시간 조인), v_mc_compare, v_forecast_*, v_order_plan_summary, v_inbound_gap, v_ai_*
-app        업무 데이터 33 테이블: 설정/마스터(system_settings, supplier, item_setting, inventory_snapshot, inbound, attach_rate, eol_eos, holiday, mc_plan_extra),
+app        업무 데이터 38 테이블 (D-058 로 customer·demand_line·item_group·item_group_item·inbound_event 추가): 설정/마스터(system_settings, supplier, item_setting, inventory_snapshot, inbound, attach_rate, eol_eos, holiday, mc_plan_extra),
            공통 메커니즘(profiles, approval, notification, audit_log, upload_log), 예측(forecast_method/policy/run/result/accuracy, item_class, tuning_proposal, auto_run_log),
            발주(extra_demand, order_plan(_line), ol_submission), 배정(sales_order, allocation), 일정(demand_submission), AI(ai_conversation, ai_message, agent_event)
 ```

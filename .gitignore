@@ -15,3 +15,6 @@ playwright-report/
 
 # Understand-Anything 분석 산출물 (파생 스냅샷, 커밋하지 않음)
 .ua/
+
+# 역할별 사용자 매뉴얼 (계정 정보 포함 — 저장소에 올리지 않음)
+manuals/

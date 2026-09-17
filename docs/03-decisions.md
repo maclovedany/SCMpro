@@ -363,3 +363,11 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 배경: D-049 로 엔진을 Railway Cron 에 올리면서 `engine tick` 이 `app.fn_tick()` 을 10분마다 호출하게 됐는데, 004000_schedule.sql 이 등록한 pg_cron `scm-tick`(같은 주기, 같은 함수)이 그대로 살아 있었다. 9/14~16 사이 pg_cron 쪽만 349회 실행 — 10분마다 두 번. D-049 는 Mac launchd 중복만 언급했다. 실제 중복 알림은 없었다(`fn_allocation_tick`·`fn_submission_reminder_tick` 의 `not exists` 가드) — 다만 정각 동시 발화 시 가드 경합 창과 두 배 부하가 남는다.
 - 결정: migration `20260916009100_unschedule_scm_tick.sql` 이 `scm-tick` 을 해제한다(멱등, pg_cron 없으면 no-op). `schedule.sql` 이 재실행마다 재등록하므로 이 파일이 항상 뒤에 와서 다시 해제한다. `scm-refresh`(물리화 뷰 매분 갱신)는 Railway tick 이 대신하지 않으므로 **유지**. fn_tick 의 유일한 정기 호출자는 Railway `engine tick`.
 - 규칙 반영: 07-architecture §6 배치 표, 10-operations §1 갱신. 새 규칙 ID 없음.
+
+## D-058 (2026-09-17) 부서 추가 요청 6건 — 고객사별 배정현황·강제배정·긴급발주 진행·담당 품목 재고·전 부서 재고·품명 병기
+- 배경: 현업 추가 요청. 영업(OL 제출 시 고객사별 필요 기기 수 대비 최종 배정·부족 확인 화면), 서비스(품목코드 옆 품명, 긴급발주 처리 진행을 대시보드에), NP마케팅(용지·카드리더기 재고를 대시보드에), 전 부서(재고현황을 대시보드에서 바로), 사업강화(사업부 제출 총량 안에서 입고 물량 일부를 고객사별로 강제배정).
+- 결정(스키마): `app.customer`, `app.demand_line`(부서×고객사×품목×월), `app.item_group`/`item_group_item`(제품군→담당 부서), `app.inbound_event`(PO 진행 단계), `sales_order.customer_code`·`is_dummy`, `allocation.forced`, `extra_demand.need_date`·`requested_dept`·`inbound_id`·`is_dummy`, enum `extra_kind.urgent`·`approval_kind.urgent_order`·`inbound_stage`. 설정 `force_alloc_max_pct`(기본 30). 뷰 `analytics.v_item_name`·`v_customer_allocation`·`v_urgent_progress`·`v_group_stock`·`v_force_alloc_pool`. RPC `fn_save_demand_lines`·`fn_force_allocate`·`fn_request_urgent`·`fn_link_urgent_inbound`·`fn_add_inbound_event`·`fn_dashboard_ext`, `fn_create_sales_order`(고객코드 인자 추가)·`fn_decide_approval`(urgent_order 분기)·`fn_apply_upload`(대상 4종 추가).
+- 결정(동작): 강제배정은 임시배정으로 만들고 팀장 승인은 생략하되 고객사 한도·품목 한도(설정값)와 즉시 알림·불변 이력으로 통제한다(R-AL-53/54). 긴급발주는 전 부서 요청 → 팀장 승인 → 추가수요 가산 → PO 연결 후 단계 추적(R-OQ-44, R-SCH-33). 대시보드는 기존 `fn_dashboard_v2` 를 건드리지 않고 `fn_dashboard_ext` 를 추가한다(R-UI-16). 재고 "바로바로" 는 스키마 변경 없이 스냅샷 적재 주기를 올리는 것으로 대응하고 ERP 일별 인터페이스(09-integration-plan I-2)는 이관 과제로 둔다.
+- 데이터: 실데이터가 없어 고객사 10곳·기기 12종 재고·수요 라인·더미 주문/배정·품목 그룹 2개·긴급발주 6건(단계별)을 `is_dummy` 로 시드(D-007). 원천은 Q-022~024.
+- 규칙 반영: R-AL-51~54, R-SCH-32·33, R-OQ-44, R-INV-09, R-UI-15·16 신설, R-UI-12 개정.
+

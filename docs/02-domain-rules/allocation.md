@@ -1,6 +1,6 @@
 # 규칙: 영업 주문과 재고 배정 (R-AL)
 
-최종 갱신: 2026-09-13 · 출처: stage1.md §2 · 구현: migrations/20260913003000_allocation.sql (fn_create_sales_order·fn_confirm/cancel·fn_receive_inbound·fn_auto_allocate·fn_manual_allocate·fn_set_priority·fn_allocation_tick), 화면 /sales-orders, /allocation, /allocation/priority (D-023)
+최종 갱신: 2026-09-17 · 출처: stage1.md §2 · 구현: migrations/20260913003000_allocation.sql (fn_create_sales_order·fn_confirm/cancel·fn_receive_inbound·fn_auto_allocate·fn_manual_allocate·fn_set_priority·fn_allocation_tick), 화면 /sales-orders, /allocation, /allocation/priority (D-023)
 범위 주의: 이 영역은 수요예측이 아니라 **주문/재고 배정 운영** 기능이다. 예측·발주 엔진과 별도 모듈로 본다.
 
 ## 주문 상태와 배정 종류
@@ -59,3 +59,13 @@
 | ID | 규칙 |
 |---|---|
 | R-AL-50 | 주문 상태, 배정 수량, 변경자, 변경 시각, 변경 사유는 모두 **변경 불가 이력**으로 보관. |
+
+## 고객사별 배정 · 강제배정 (D-058)
+
+| ID | 규칙 |
+|---|---|
+| R-AL-51 | **고객사 마스터**: 영업 주문·수요자료의 고객은 `app.customer`(코드·이름·세그먼트·담당 영업·전략 고객 여부)의 **고객코드**로 식별한다. 기존 자유 입력 `sales_order.customer` 는 표시용으로 남기고, 신규 주문은 `customer_code` 를 함께 저장한다. 마스터는 업로드 + 관리자 화면(관리 › 고객사) 이중 경로, 실데이터 전까지 더미(`is_dummy`) (D-007). |
+| R-AL-52 | **고객사별 배정현황** (`analytics.v_customer_allocation`, 화면 `/sales-orders/customers`): 고객사 × 품목 단위로 **필요 수량**(수요자료 상세 라인 R-SCH-32 의 이번 달 이후 합) · **주문 수량**(진행·확정 주문) · **배정 수량**(임시+확정, 승인대기 확보는 별도 표기) · **부족** = max(필요 − 배정, 0) · **충족률** = 배정 ÷ 필요. 필요가 없고 주문만 있는 행은 필요 = 주문 수량으로 본다. 전 역할 조회. |
+| R-AL-53 | **강제배정 (사업강화부)**: `biz_enable`·`scm_lead`·`admin` 이 부족이 남은 고객사 주문에 가용재고 일부를 큐 순서와 무관하게 배정한다(`fn_force_allocate`). 조건 — ① 사유 필수 ② 수량 ≤ 주문 부족 ≤ 가용재고 ③ 주문에 고객코드가 있어야 함 ④ **고객사 한도**: 그 고객사·품목의 강제배정 누계 ≤ 수요자료 필요 수량(라인이 있을 때) ⑤ **품목 한도**: 품목의 활성 강제배정 누계 ≤ 현재고 × `force_alloc_max_pct`%(관리자 설정, 기본 30) — "일부만" 의 기준. 한도는 하드코딩하지 않는다. |
+| R-AL-54 | 강제배정은 **임시배정**(`allocation.forced = true`)으로 생성되어 기존 30일 만료·수주 확정 흐름(R-AL-01~04)을 그대로 탄다. 팀장 승인은 생략하되 영업담당·SCM 품목담당·SCM팀장에게 즉시 알림(주문·품목·수량·사유·처리자)하고 이력은 변경 불가로 남긴다(R-AL-50). 화면 `/allocation/force`. |
+

@@ -29,6 +29,11 @@
 | 현재고 · 입고예정 | 발주 산출 시작값 | D-007 · 업로드+관리자 입력, 더미 시드 |
 | EOL/EOS 일정 | 수명주기 예측 조정 | Q-008 |
 | 공휴일 캘린더 | 영업일 보정 | Q-009 |
+| 고객사 마스터 (고객코드·이름·세그먼트·담당 영업·전략 고객) | 고객사별 배정현황·강제배정 (R-AL-51~54) | Q-022 · 업로드 대상 `customer` + 관리 › 고객사, 더미 시드 (D-058) |
+| 수요자료 상세 (부서 × 고객사 × 품목 × 필요월 × 수량) | 고객사 필요 대비 배정 부족 (R-SCH-32) | 업로드 대상 `demand_line` + 일정·제출 화면 입력, 더미 시드 (D-058) |
+| 품목 → 제품군 → 담당 부서 매핑 | 부서별 담당 품목 재고 (R-INV-09) | Q-024 · 업로드 대상 `item_group` + 관리 › 품목 그룹, 더미 시드 (D-058) |
+| PO 진행 이벤트 (접수·출하·출항·입항·통관) | 긴급발주 진행 단계 (R-SCH-33) | Q-020 · 업로드 대상 `inbound_event` + 추가 수요 화면 입력, 더미 시드 (D-058) |
+| 기기(MACHINE) 재고 | 고객사별 기기 배정 | Q-022 · 기존 `inventory_snapshot` 업로드로 반입, 더미 시드 (D-058) |
 
 ## 2. Supabase 스키마 (migrations 실행 순서)
 
@@ -60,6 +65,8 @@
 | `20260914008400_retention.sql` | 보존 정책 `fn_prune_runs`·설정·감사 트리거 축소 (D-045) |
 | `20260916009000_analytics_passthrough.sql` | `analytics.v_model`·`analytics.v_option_model_link` pass-through — 화면의 core 직접 조회 3곳 제거 (D-056) |
 | `20260916009100_unschedule_scm_tick.sql` | pg_cron `scm-tick` 해제 — fn_tick 은 Railway `engine tick` 만 호출. `scm-refresh` 유지 (D-057) |
+| `20260917010000_enum_additions.sql` | enum 값 추가: `extra_kind.urgent`, `approval_kind.urgent_order` (사용 전 커밋 필요해 분리, D-058) |
+| `20260917010100_customer_demand.sql` | 고객사·수요 라인·품목 그룹·PO 이벤트 테이블, 강제배정·긴급발주 RPC, `fn_dashboard_ext`, analytics 뷰 5종, 업로드 대상 4종 (D-058) |
 | `20260913999900_grants.sql` | 권한. **항상 마지막** — 파일명 순서상 앞서지만 `migrate.sh` 가 마지막에 따로 실행한다. 그래도 새 마이그레이션은 자기 객체에 직접 `grant` 를 쓴다 |
 
 raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `supabase/scripts/load-raw.sh` (\copy). 구 `02-data-*.sql`, `03-verify.sql`, `07-*.sql` 은 `supabase/legacy/` 참고용.
@@ -93,7 +100,7 @@ raw 데이터 적재: `engine export-raw` (scm.db → `data/export/*.csv`) → `
 ### analytics 뷰 (화면·Tool 전용)
 
 `v_shipment_trend`, `v_item_demand_profile`, `v_item_demand_kpi`, `v_ol_accuracy`, `v_ol_accuracy_fy`, `v_bom_requirement`, `v_bom_requirement_x`, `v_part_linkage`, `v_realdata_kpi`, `v_model`·`v_option_model_link`(core pass-through — 화면은 이것만, D-056)
-(5회차 더미 뷰 `v_stockout_risk`·`v_stockout_kpi`·`v_leadtime_gap` 은 **삭제 완료**. 현재 analytics 는 뷰 25 + 물리화 뷰 2)
+(5회차 더미 뷰 `v_stockout_risk`·`v_stockout_kpi`·`v_leadtime_gap` 은 **삭제 완료**. 현재 analytics 는 뷰 33 + 물리화 뷰 2 — D-058 로 `v_item_name`·`v_customer`·`v_customer_allocation`·`v_demand_line`·`v_urgent_progress`·`v_inbound_event`·`v_group_stock`·`v_force_alloc_pool` 추가)
 
 ## 3. `app` 스키마 (SP1 구현, migrations 000400~000700)
 
