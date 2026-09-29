@@ -49,9 +49,18 @@ test("기종 OL · 실적: 메뉴 · KPI · 표 · 실제 이름 · 검색 · �
   for (const b of await rows.locator("td:nth-child(2)").allInnerTexts()) expect(b).toBe("DT");
   await expect(page.getByRole("button", { name: "내보내기" })).toBeEnabled();
   // Product 를 누르면 기종 예측 비교로
-  await rows.locator("td:nth-child(3) a[href^='/forecast/mc']").first().click();   // 기종 묶음이 있는 첫 행
-  await page.waitForURL("**/forecast/mc?model=**");
+  const link = rows.locator("td:nth-child(3) a[href^='/forecast/mc']").first();   // 기종 묶음이 있는 첫 행
+  const picked = (await link.innerText()).trim();
+  await link.click();
+  await page.waitForURL(/\/forecast\/mc\?.*family=/);
   await expect(page.getByRole("heading", { name: "기종 예측 비교" })).toBeVisible();
+  // 어떤 Family 를 눌러서 왔는지 이 화면에서 보인다 (D-079)
+  await expect(page.getByTestId("mc-picked")).toContainText(picked);
+  await expect(page.getByTestId("mc-picked")).toContainText("DT");
+  await expect(page.getByTestId("mc-siblings").getByRole("link", { name: picked, exact: true })).toHaveAttribute("aria-current", "true");
+  // 사이드바: 기종 OL · 실적이 품목 위
+  const menu = await page.locator("nav[aria-label='주 메뉴'] a").allInnerTexts();
+  expect(menu.indexOf("기종 OL · 실적")).toBeLessThan(menu.indexOf("품목"));
 });
 test("제품군 · 기종으로 보기: 요약 → 품목 목록 → 발주 계획 (D-076)", async ({ page }) => {
   test.setTimeout(120_000);

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { menuForRole, menuGroupsForRole } from "@/lib/auth/roles";
 describe("menuForRole", () => {
   it("sales sees only common menus", () => {
-    expect(menuForRole("sales").map(m => m.href)).toEqual(["/dashboard", "/notifications", "/items", "/forecast", "/mc-plan", "/orders", "/extra-demand", "/sales-orders", "/sales-orders/customers", "/schedule"]);
+    expect(menuForRole("sales").map(m => m.href)).toEqual(["/dashboard", "/notifications", "/mc-plan", "/items", "/forecast", "/orders", "/extra-demand", "/sales-orders", "/sales-orders/customers", "/schedule"]);
   });
   it("admin sees admin menus", () => {
     const hrefs = menuForRole("admin").map(m => m.href);

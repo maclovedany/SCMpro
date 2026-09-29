@@ -1,7 +1,7 @@
 import { it, expect } from "vitest";
 import { ratioOf, mcPivot, mcSummary, mcLineage, fyOf, fyLabel, type McOlRow } from "@/lib/queries/mcPlan";
 import { parseFamilyFilters, byModel, inList, type FamilySummaryRow } from "@/lib/queries/families";
-import { menuForRole } from "@/lib/auth/roles";
+import { menuForRole, menuGroupsForRole } from "@/lib/auth/roles";
 // 합성 값 — 실제 제품군 이름은 테스트에 쓰지 않는다 (D-075)
 const row = (p: Partial<McOlRow>): McOlRow => ({ model_key: "MDL901 A", model_base: "MDL901", biz: "DT", iot_code: "TL000001", ym: "2026-04", sales_ol: null, scm_ol: null, act: null, product_name: "Alpha A", codename: "ALPHA", ...p });
 it("ratio = 실적 ÷ Sales OL, OL 이 0 이거나 없으면 값 없음", () => {
@@ -29,6 +29,10 @@ it("pivots rows into product lines by month with totals", () => {
 it("filters by business line", () => {
   const p = mcPivot([row({ sales_ol: 1, act: 1 }), row({ model_key: "B", biz: "GC", sales_ol: 2, act: 2 })], "GC");
   expect(p.lines.length).toBe(1); expect(p.total.total.act).toBe(2);
+});
+it("machine OL screen is the first item of the plan group", () => {
+  const plan = menuGroupsForRole("sales").find(g => g.key === "plan")!;
+  expect(plan.items.map(i => i.href)).toEqual(["/mc-plan", "/items", "/forecast", "/orders", "/extra-demand"]);
 });
 it("menu has the machine OL screen in the plan group for every role", () => {
   for (const r of ["sales", "marketing", "item_manager", "admin"] as const) expect(menuForRole(r).some(m => m.href === "/mc-plan")).toBe(true);

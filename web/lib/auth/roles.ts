@@ -16,9 +16,9 @@ export const MENU_GROUPS: MenuGroup[] = [
     { href: "/agent", label: "AI 감시", icon: "Radar", roles: SCM },
   ] },
   { key: "plan", label: "계획", items: [
+    { href: "/mc-plan", label: "기종 OL · 실적", icon: "Table2", roles: ALL },                       // R-FC-15 (D-075) — 관리자가 주로 보는 자료라 계획의 맨 위 (D-079)
     { href: "/items", label: "품목", icon: "Package", roles: ALL },
     { href: "/forecast", label: "예측", icon: "TrendingUp", roles: ALL },
-    { href: "/mc-plan", label: "기종 OL · 실적", icon: "Table2", roles: ALL },                       // R-FC-15 (D-075)
     { href: "/orders", label: "발주 계획", icon: "ClipboardList", roles: ALL },
     { href: "/extra-demand", label: "추가 수요", icon: "PlusSquare", roles: ALL },
   ] },
