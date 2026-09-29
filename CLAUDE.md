@@ -69,6 +69,8 @@ uv --directory engine run engine notify                             # 이메일 
 # Web
 cd web && npm run dev            # http://localhost:3000  (계정: scripts/seed-users.mts — admin insightdany@naver.com, item_manager insightcha@daum.net, scm_lead upflash@naver.com, sales insightcha0624@gmail.com, biz_enable pro-worker@daum.net, marketing alltest@nate.com, service imagineworld@kakao.com · 초기 비밀번호 1q2w3e)
 npm test · npm run lint · npx tsc --noEmit
+npm run gen:help                 # 사용자 가이드·용어집 → web/lib/ai/helpData.ts (AI 도움말, 문서를 고치면 다시 실행 — 단위 테스트가 어긋남을 잡는다, D-081)
+npm run eval:ai                  # AI Agent 평가: 역할별 도구 실행 + 도구 선택 (실제 DB 읽기·모델 호출, 평소 테스트에는 없음)
 E2E_BASE_URL=http://localhost:3001 npm run test:e2e   # 이미 떠 있는 dev 서버에 붙여 실행 (Next 16 은 같은 폴더에 dev 서버 2개 불가). 서버가 없으면 E2E_BASE_URL 없이 실행하면 3000 에 자동 기동
 # Engine
 cd engine && uv run pytest

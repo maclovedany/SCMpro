@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   const history = (hist ?? []).reverse().map(m => ({ role: m.role as "user" | "assistant", content: m.content ?? "" }));
   { const { error } = await sb.schema("app").from("ai_message").insert({ conversation_id: convId, role: "user", content: text }); if (error) return NextResponse.json({ conversation_id: convId, error: `질문 저장 실패: ${error.message}` }, { status: 500 }); }
   const t0 = Date.now();
-  let result; try { result = await runChat(client, model, sb, history, summary, body.page_context ?? null, text); }
+  let result; try { result = await runChat(client, model, sb, history, summary, body.page_context ?? null, text, { role: p.role, userId: p.user_id, dept: p.dept, name: p.name }); }
   catch (e) { const err = e instanceof Error ? e.message : String(e); await sb.schema("app").from("ai_message").insert({ conversation_id: convId, role: "assistant", content: null, error: err.slice(0, 500), latency_ms: Date.now() - t0 }); return NextResponse.json({ conversation_id: convId, error: `AI 호출 실패: ${err}` }, { status: 502 }); }
   const topic = await classifyTopic(client, model, text);
   await sb.schema("app").from("ai_message").update({ topic }).eq("conversation_id", convId).eq("role", "user").eq("content", text).order("id", { ascending: false }).limit(1);

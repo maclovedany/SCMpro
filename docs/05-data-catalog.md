@@ -163,6 +163,7 @@ Project Settings → Data API → **Exposed schemas**: `public, graphql_public, 
 | `analytics.v_item_master_x` · `v_order_plan_line_x` | 품목 목록 · 발주 계획 라인 + 연결 기종(`link_models`) — 제품군·기종 필터가 있을 때만 읽는다 |
 | `analytics.v_family_summary` · `v_model_item_summary` | 제품군 / 기종 × 카테고리 요약: 품목 수·현재고·입고예정·평균 출고·재고 0·목표 미달 |
 | `analytics.v_order_plan_family` · `app.fn_plan_model_summary(plan)` | 발주 계획의 제품군별 / 기종별 요약. 기종별은 8초 제한 때문에 함수 (D-027) |
+| `analytics.v_plan_line_item` · `v_item_risk` · `v_inbound_delay` | AI Agent 도구용: 발주 계획 라인 + 품명·ABC·제품군 / 품목별 재고 0 · 목표 DoS 미달 · 과잉 표시 / 입고 지연 PO 공급처별 집계 (R-AI-16, D-081) |
 | `analytics.v_mc_ol_act` | 기종 OL · 실적 화면용: IOT × Product × 월 — sales_ol·scm_ol·act·fy + 표시 이름(product_name·codename). raw 단위 그대로(변형 합산 없음), 업로드 추가분 없음 (R-FC-15, D-075) |
 | `app.name_alias` ★ | 표시 이름: 익명 제품군·기종 이름 → 실제 이름 (kind=family 794 · codename 266). `engine load-names` 가 치환표의 이름 쌍만 적재 — 코드 복원 쌍 없음. 조회 함수 `app.fn_real_name(kind, anon)` (R-UI-17, D-075) |
 | `analytics.v_mc_compare` | 기종×월: sales_ol·scm_ol·act·system_fc·밴드·fy (기종 변형 합산) |

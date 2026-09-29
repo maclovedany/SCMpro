@@ -2230,6 +2230,67 @@ export type Database = {
         }
         Relationships: []
       }
+      v_inbound_delay: {
+        Row: {
+          supplier: string | null
+          n: number | null
+          qty: number | null
+          n_items: number | null
+          oldest_planned: string | null
+          max_days_late: number | null
+        }
+        Relationships: []
+      }
+      v_item_risk: {
+        Row: {
+          key_code: string | null
+          description: string | null
+          category: string | null
+          family: string | null
+          abc: string | null
+          xyz: string | null
+          avg_6m: number | null
+          total_12m: number | null
+          on_hand: number | null
+          inbound_qty: number | null
+          dos_days: number | null
+          target_dos_days: number | null
+          is_zero_stock: boolean | null
+          is_below_target: boolean | null
+          is_excess: boolean | null
+        }
+        Relationships: []
+      }
+      v_plan_line_item: {
+        Row: {
+          plan_id: string | null
+          key_code: string | null
+          description: string | null
+          category: string | null
+          abc: string | null
+          xyz: string | null
+          family: string | null
+          need_ym: string | null
+          on_hand: number | null
+          inbound_until_need: number | null
+          forecast_need: number | null
+          extras_need: number | null
+          start_need: number | null
+          target_stock: number | null
+          target_dos_days: number | null
+          required_qty: number | null
+          final_qty: number | null
+          override_qty: number | null
+          override_reason: string | null
+          end_after: number | null
+          dos_after: number | null
+          amount: number | null
+          stockout_risk: boolean | null
+          blocked: boolean | null
+          flex_hit: boolean | null
+        }
+        Relationships: []
+      }
       v_mc_ol_act: {
         Row: {
           model_key: string | null

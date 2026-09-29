@@ -10,6 +10,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "gen:types": "uv --directory ../engine run engine gen-types",
+    "gen:help": "node scripts/gen-help.mjs",
+    "eval:ai": "vitest run --config vitest.eval.config.ts",
     "seed:users": "tsx scripts/seed-users.mts"
   },
   "dependencies": {
