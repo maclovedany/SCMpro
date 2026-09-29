@@ -1,5 +1,5 @@
 -- 기종(MC) 마스터 · 제품 단위 OL 실적 (D-077, R-FC-16). `engine load-mc --src <회사 정리본> --key <치환표>` 가 로컬에서 변환해 채운다. 재실행 안전.
--- family_key = 회사가 준 보안용 제품군 약자(없으면 익명 이름), item_code = 익명 Item Code. 실제 이름·실코드는 넣지 않는다.
+-- family_key = 회사가 준 보안용 제품군 약자(약자가 없는 제품군만 회사 파일의 이름 그대로, D-078), item_code = 익명 Item Code. 실코드는 넣지 않는다.
 create table if not exists app.mc_family (
   family_key text primary key,
   biz text check (biz in ('DT','GC','PRT')),          -- MC 안의 구분 (R-FC-16)
@@ -7,7 +7,7 @@ create table if not exists app.mc_family (
   model_key text,                                      -- raw 의 익명 Product 이름 (연결용)
   model_base text,                                     -- 기종 묶음 (MDLnnn)
   predecessor text,                                    -- 전임기 family_key (회사 '전임 후속기' 시트)
-  has_alias boolean not null default true,             -- false = 회사 약자가 없어 익명 이름을 쓴다
+  has_alias boolean not null default true,             -- false = 회사 약자가 없어 회사 파일의 이름을 그대로 쓴다 (D-078)
   sort_no int not null default 0,                      -- 회사 파일의 행 순서
   updated_at timestamptz not null default now());
 create table if not exists app.mc_plan_item (

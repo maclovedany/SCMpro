@@ -51,16 +51,16 @@ def test_build_uses_company_alias_and_keeps_codes_anonymous(tmp_path):
     p = _book(tmp_path)
     fam, items, rep = M.build(M.read_plan(p), M.read_lineage(p), KEY, MODELS)
     f = fam.set_index("family_key")
-    assert set(f.index) == {"AL1", "BT2", "BTM", "GMS", "MDL904 4C"}                                             # 회사 약자, 약자 없는 것은 익명 이름
+    assert set(f.index) == {"AL1", "BT2", "BTM", "GMS", "Delta 4C"}                                              # 회사 약자, 약자 없는 것은 회사 파일의 이름 그대로 (D-078)
     assert f.loc["BT2", ["biz", "item_code", "model_key", "model_base", "predecessor", "has_alias"]].tolist() == ["DT", "TL900002", "MDL902 Two(337)", "MDL902", "AL1", True]
     assert f.loc["BTM", "model_base"] == "MDL902" and pd.isna(f.loc["BTM", "predecessor"])                       # 이름 앞 코드네임으로 기종 묶음
-    assert f.loc["MDL904 4C", ["biz", "has_alias"]].tolist() == ["GC", False] and pd.isna(f.loc["MDL904 4C", "item_code"])   # 치환표에 없는 코드는 넣지 않는다
-    assert fam.family_key.tolist() == ["BT2", "BTM", "MDL904 4C", "AL1", "GMS"]                                  # 가장 최근 시트의 행 순서, 옛 시트에만 있는 것은 뒤
+    assert f.loc["Delta 4C", ["biz", "has_alias", "model_base"]].tolist() == ["GC", False, "MDL904"] and pd.isna(f.loc["Delta 4C", "item_code"])   # 치환표에 없는 코드는 넣지 않는다
+    assert fam.family_key.tolist() == ["BT2", "BTM", "Delta 4C", "AL1", "GMS"]                                  # 가장 최근 시트의 행 순서, 옛 시트에만 있는 것은 뒤
     assert f.loc["GMS", ["biz", "model_key", "model_base"]].tolist() == ["PRT", "MDL903 SFP (MOQ 161)", "MDL903"]      # (MOQ n) 이 붙은 옛 이름과 연결
     assert items[(items.family_key == "BT2")].sort_values("ym").ym.tolist() == ["2025-04", "2026-04", "2026-05"]
-    assert rep["no_alias"] == ["MDL904 4C"] and rep["unmapped_codes"] == 1
+    assert rep["no_alias"] == ["Delta 4C"] and rep["unmapped_codes"] == 1
     blob = fam.to_csv() + items.to_csv()
-    for real in ["Alpha", "Beta", "Gamma", "Delta", "TL000001", "TL000002", "TX999999"]: assert real not in blob   # 실제 이름·실코드는 결과에 없다
+    for real in ["Alpha", "Beta", "Gamma", "TL000001", "TL000002", "TX999999"]: assert real not in blob   # 약자가 있는 Family 의 실제 이름과 실코드는 결과에 없다
 
 
 def test_to_sql_is_rerunnable(tmp_path):

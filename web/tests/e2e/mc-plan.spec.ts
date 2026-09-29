@@ -10,10 +10,10 @@ test("기종 OL · 실적: 메뉴 · KPI · 표 · 실제 이름 · 검색 · �
   const rows = page.getByTestId("mc-row");
   await expect(rows.first()).toBeVisible();
   const n = await rows.count(); expect(n).toBeGreaterThan(20);
-  // 머리글은 회사 파일과 같게, Family = 회사 약자(약자가 없는 몇 개만 익명 이름), Item Code = 익명 코드
+  // 머리글은 회사 파일과 같게, Family = 회사 약자(약자가 없는 몇 개는 회사 파일의 이름) — 익명 표기(MDLnnn)는 없다. Item Code = 익명 코드
   await expect(page.locator("[data-testid=mc-table] thead")).toContainText("Item Code"); await expect(page.locator("[data-testid=mc-table] thead")).toContainText("Family");
   const products = await rows.locator("td:nth-child(3)").allInnerTexts();
-  expect(products.filter(p => /MDL\d{3}/.test(p)).length).toBeLessThanOrEqual(3);
+  expect(products.filter(p => /MDL\d{3}/.test(p))).toEqual([]);
   const iots = (await rows.locator("td:nth-child(1)").allInnerTexts()).filter(v => v !== "-");
   expect(iots.length).toBeGreaterThan(20); for (const v of iots) expect(v).toMatch(/^[A-Z0-9][A-Z0-9_-]{5,11}$/);   // 코드 형태 (이름이 아님)
   // 합계 행 = 표시된 행의 합

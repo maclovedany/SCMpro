@@ -1,7 +1,7 @@
-"""기종(MC) 마스터·OL 실적 적재 (D-077, R-FC-16). 회사가 보낸 정리본(실제 이름·실코드)을 **로컬에서** 읽어
-- 제품군 이름은 회사가 준 보안용 약자('전임 후속기' 시트)로,
+"""기종(MC) 마스터·OL 실적 적재 (D-077 · D-078, R-FC-16). 회사가 보낸 정리본(실제 이름·실코드)을 **로컬에서** 읽어
+- 제품군 이름은 회사가 준 보안용 약자('전임 후속기' 시트)로 — 약자가 없는 제품군만 회사 파일의 이름 그대로(D-078),
 - Item Code 는 치환표의 익명 코드로
-바꾼 뒤 app.mc_family · app.mc_plan_item 에 넣는다. 실제 이름과 실코드는 DB·저장소에 남기지 않는다 (D-059, D-075)."""
+바꾼 뒤 app.mc_family · app.mc_plan_item 에 넣는다. 약자가 있는 제품군의 실제 이름과 실코드는 DB 에 남기지 않는다. 저장소에는 어떤 이름도 쓰지 않는다 (D-059, D-075)."""
 from __future__ import annotations
 import re
 from dataclasses import dataclass
@@ -105,7 +105,7 @@ def read_lineage(path: Path) -> pd.DataFrame:
 
 
 def build(plan: pd.DataFrame, lineage: pd.DataFrame, key: Key, models: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
-    """plan·lineage(실제 이름·실코드) → families(family_key …) · items(family_key, ym, …). 결과에는 약자와 익명 코드만 남는다."""
+    """plan·lineage(실제 이름·실코드) → families(family_key …) · items(family_key, ym, …). 결과에는 약자(없으면 회사 파일의 이름)와 익명 코드만 남는다."""
     alias, biz_of, pred = {}, {}, {}
     for r in lineage.itertuples():
         for real, al in ((r.before, r.before_alias), (r.after, r.after_alias)):
@@ -122,8 +122,7 @@ def build(plan: pd.DataFrame, lineage: pd.DataFrame, key: Key, models: pd.DataFr
         for f in plan[plan.fy_sheet == sh].family.drop_duplicates(): order.setdefault(f, len(order))
     for r in last.itertuples():
         anon_name = key.family.get(_norm(r.family)) or old_name.get(_base(r.family))
-        fk = alias.get(_base(r.family)) or anon_name or (f"MC-{key.code[r.item_code]}" if r.item_code in key.code else None)
-        if not fk: continue
+        fk = alias.get(_base(r.family)) or _hdr(r.family)             # 회사 약자, 없으면 회사 파일의 이름 그대로 (D-078)
         has_alias = _base(r.family) in alias
         if not has_alias: no_alias.append(fk)
         iot = key.code.get(r.item_code) if r.item_code else None
