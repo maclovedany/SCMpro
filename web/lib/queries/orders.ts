@@ -1,3 +1,5 @@
+import type { AliasMap } from "@/lib/names";
+import { applyFamilyFilters } from "@/lib/queries/families";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import type { TreeRow } from "@/components/tables/TreeGrid";
@@ -9,8 +11,13 @@ export async function fetchPlans(sb: SB) {
   return data ?? [];
 }
 export const LINE_PAGE = 500;
-export async function fetchPlan(sb: SB, id: string, f: LineFilters = {}, page = 1) {
-  let q = sb.schema("app").from("order_plan_line").select("*", { count: "exact" }).eq("plan_id", id);
+export async function fetchPlan(sb: SB, id: string, f: LineFilters = {}, page = 1, names?: AliasMap) {
+  // 제품군·기종 필터가 있으면 제품군·연결 기종이 붙은 뷰에서 읽는다 — 나머지 열은 order_plan_line 과 같다 (D-076)
+  const grouped = !!names && !!(f.family || f.model);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let q: any = grouped ? sb.schema("analytics").from("v_order_plan_line_x" as never).select("*", { count: "exact" }).eq("plan_id", id)
+    : sb.schema("app").from("order_plan_line").select("*", { count: "exact" }).eq("plan_id", id);
+  if (grouped) q = applyFamilyFilters(q, f, names!);
   if (f.risk) q = q.eq("stockout_risk", true);
   if (f.blocked) q = q.eq("blocked", true);
   if (f.flex) q = q.eq("flex_hit", true);
@@ -21,7 +28,7 @@ export async function fetchPlan(sb: SB, id: string, f: LineFilters = {}, page = 
     q.order("amount", { ascending: false }).range((page - 1) * LINE_PAGE, page * LINE_PAGE - 1),
     sb.schema("app").rpc("fn_plan_cat_projection", { p_plan_id: id }),
   ]);
-  return { plan: plan.data, lines: lines.data ?? [], count: lines.count ?? 0, catAgg: (cat.data ?? {}) as unknown as CatAgg };
+  return { plan: plan.data, lines: (lines.data ?? []) as LineRow[], count: lines.count ?? 0, catAgg: (cat.data ?? {}) as unknown as CatAgg };
 }
 export type CatAgg = Record<string, Record<string, { forecast: number; inbound: number; extras: number; end: number; order: number; final: number; n: number }>>;
 export async function fetchPrevApprovedPlan(sb: SB, planYm: string) {
@@ -32,7 +39,7 @@ export async function fetchExtraDemand(sb: SB) {
   const { data } = await sb.schema("app").from("extra_demand").select("*").order("created_at", { ascending: false }).limit(200);
   return data ?? [];
 }
-export type LineFilters = { risk?: boolean; blocked?: boolean; flex?: boolean; category?: string; q?: string };
+export type LineFilters = { risk?: boolean; blocked?: boolean; flex?: boolean; category?: string; q?: string; family?: string; model?: string };
 export function filterLines<T extends { stockout_risk: boolean | null; blocked: boolean | null; flex_hit: boolean | null; category: string | null; key_code: string }>(lines: T[], f: LineFilters) {
   return lines.filter(l => (!f.risk || l.stockout_risk) && (!f.blocked || l.blocked) && (!f.flex || l.flex_hit) && (!f.category || l.category === f.category) && (!f.q || l.key_code.includes(f.q)));
 }

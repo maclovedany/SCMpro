@@ -1756,6 +1756,7 @@ export type Database = {
       fn_request_approval: { Args: { p_kind: string; p_target_table: string; p_target_pk: string; p_payload: Json; p_reason: string }; Returns: string }
       fn_request_forecast_run: { Args: { p_run_type: string; p_eval_fy: number; p_horizon: number }; Returns: string }
       fn_request_refresh: { Args: Record<string, never>; Returns: undefined }
+      fn_plan_model_summary: { Args: { p_plan_id: string }; Returns: { model_base: string; codename: string; category: string; n_lines: number; qty: number; amount: number; n_stockout: number; n_flex: number }[] }
       fn_real_name: { Args: { p_kind: string; p_anon: string }; Returns: string }
       fn_request_tuning: { Args: { p_run_id: string }; Returns: string }
       fn_request_tuning_approval: { Args: { p_proposal_id: string; p_reason: string }; Returns: string }
@@ -2172,6 +2173,60 @@ export type Database = {
           sum_actual: number | null
           wape: number | null
           bias: number | null
+        }
+        Relationships: []
+      }
+      v_family_summary: {
+        Row: {
+          family: string | null
+          family_name: string | null
+          category: string | null
+          n_items: number | null
+          on_hand: number | null
+          inbound_qty: number | null
+          avg_6m: number | null
+          total_12m: number | null
+          n_zero_stock: number | null
+          n_below_target: number | null
+          dos_days: number | null
+        }
+        Relationships: []
+      }
+      v_item_model: {
+        Row: {
+          item_code: string | null
+          model_base: string | null
+          link_source: string | null
+        }
+        Relationships: []
+      }
+      v_model_item_summary: {
+        Row: {
+          model_base: string | null
+          codename: string | null
+          category: string | null
+          n_items: number | null
+          on_hand: number | null
+          inbound_qty: number | null
+          avg_6m: number | null
+          total_12m: number | null
+          n_zero_stock: number | null
+          n_below_target: number | null
+          dos_days: number | null
+        }
+        Relationships: []
+      }
+      v_order_plan_family: {
+        Row: {
+          plan_id: string | null
+          family: string | null
+          family_name: string | null
+          category: string | null
+          n_lines: number | null
+          qty: number | null
+          amount: number | null
+          n_stockout: number | null
+          n_flex: number | null
         }
         Relationships: []
       }

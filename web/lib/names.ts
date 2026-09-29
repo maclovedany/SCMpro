@@ -3,17 +3,25 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 export type AliasKind = "family" | "codename";
 export type AliasRow = { kind: string; anon: string; anon_key: string; real_name: string };
-export type AliasMap = { exact: Map<string, string>; loose: Map<string, string> };
+export type AliasMap = { exact: Map<string, string>; loose: Map<string, string>; byReal: Map<string, string[]> };
 const k = (kind: string, v: string) => `${kind}\u0000${v}`;
 export function aliasMap(rows: AliasRow[]): AliasMap {
-  const exact = new Map<string, string>(); const loose = new Map<string, string>();
-  for (const r of rows) { exact.set(k(r.kind, r.anon), r.real_name); if (!loose.has(k(r.kind, r.anon_key))) loose.set(k(r.kind, r.anon_key), r.real_name); }
-  return { exact, loose };
+  const exact = new Map<string, string>(); const loose = new Map<string, string>(); const byReal = new Map<string, string[]>();
+  for (const r of rows) {
+    exact.set(k(r.kind, r.anon), r.real_name); if (!loose.has(k(r.kind, r.anon_key))) loose.set(k(r.kind, r.anon_key), r.real_name);
+    const rk = k(r.kind, r.real_name.trim().toUpperCase()); byReal.set(rk, [...(byReal.get(rk) ?? []), r.anon]);
+  }
+  return { exact, loose, byReal };
 }
 /** 같은 표기 → 대소문자 무시 → 없으면 받은 값 그대로 */
 export function realName<T extends string | null | undefined>(m: AliasMap, kind: AliasKind, anon: T): T | string {
   if (anon == null) return anon;
   return m.exact.get(k(kind, anon)) ?? m.loose.get(k(kind, anon.trim().toUpperCase())) ?? anon;
+}
+/** 필터용: 화면에서 받은 이름(실제 이름 또는 저장된 이름) → 저장된 이름 목록. 쌍이 없으면 받은 값 그대로 */
+export function anonNamesOf(m: AliasMap, kind: AliasKind, value: string): string[] {
+  const v = value.trim();
+  return m.byReal.get(k(kind, v.toUpperCase())) ?? [v];
 }
 /** 종류별로 나눠 읽는다 — 한 번에 1,000행 제한 (제품군 약 800쌍, 기종 약 270쌍) */
 export async function fetchAliasMap(sb: SupabaseClient<Database>): Promise<AliasMap> {

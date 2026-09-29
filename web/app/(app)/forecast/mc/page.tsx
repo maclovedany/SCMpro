@@ -20,6 +20,7 @@ export default async function McPage({ searchParams }: { searchParams: Promise<{
       <div><h1 className="text-xl font-semibold">기종 예측 비교</h1><p className="text-sm text-muted-foreground">Sales OL · SCM OL · 시스템 기준예측 · 실적 을 항상 함께 표시합니다 (R-FC-10). 백테스트 구간은 평가 FY, 그 이후는 프로덕션 예측(밴드).</p></div>
       <div className="flex flex-wrap gap-1">{models.slice(0, 40).map(m => <Link key={m.model_base} href={`/forecast/mc?model=${m.model_base}`} className={cn("rounded-full border px-2.5 py-0.5 text-xs", m.model_base === sel ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{nm(m.model_base)} <span className="opacity-60">{m.biz}</span></Link>)}</div>
       {sel && <section className="rounded-md border p-3">
+        <div className="float-right flex gap-3 text-xs"><Link className="text-muted-foreground hover:underline" href={`/items?model=${encodeURIComponent(sel)}`}>연결 품목 →</Link><Link className="text-muted-foreground hover:underline" href="/mc-plan">기종 OL · 실적 →</Link></div>
         <h2 className="mb-1 text-sm font-medium">{nm(sel)} — 월별 (챔피언 기법: {method ? METHOD_LABEL[method] ?? method : "-"})</h2>
         <TimeSeriesChart months={months} series={series} forecastFrom={forecastFrom} height={340} />
       </section>}

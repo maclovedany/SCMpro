@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { fetchItems, parseItemFilters, CATEGORIES, PAGE } from "@/lib/queries/items";
+import { parseFamilyFilters, familyChips, fetchFamilyNames } from "@/lib/queries/families";
+import { fetchAliasMap } from "@/lib/names";
 import { drillHref } from "@/lib/drill";
 import { fmtInt } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
@@ -12,12 +14,14 @@ export default async function ItemsPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams;
   const f = parseItemFilters(sp);
   const sb = await createServerSupabase();
-  const { rows, count } = await fetchItems(sb, f);
+  const g = parseFamilyFilters(sp);   // 제품군 · 기종 필터 (D-076)
+  const [{ rows, count }, names, familyNames] = await Promise.all([fetchItems(sb, f, g), fetchAliasMap(sb), fetchFamilyNames(sb)]);
   const page = f.page ?? 1; const pages = Math.max(1, Math.ceil(count / PAGE));
   const active: { k: string; label: string }[] = [];
   if (f.dummy) active.push({ k: "dummy", label: "더미 설정만" });
   if (f.target_dos) active.push({ k: "target_dos", label: "목표 DoS 미설정" });
   if (f.q) active.push({ k: "q", label: `검색: ${f.q}` });
+  active.push(...familyChips(g, names));
   if (f.abc) active.push({ k: "abc", label: `ABC ${f.abc}` });
   if (f.xyz) active.push({ k: "xyz", label: `XYZ ${f.xyz}` });
   if (f.pattern) active.push({ k: "pattern", label: `패턴 ${f.pattern}` });
@@ -27,10 +31,13 @@ export default async function ItemsPage({ searchParams }: { searchParams: Promis
   const without = (k: string) => drillHref("/items", { ...sp, [k]: undefined, page: undefined });
   return (
     <div className="space-y-4">
-      <div className="flex items-end justify-between gap-4">
-        <div><h1 className="text-xl font-semibold">품목</h1><p className="text-sm text-muted-foreground">{fmtInt(count)}개 · 부품은 HOC(발주 코드) 기준으로 합산 (R-XCN-01)</p></div>
-        <form className="flex gap-2" action="/items">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div><div className="flex items-center gap-3"><h1 className="text-xl font-semibold">품목</h1><Link href="/items/families" className="text-sm text-muted-foreground underline-offset-2 hover:underline">제품군 · 기종별 보기 →</Link></div><p className="text-sm text-muted-foreground">{fmtInt(count)}개 · 부품은 HOC(발주 코드) 기준으로 합산 (R-XCN-01)</p></div>
+        <form className="flex flex-wrap gap-2" action="/items">
           {f.category && <input type="hidden" name="category" value={f.category} />}
+          {g.model && <input type="hidden" name="model" value={g.model} />}
+          <Input key={g.family ?? ""} name="family" defaultValue={g.family ? String(familyChips({ family: g.family }, names)[0].label.replace(/^제품군: /, "")) : ""} placeholder="제품군 (Family)" className="h-9 w-56" list="family-names" autoComplete="off" aria-label="제품군" />
+          <datalist id="family-names">{familyNames.map(n => <option key={n} value={n} />)}</datalist>
           <Input name="q" defaultValue={f.q ?? ""} placeholder="코드·설명 검색" className="h-9 w-64" />
           <Button size="sm" type="submit">검색</Button>
         </form>

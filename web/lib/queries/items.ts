@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import { fetchAliasMap, realName } from "@/lib/names";
+import { applyFamilyFilters, type FamilyFilters } from "@/lib/queries/families";
 export type ItemMasterRow = Database["analytics"]["Views"]["v_item_master"]["Row"];
 export type ItemFilters = { category?: string; q?: string; dummy?: boolean; target_dos?: "missing"; sort?: string; page?: number; abc?: string; xyz?: string; pattern?: string; champion?: string; stock?: "zero"; excess?: boolean };
 export const PAGE = 200;
@@ -24,14 +25,15 @@ export function applyItemFilters(q: any, f: ItemFilters) {
   if (f.excess) q = q.eq("is_excess", true);                            // DoS ≥ 목표 2배 (D-034)
   return q;
 }
-export async function fetchItems(sb: SupabaseClient<Database>, f: ItemFilters): Promise<{ rows: ItemMasterRow[]; count: number }> {
+export async function fetchItems(sb: SupabaseClient<Database>, f: ItemFilters, g: FamilyFilters = {}): Promise<{ rows: ItemMasterRow[]; count: number }> {
   const page = f.page ?? 1;
-  let q = sb.schema("analytics").from("v_item_master").select("*", { count: "exact" });
-  q = applyItemFilters(q, f);
+  const names = await fetchAliasMap(sb);   // 제품군은 실제 이름으로 (D-075)
+  // 제품군·기종 필터가 있으면 연결 기종(link_models)이 붙은 뷰에서 읽는다 — 나머지 열은 v_item_master 와 같다 (D-076)
+  let q = sb.schema("analytics").from(((g.family || g.model) ? "v_item_master_x" : "v_item_master") as "v_item_master").select("*", { count: "exact" });
+  q = applyFamilyFilters(applyItemFilters(q, f), g, names);
   const [col, dir] = (f.sort ?? "total_12m.desc").split(".");
   const { data, error, count } = await q.order(col, { ascending: dir !== "desc", nullsFirst: false }).range((page - 1) * PAGE, page * PAGE - 1);
   if (error) throw error;
-  const names = await fetchAliasMap(sb);   // 제품군은 실제 이름으로 (D-075)
   return { rows: (data ?? []).map(r => ({ ...r, family: realName(names, "family", r.family) })), count: count ?? 0 };
 }
 export async function fetchItemDetail(sb: SupabaseClient<Database>, code: string) {

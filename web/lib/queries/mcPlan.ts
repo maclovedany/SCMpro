@@ -33,6 +33,14 @@ export function mcPivot(rows: McOlRow[], biz?: string): McPivot {
   const cells = months.map((_, i) => lines.reduce((t, l) => sumCell(t, l.cells[i]), { ...EMPTY }));
   return { months, lines, total: { cells, total: cells.reduce(sumCell, { ...EMPTY }) }, activeProducts: lines.filter(l => (l.total.act ?? 0) > 0).length };
 }
+/** 원본 파일의 소계 묶음: DT/GC SUB TOTAL · PRINTER SUB TOTAL */
+export const MC_GROUPS = [{ key: "dtgc", label: "DT/GC 소계", biz: ["DT", "GC"] }, { key: "printer", label: "PRINTER 소계", biz: ["PRT"] }] as const;
+export type McSum = { cells: McCell[]; total: McCell; n: number };
+const sumLines = (months: string[], ls: McLine[]): McSum => ({ cells: months.map((_, i) => ls.reduce((t, l) => sumCell(t, l.cells[i]), { ...EMPTY })), total: ls.reduce((t, l) => sumCell(t, l.total), { ...EMPTY }), n: ls.length });
+/** 합계와 소계 — 받은 행(검색·필터가 적용된 행)만 더한다. 행이 없는 묶음은 내지 않는다 */
+export function mcSummary(months: string[], lines: McLine[]): { total: McSum; groups: (McSum & { key: string; label: string })[] } {
+  return { total: sumLines(months, lines), groups: MC_GROUPS.map(g => ({ key: g.key, label: g.label, ...sumLines(months, lines.filter(l => (g.biz as readonly string[]).includes(l.biz ?? ""))) })).filter(g => g.n > 0) };
+}
 /** 데이터가 있는 회계연도 목록 (최신 먼저) */
 export async function fetchMcFys(sb: SB): Promise<number[]> {
   const [lo, hi] = await Promise.all([

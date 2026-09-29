@@ -10,14 +10,19 @@ import { Badge } from "@/components/ui/badge";
 import { drillHref } from "@/lib/drill";
 import { fmtInt } from "@/lib/format";
 import { PlanDetail } from "./PlanDetail";
+import { PlanGroups } from "./PlanGroups";
+import { parseFamilyFilters, familyChips, fetchPlanGroups, fetchFamilyNames } from "@/lib/queries/families";
+import { fetchAliasMap } from "@/lib/names";
 const STATUS: Record<string, string> = { draft: "초안", confirmed: "확정(승인 대기)", approved: "승인", rejected: "반려" };
 export default async function PlanPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | undefined>> }) {
   const { id } = await params; const sp = await searchParams;
   const p = await getProfile();
   const sb = await createServerSupabase();
-  const f = { risk: sp.risk === "true", blocked: sp.blocked === "true", flex: sp.flex === "true", category: sp.category, q: sp.q };
+  const by = sp.by === "model" ? "model" as const : "family" as const;   // 묶어 보기 기준 (D-076)
+  const names = await fetchAliasMap(sb);
+  const f = { risk: sp.risk === "true", blocked: sp.blocked === "true", flex: sp.flex === "true", category: sp.category, q: sp.q, ...parseFamilyFilters(sp) };
   const page = Number(sp.page ?? 1) || 1;
-  const [{ plan, lines, count, catAgg }, ov, sc] = await Promise.all([fetchPlan(sb, id, f, page), fetchPlanOverview(sb, id), fetchPlanScorecard(sb, id)]);
+  const [{ plan, lines, count, catAgg }, ov, sc, groups, familyNames] = await Promise.all([fetchPlan(sb, id, f, page, names), fetchPlanOverview(sb, id), fetchPlanScorecard(sb, id), fetchPlanGroups(sb, id, by), fetchFamilyNames(sb)]);
   if (!plan) notFound();
   const c = planCharts(ov);
   const shown = lines;
@@ -51,6 +56,7 @@ export default async function PlanPage({ params, searchParams }: { params: Promi
             <tbody>{sc.worst.slice(0, 10).map(w => <tr key={w.key_code + w.need_ym} className="border-t tabular-nums"><td className="py-1 font-mono"><Link className="underline" href={`/items/${w.key_code}`}>{w.key_code}</Link> <span className="text-xs text-muted-foreground">{w.abc ?? ""}</span></td><td>{w.need_ym}</td><td className="text-right">{fmtInt(w.proposed)}</td><td className="text-right">{fmtInt(w.ordered)}</td><td className="text-right">{fmtInt(w.actual)}</td><td className="text-right">{fmtInt(w.realized_end)}</td><td>{OUTCOME_LABEL[w.outcome_h]} / {OUTCOME_LABEL[w.outcome_s]}{w.override_reason && <span className="ml-1 text-xs text-muted-foreground" title={w.override_reason}>사유</span>}</td></tr>)}</tbody></table></div>
         </div>}
       </section>}
+      <PlanGroups base={base} by={by} rows={groups} familyNames={familyNames} chips={familyChips(f, names)} filters={f} exportName={`order-plan-${plan.plan_ym}-${by === "model" ? "기종별" : "제품군별"}`} />
       <PlanDetail plan={{ id: plan.id, plan_ym: plan.plan_ym, status: plan.status }} lines={shown} treeRows={treeRows} months={months} filters={f} canEdit={!!p && canWriteMaster(p.role) && plan.status === "draft"} total={count} page={page} pageSize={LINE_PAGE} />
     </div>
   );

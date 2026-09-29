@@ -156,6 +156,10 @@ Project Settings → Data API → **Exposed schemas**: `public, graphql_public, 
 | `app.item_class` | 품목 분류: pattern(SBC)·ABC·XYZ·CV·챔피언 기법 (v_item_master 조인) |
 | `app.forecast_tuning_proposal` ★ | LLM(설정 ai_model) 진단·제안(JSON), status pending→requested→applied/rejected |
 | `analytics.v_forecast_latest_run` / `v_forecast_latest` | 최신 완료 런 / 프로덕션 챔피언 예측 |
+| `analytics.v_item_model` · `v_item_links` | 품목 ↔ 기종 묶음 연결(제품군 이름 · BOM · 옵션 연결), 품목별 연결 기종 배열 (R-UI-18, D-076) |
+| `analytics.v_item_master_x` · `v_order_plan_line_x` | 품목 목록 · 발주 계획 라인 + 연결 기종(`link_models`) — 제품군·기종 필터가 있을 때만 읽는다 |
+| `analytics.v_family_summary` · `v_model_item_summary` | 제품군 / 기종 × 카테고리 요약: 품목 수·현재고·입고예정·평균 출고·재고 0·목표 미달 |
+| `analytics.v_order_plan_family` · `app.fn_plan_model_summary(plan)` | 발주 계획의 제품군별 / 기종별 요약. 기종별은 8초 제한 때문에 함수 (D-027) |
 | `analytics.v_mc_ol_act` | 기종 OL · 실적 화면용: IOT × Product × 월 — sales_ol·scm_ol·act·fy + 표시 이름(product_name·codename). raw 단위 그대로(변형 합산 없음), 업로드 추가분 없음 (R-FC-15, D-075) |
 | `app.name_alias` ★ | 표시 이름: 익명 제품군·기종 이름 → 실제 이름 (kind=family 794 · codename 266). `engine load-names` 가 치환표의 이름 쌍만 적재 — 코드 복원 쌍 없음. 조회 함수 `app.fn_real_name(kind, anon)` (R-UI-17, D-075) |
 | `analytics.v_mc_compare` | 기종×월: sales_ol·scm_ol·act·system_fc·밴드·fy (기종 변형 합산) |
