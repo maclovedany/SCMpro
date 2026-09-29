@@ -1,3 +1,4 @@
+import { catLabel } from "@/lib/design/category";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { fetchLatestRuns, fetchAccuracySummary, accuracyTable, fetchForecastOverview, overviewCharts, fetchItemOlSummary, METHOD_LABEL, PATTERN_LABEL } from "@/lib/queries/forecast";
 import { DrillCard } from "@/components/cards/DrillCard";
@@ -34,7 +35,7 @@ export default async function ForecastPage() {
   ];
   const wapeMethods = { labels: modelTbl.map(r => r.label), keys: modelTbl.map(r => r.method), values: modelTbl.map(r => pct1(r.wape)), href: "/forecast/mc",
     insight: sys && scm ? `시스템 기준예측 ${fmtPct(sys.wape)} vs SCM OL ${fmtPct(scm.wape)} · Sales OL ${fmtPct(sales?.wape)}` : "백테스트 결과 없음" };
-  const wapeCat = { labels: byCat.map(r => r.key), keys: byCat.map(r => r.key), values: byCat.map(r => pct1(r.wape)), href: "/items", filterKey: "category", insight: byCat[0] ? `${byCat[0].key} 가 가장 정확 (${fmtPct(byCat[0].wape)})` : "-" };
+  const wapeCat = { labels: byCat.map(r => catLabel(r.key)), keys: byCat.map(r => r.key), values: byCat.map(r => pct1(r.wape)), href: "/items", filterKey: "category", insight: byCat[0] ? `${catLabel(byCat[0].key)} 가 가장 정확 (${fmtPct(byCat[0].wape)})` : "-" };
   const wapePat = { labels: byPat.map(r => PATTERN_LABEL[r.key] ?? r.key), keys: byPat.map(r => r.key), values: byPat.map(r => pct1(r.wape)), href: "/items", filterKey: "pattern", insight: byPat.length ? `${PATTERN_LABEL[byPat[byPat.length - 1].key] ?? byPat[byPat.length - 1].key} 패턴이 가장 어려움 (${fmtPct(byPat[byPat.length - 1].wape)})` : "-" };
   const gA = c.grade[0], gAll = c.grade.reduce((a, g) => a + g.stockout, 0);
   return (

@@ -1,4 +1,5 @@
 /** AI Agent 도구 (R-AI-05): 사용자 세션 supabase 클라이언트로만 조회 → RLS 그대로 */
+import { catLabel } from "@/lib/design/category";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import { fetchAliasMap, realName, type AliasMap } from "@/lib/names";
@@ -26,10 +27,10 @@ export const TOOLS: ToolDef[] = [
     run: async (sb) => (await sb.schema("app").from("v_sales_order").select("order_no,item_code,qty,status,temp_qty,firm_qty,shortage,expires_at,customer").order("requested_at", { ascending: false }).limit(20)).data },
 ];
 export const toolSpecs = () => TOOLS.map(t => ({ type: "function" as const, function: { name: t.name, description: t.description, parameters: t.parameters } }));
-/** 도구 결과의 제품군(family)을 실제 이름으로 (D-075). 품목코드는 그대로 */
+/** 도구 결과의 제품군(family)은 실제 이름으로(D-075), 카테고리는 회사 표기로(D-077). 품목코드는 그대로 */
 export function withRealNames(out: unknown, names: AliasMap): unknown {
   if (Array.isArray(out)) return out.map(x => withRealNames(x, names));
-  if (out && typeof out === "object") return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, k === "family" && typeof v === "string" ? realName(names, "family", v) : withRealNames(v, names)]));
+  if (out && typeof out === "object") return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, typeof v === "string" && k === "family" ? realName(names, "family", v) : typeof v === "string" && k === "category" ? catLabel(v) : withRealNames(v, names)]));
   return out;
 }
 export async function runTool(sb: SB, name: string, args: Record<string, unknown>) {

@@ -1,3 +1,4 @@
+import { catLabel } from "@/lib/design/category";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import { drillHref } from "@/lib/drill";
@@ -36,7 +37,7 @@ export const wonCompact = (n: number | null | undefined) => n == null ? "-" : Ma
 export function buildSections(d: DashboardV2): Record<string, Section> {
   const plan = d.cycle.plan; const planHref = plan ? `/orders/${plan.id}` : "/orders";
   const endVsTarget = d.stock.target_amount ? d.stock.expected_end_amount / d.stock.target_amount : null;
-  const dosLine = d.dos.map(x => `${x.category} ${fmtInt(x.avg_dos)}일(목표 ${fmtInt(x.avg_target)})`).join(" · ");
+  const dosLine = d.dos.map(x => `${catLabel(x.category)} ${fmtInt(x.avg_dos)}일(목표 ${fmtInt(x.avg_target)})`).join(" · ");
   const dosBad = d.dos.some(x => x.avg_dos != null && x.avg_target != null && x.avg_dos < x.avg_target * 0.8);
   const missing = (d.cycle.submission.depts ?? []).filter(x => !x.submitted).length;
   const bt = d.forecast.backtest; const sysW = pct(bt?.model_wape), scmW = pct(bt?.scm_ol_wape), salesW = pct(bt?.sales_ol_wape);
@@ -110,9 +111,9 @@ export function chartData(d: DashboardV2) {
   const riskTotal = c.risk_by_cat_abc.reduce((a, x) => a + x.n, 0); const riskA = c.risk_by_cat_abc.filter(x => x.abc === "A").reduce((a, x) => a + x.n, 0);
   const worst = cats.map(k => { const x = c.stock_by_cat.find(y => y.category === k)!; return { k, r: x.target ? x.expected_end / x.target : 0 }; }).sort((a, b) => b.r - a.r)[0];
   return {
-    stock: { categories: cats, series: [{ name: "현재고", data: cats.map(k => c.stock_by_cat.find(x => x.category === k)?.current ?? 0) }, { name: "목표 재고", data: cats.map(k => c.stock_by_cat.find(x => x.category === k)?.target ?? 0) }, { name: "예상 월말", data: cats.map(k => c.stock_by_cat.find(x => x.category === k)?.expected_end ?? 0) }],
-      insight: worst ? `${worst.k} 의 예상 월말 재고가 목표의 ${fmtPct(worst.r)} — 가장 높음` : "계획 없음" },
-    risk: { categories: riskCats, series: ["A", "B", "C"].map(g => ({ name: `${g} 등급`, data: riskCats.map(k => c.risk_by_cat_abc.find(x => x.category === k && x.abc === g)?.n ?? 0) })),
+    stock: { categories: cats.map(catLabel), series: [{ name: "현재고", data: cats.map(k => c.stock_by_cat.find(x => x.category === k)?.current ?? 0) }, { name: "목표 재고", data: cats.map(k => c.stock_by_cat.find(x => x.category === k)?.target ?? 0) }, { name: "예상 월말", data: cats.map(k => c.stock_by_cat.find(x => x.category === k)?.expected_end ?? 0) }],
+      insight: worst ? `${catLabel(worst.k)} 의 예상 월말 재고가 목표의 ${fmtPct(worst.r)} — 가장 높음` : "계획 없음" },
+    risk: { categories: riskCats.map(catLabel), series: ["A", "B", "C"].map(g => ({ name: `${g} 등급`, data: riskCats.map(k => c.risk_by_cat_abc.find(x => x.category === k && x.abc === g)?.n ?? 0) })),
       insight: riskTotal ? `품절 위험 ${fmtInt(riskTotal)}개 중 A 등급 ${fmtInt(riskA)}개 (${fmtPct(riskA / riskTotal)}) — 먼저 처리` : "품절 위험 없음" },
     cycle: { x: c.plan_history.map(h => h.plan_ym), series: [{ name: "발주 금액", data: c.plan_history.map(h => h.amount) }], insight: c.plan_history.length > 1 ? `최근 ${c.plan_history.length}개월 계획 금액 추이` : "이력이 쌓이면 월별 추이가 표시됩니다" },
     forecast: { labels: ["시스템 기준예측", "Sales OL", "SCM OL"], values: [pct(d.forecast.backtest?.model_wape) ?? 0, pct(d.forecast.backtest?.sales_ol_wape) ?? 0, pct(d.forecast.backtest?.scm_ol_wape) ?? 0],

@@ -1,4 +1,5 @@
 "use client";
+import { catLabel } from "@/lib/design/category";
 import Link from "next/link";
 import { useMemo } from "react";
 import { DrillCard } from "@/components/cards/DrillCard";
@@ -38,7 +39,7 @@ export function ItemDetail({ d, forecast = [], cls = null, backtest = null, ol =
   return (
     <div className="space-y-5">
       <div>
-        <div className="flex items-center gap-2"><h1 className="font-mono text-xl font-semibold">{m.key_code}</h1><Badge variant="outline">{m.category}</Badge>{m.family && <Badge variant="secondary">{m.family}</Badge>}</div>
+        <div className="flex items-center gap-2"><h1 className="font-mono text-xl font-semibold">{m.key_code}</h1><Badge variant="outline">{catLabel(m.category)}</Badge>{m.family && <Badge variant="secondary">{m.family}</Badge>}</div>
         <p className="text-sm text-muted-foreground">{m.description ?? "(설명 없음)"} · 최근 출고 {m.last_ship_ym ?? "-"}</p>
       </div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

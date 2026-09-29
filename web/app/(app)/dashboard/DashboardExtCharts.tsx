@@ -1,4 +1,5 @@
 "use client";
+import { catCode } from "@/lib/design/category";
 import { useRouter } from "next/navigation";
 import { ChartCard } from "@/components/cards/ChartCard";
 import { StackedBars, HBars } from "@/components/charts/MiniCharts";
@@ -11,7 +12,7 @@ export function DashboardExtCharts({ section, charts }: { section: string; chart
   switch (section) {
     case "inv": return <ChartCard title="카테고리별 재고 — 가용 · 배정 비율 (%)" insight={charts.inv.insight} href="/items" accent="stock">
       <StackedBars height={236} categories={charts.inv.categories} series={charts.inv.series} colors={[SERIES_LIGHT[0], SEQ_BLUE[1]]}
-        onClick={name => router.push(["PART", "SUPPLY", "OPTION"].includes(name) ? drillHref("/items", { category: name }) : "/sales-orders/customers")} /></ChartCard>;
+        onClick={name => router.push(["PART", "SUPPLY", "OPTION"].includes(catCode(name)) ? drillHref("/items", { category: catCode(name) }) : catCode(name) === "MACHINE" ? drillHref("/items", { category: "MC" }) : "/sales-orders/customers")} /></ChartCard>;
     case "mygroup": return <ChartCard title="담당 품목 — 가용재고 적은 순" insight={charts.mygroup.insight} href="/items/groups" accent="stock">
       <HBars height={236} labels={charts.mygroup.labels} values={charts.mygroup.values} color={SERIES_LIGHT[2]} onClick={() => router.push("/items/groups")} /></ChartCard>;
     case "urgent": return <ChartCard title="긴급발주 단계별 건수 — 요청 → 입고" insight={charts.urgent.insight} href="/extra-demand#urgent" accent="risk">

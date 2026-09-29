@@ -16,8 +16,8 @@ it("restores display names: exact spelling first, then case-insensitive, else un
   expect(realName(m, "family", "47 SERIES")).toBe("47 SERIES"); expect(realName(m, "family", null)).toBeNull();
 });
 it("AI tool results show real family names and keep item codes", () => {
-  expect(withRealNames([{ key_code: "MDL901", family: "MDL901 Mono(A237)", setting: { family: "47 SERIES", moq: 1 } }, null], m))
-    .toEqual([{ key_code: "MDL901", family: "Alpha Mono(A100)", setting: { family: "47 SERIES", moq: 1 } }, null]);
+  expect(withRealNames([{ key_code: "MDL901", category: "PART", family: "MDL901 Mono(A237)", setting: { family: "47 SERIES", moq: 1 } }, null], m))
+    .toEqual([{ key_code: "MDL901", category: "SPAREPARTS", family: "Alpha Mono(A100)", setting: { family: "47 SERIES", moq: 1 } }, null]);
 });
 it("finds stored names from a display name (for filters)", () => {
   expect(anonNamesOf(m, "family", "alpha mono(a100)").sort()).toEqual(["MDL901 MONO(A237)", "MDL901 Mono(A237)"]);   // 실제 이름 → 저장된 이름들 (대소문자 무시)

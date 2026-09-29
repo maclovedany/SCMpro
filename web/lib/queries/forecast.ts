@@ -1,3 +1,4 @@
+import { catLabel } from "@/lib/design/category";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import { drillHref } from "@/lib/drill";
@@ -161,8 +162,8 @@ export function overviewCharts(o: ForecastOverview) {
   const grade = ys.map(abc => o.grade.find(g => g.abc === abc) ?? { abc, n_items: 0, stock_value: 0, avg_dos: null, target_dos: null, excess: 0, stockout: 0 });
   const months = Array.from(new Set(o.trend.map(t => t.ym))).sort();
   const cats = ["PART", "SUPPLY", "OPTION"];
-  const trend = { x: months, series: cats.map(c => ({ name: c, data: months.map(m => o.trend.find(t => t.ym === m && t.category === c)?.qty ?? 0) })) };
-  const mom = cats.map(c => { const d = trend.series.find(x => x.name === c)!.data; const r3 = d.slice(-3), p9 = d.slice(0, -3);
+  const trend = { x: months, series: cats.map(c => ({ name: catLabel(c), data: months.map(m => o.trend.find(t => t.ym === m && t.category === c)?.qty ?? 0) })) };
+  const mom = cats.map(c => { const d = trend.series.find(x => x.name === catLabel(c))!.data; const r3 = d.slice(-3), p9 = d.slice(0, -3);
     const a = r3.length ? r3.reduce((x, y) => x + y, 0) / r3.length : 0, b = p9.length ? p9.reduce((x, y) => x + y, 0) / p9.length : 0; return { c, r: b ? (a - b) / b : 0 }; })
     .sort((a, b) => Math.abs(b.r) - Math.abs(a.r))[0];
   const champTotal = o.champion.reduce((a, c) => a + c.n, 0);

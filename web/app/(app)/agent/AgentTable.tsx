@@ -1,4 +1,5 @@
 "use client";
+import { catLabel } from "@/lib/design/category";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
@@ -20,7 +21,7 @@ export function AgentTable({ rows }: { rows: AgentEvent[] }) {
         <tr key={e.id} className="border-t align-top" data-testid="agent-row">
           <td className="py-1.5"><span className={cn("rounded-md px-2 py-0.5 text-xs font-medium", sv.cls)}>{sv.label}</span></td>
           <td>{SIGNAL_LABEL[e.signal] ?? e.signal}</td>
-          <td className="font-mono">{e.item_code ? <Link className="underline" href={`/items/${e.item_code}`}>{e.item_code}</Link> : e.supplier ?? "-"}{e.category && <span className="ml-1 text-xs text-muted-foreground">{e.category}</span>}</td>
+          <td className="font-mono">{e.item_code ? <Link className="underline" href={`/items/${e.item_code}`}>{e.item_code}</Link> : e.supplier ?? "-"}{e.category && <span className="ml-1 text-xs text-muted-foreground">{catLabel(e.category)}</span>}</td>
           <td className="max-w-[22rem]"><div>{j.reason ?? <span className="text-muted-foreground">판단 전</span>}</div>{j.action === "propose" && j.qty != null && <div className="text-xs text-muted-foreground">제안 {Number(j.qty).toLocaleString("ko-KR")}개 / {j.need_ym} {j.by === "llm" ? "· AI" : "· 규칙"}</div>}</td>
           <td className="max-w-[24rem] text-xs text-muted-foreground">{evidenceLine(e)}</td>
           <td><Badge variant={e.status === "proposed" ? "default" : e.status === "accepted" ? "secondary" : "outline"}>{STATUS_LABEL[e.status] ?? e.status}</Badge>{e.approval_id && <Link className="ml-1 text-xs underline" href={`/approvals?status=${e.status === "proposed" ? "pending" : e.status === "accepted" ? "approved" : "rejected"}`}>결재</Link>}</td>

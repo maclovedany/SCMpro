@@ -33,3 +33,4 @@ def test_to_sql_replaces_whole_table_and_escapes(tmp_path):
     assert sql.startswith("begin;") and "delete from app.name_alias;" in sql and sql.rstrip().endswith("commit;")
     assert "('family','MDL902-2','MDL902-2','Beta''s 2')" in sql
     assert "부품·옵션 코드" not in sql and "0000-" not in sql                                  # 코드 복원 쌍은 다루지 않는다
+    assert sql.index("delete from app.name_alias a where a.kind = 'family'") > sql.index("insert into")          # 기종(MC) Product 의 실제 이름은 적재 뒤에 지운다 (D-077)

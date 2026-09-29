@@ -77,6 +77,16 @@ def load_names_cmd(key: Path = typer.Option(..., help="치환표 파일 경로 (
     _pg().execute(names.to_sql(df))
     typer.echo(f"적용: app.name_alias — 제품군 {stat['family']:,}쌍 · 기종 {stat['codename']:,}쌍 (같은 익명 이름 중복 {stat['duplicate_anon']:,}건 제외)")
 
+@app.command("load-mc")
+def load_mc_cmd(src: Path = typer.Option(..., help="회사 정리본 'MC OL vs ACT' 파일 (실제 이름·실코드, 저장소 밖)"), key: Path = typer.Option(..., help="치환표 파일 경로 (저장소 밖)")):
+    """기종(MC) 마스터·제품 단위 OL 실적 적재 (D-077): 제품군은 회사 약자로, Item Code 는 익명 코드로 바꿔 app.mc_family · app.mc_plan_item 에 넣는다."""
+    from . import mc_master
+    db = _pg()
+    fam, items, rep = mc_master.build(mc_master.read_plan(src), mc_master.read_lineage(src), mc_master.Key.load(key), db.read_df("select model_key, model_base, iot_code from raw.dim_model"))
+    db.execute(mc_master.to_sql(fam, items))
+    typer.echo(f"적용: app.mc_family {rep['families']:,}개 · app.mc_plan_item {rep['rows']:,}행 — 구분 {fam.biz.value_counts(dropna=False).to_dict()} · 전임기 연결 {int(fam.predecessor.notna().sum())}건")
+    typer.echo(f"회사 약자가 없어 익명 이름을 쓴 제품군 {len(rep['no_alias'])}개: {rep['no_alias']} · 치환표에 없는 Item Code {rep['unmapped_codes']}개(코드 없이 적재)")
+
 forecast_app = typer.Typer(help="예측 엔진 (SP2)")
 app.add_typer(forecast_app, name="forecast")
 

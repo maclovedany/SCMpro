@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { fetchItems, parseItemFilters, CATEGORIES, PAGE } from "@/lib/queries/items";
+import { fetchItems, parseItemFilters, PAGE } from "@/lib/queries/items";
 import { parseFamilyFilters, familyChips, fetchFamilyNames } from "@/lib/queries/families";
+import { CATEGORY_TABS, MC, catLabel } from "@/lib/design/category";
+import { McItems } from "./McItems";
 import { fetchAliasMap } from "@/lib/names";
 import { drillHref } from "@/lib/drill";
 import { fmtInt } from "@/lib/format";
@@ -12,6 +14,7 @@ import { ItemsTable } from "./ItemsTable";
 import { cn } from "@/lib/utils";
 export default async function ItemsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
+  if (sp.category === MC) return <McItems sp={sp} />;   // MC(기종)는 출고 품목과 다른 자료 — 전용 목록 (R-FC-16, D-077)
   const f = parseItemFilters(sp);
   const sb = await createServerSupabase();
   const g = parseFamilyFilters(sp);   // 제품군 · 기종 필터 (D-076)
@@ -43,9 +46,9 @@ export default async function ItemsPage({ searchParams }: { searchParams: Promis
         </form>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        {["", ...CATEGORIES].map(c => (
+        {["", ...CATEGORY_TABS].map(c => (
           <Link scroll={false} key={c || "all"} href={drillHref("/items", { ...sp, category: c || undefined, page: undefined })}
-            className={cn("rounded-full border px-3 py-1 text-sm", (f.category ?? "") === c ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{c || "전체"}</Link>
+            className={cn("rounded-full border px-3 py-1 text-sm", (f.category ?? "") === c ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{c ? catLabel(c) : "전체"}</Link>
         ))}
         {active.map(a => <Link key={a.k} href={without(a.k)}><Badge variant="secondary">{a.label} ✕</Badge></Link>)}
       </div>

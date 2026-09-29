@@ -1,4 +1,5 @@
 "use client";
+import { catCode } from "@/lib/design/category";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChartCard } from "@/components/cards/ChartCard";
@@ -24,7 +25,7 @@ export function ForecastCharts({ kind, c, acc }: { kind: "heat" | "guide" | "gra
     case "gradeDos": return <ChartCard title="등급별 평균 DoS vs 목표 (일)" insight={c.gradeDos.insight} href="/items" accent="stock">
       <GroupedBars height={200} categories={c.gradeDos.categories} series={c.gradeDos.series} colors={[SERIES_LIGHT[0], "#9ec5f4"]} onClick={name => router.push(drillHref("/items", { abc: name.slice(0, 1) }))} /></ChartCard>;
     case "trend": return <ChartCard title="최근 12개월 카테고리별 출고 수량" insight={c.trend.insight} href="/items" accent="forecast">
-      <Lines height={240} x={c.trend.x} series={c.trend.series} colors={c.trend.series.map(s => CATEGORY_COLOR[s.name] ?? SERIES_LIGHT[0])} /></ChartCard>;
+      <Lines height={240} x={c.trend.x} series={c.trend.series} colors={c.trend.series.map(s => CATEGORY_COLOR[catCode(s.name)] ?? SERIES_LIGHT[0])} /></ChartCard>;
     case "champion": return <ChartCard title="챔피언 기법 분포 (품목 수)" insight={c.champion.insight} href="/forecast/runs" accent="forecast">
       <HBars height={Math.max(160, 22 * c.champion.labels.length + 24)} labels={c.champion.labels} values={c.champion.values} color={SERIES_LIGHT[2]} onClick={name => { const i = c.champion.labels.indexOf(name); if (i >= 0) router.push(drillHref("/items", { champion: c.champion.keys[i] })); }} /></ChartCard>;
     case "wape": return acc ? <ChartCard title={acc.filterKey ? (acc.filterKey === "category" ? "카테고리별 WAPE (품목 챔피언)" : "수요패턴별 WAPE (품목 챔피언)") : "기종 레벨 WAPE — 기법별 (낮을수록 정확)"} insight={acc.insight} href={acc.href} accent="forecast">

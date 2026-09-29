@@ -1,3 +1,4 @@
+import { catLabel } from "@/lib/design/category";
 import type { AliasMap } from "@/lib/names";
 import { applyFamilyFilters } from "@/lib/queries/families";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -53,7 +54,7 @@ export function buildTreeRows(catAgg: CatAgg, lines: Pick<LineRow, "key_code" | 
   const cats = Array.from(new Set([...Object.keys(catAgg), ...byCat.keys()])).sort();
   return cats.map(cat => { const agg = catAgg[cat] ?? {}; const ls = byCat.get(cat) ?? []; const n = Object.values(agg)[0]?.n ?? ls.length;
     const v = (k: "forecast" | "inbound" | "extras" | "end" | "final", sign: 1 | -1 = 1) => Object.fromEntries(months.map(m => [m, agg[m] ? (sign < 0 ? neg(Number(agg[m][k])) : Number(agg[m][k])) : null]));
-    return { id: `cat-${cat}`, label: `${cat} (${n}) — 기말재고 합`, level: 0, values: v("end"), children: [
+    return { id: `cat-${cat}`, label: `${catLabel(cat)} (${n}) — 기말재고 합`, level: 0, values: v("end"), children: [
       { id: `cat-${cat}-inb`, label: "＋ 입고예정 합", level: 1, values: v("inbound") },
       { id: `cat-${cat}-fc`, label: "− 예측 판매 합", level: 1, values: v("forecast", -1) },
       { id: `cat-${cat}-ex`, label: "− 추가수요 합", level: 1, values: v("extras", -1) },
@@ -95,11 +96,11 @@ export function planCharts(o: PlanOverview) {
   const riskTotal = o.risk_by_cat_abc.reduce((a, r) => a + r.n, 0), riskA = o.risk_by_cat_abc.filter(r => r.abc === "A").reduce((a, r) => a + r.n, 0);
   const olDelta = o.by_category.reduce((a, c) => a + Number(c.required_amount) - Number(c.ol_base_amount), 0), olBase = o.by_category.reduce((a, c) => a + Number(c.ol_base_amount), 0);
   return {
-    category: { data: o.by_category.map(c => ({ name: c.category, value: Math.round(Number(c.amount)) })), insight: topCat ? `${topCat.category} 이 ${won(Number(topCat.amount))} (${Math.round(100 * Number(topCat.amount) / Math.max(1, total))}%) 으로 최대 · 제출 OL 대비 필요량 ${olBase ? `${olDelta >= 0 ? "+" : ""}${Math.round(1000 * olDelta / olBase) / 10}%` : "-"}` : "라인 없음" },
+    category: { data: o.by_category.map(c => ({ name: catLabel(c.category), value: Math.round(Number(c.amount)) })), insight: topCat ? `${catLabel(topCat.category)} 이 ${won(Number(topCat.amount))} (${Math.round(100 * Number(topCat.amount) / Math.max(1, total))}%) 으로 최대 · 제출 OL 대비 필요량 ${olBase ? `${olDelta >= 0 ? "+" : ""}${Math.round(1000 * olDelta / olBase) / 10}%` : "-"}` : "라인 없음" },
     supplier: { labels: o.by_supplier.map(s => s.supplier), values: o.by_supplier.map(s => Math.round(Number(s.amount))), insight: topSup ? `${topSup.supplier} ${won(Number(topSup.amount))} · ${topSup.n.toLocaleString("ko-KR")} 품목 — 출항 일정 확인 우선` : "-" },
-    needYm: { categories: months, series: cats.map(c => ({ name: c, data: months.map(m => Math.round(Number(o.by_need_ym.find(x => x.need_ym === m && x.category === c)?.amount ?? 0))) })), insight: months[0] ? `${months[0]} 필요분이 금액의 ${Math.round(firstShare * 100)}% — 리드타임상 이번 달 발주 필수` : "-" },
+    needYm: { categories: months, series: cats.map(c => ({ name: catLabel(c), data: months.map(m => Math.round(Number(o.by_need_ym.find(x => x.need_ym === m && x.category === c)?.amount ?? 0))) })), insight: months[0] ? `${months[0]} 필요분이 금액의 ${Math.round(firstShare * 100)}% — 리드타임상 이번 달 발주 필수` : "-" },
     topItems: { labels: o.top_items.map(t => t.key_code), values: o.top_items.map(t => Math.round(Number(t.amount ?? 0))), flags: o.top_items.map(t => t.stockout_risk), insight: o.top_items[0] ? `${o.top_items[0].key_code} 한 품목이 ${won(Number(o.top_items[0].amount ?? 0))} · 상위 10 품목 = ${Math.round(100 * o.top_items.reduce((a, t) => a + Number(t.amount ?? 0), 0) / Math.max(1, total))}%` : "-" },
-    risk: { categories: cats, series: ["A", "B", "C"].map(abc => ({ name: `${abc} 등급`, data: cats.map(c => o.risk_by_cat_abc.find(r => r.category === c && r.abc === abc)?.n ?? 0) })), insight: riskTotal ? `품절 위험 ${riskTotal.toLocaleString("ko-KR")}개 중 A 등급 ${riskA}개 — 오버라이드·긴급 발주 검토` : "품절 위험 없음" },
+    risk: { categories: cats.map(catLabel), series: ["A", "B", "C"].map(abc => ({ name: `${abc} 등급`, data: cats.map(c => o.risk_by_cat_abc.find(r => r.category === c && r.abc === abc)?.n ?? 0) })), insight: riskTotal ? `품절 위험 ${riskTotal.toLocaleString("ko-KR")}개 중 A 등급 ${riskA}개 — 오버라이드·긴급 발주 검토` : "품절 위험 없음" },
     total,
   };
 }

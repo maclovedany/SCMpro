@@ -1,3 +1,4 @@
+import { catLabel } from "@/lib/design/category";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import { drillHref } from "@/lib/drill";
@@ -68,8 +69,8 @@ export function extCharts(x: DashboardExt) {
   const top = x.customer.top;
   return {
     // 카테고리 간 수량 차이가 커서(소모품 수만 vs 기기 수백) 수량 막대는 작은 쪽이 안 보인다 → 카테고리 안에서의 비율(%)로 그린다
-    inv: { categories: cats.map(c => c.category), series: [{ name: "가용", data: cats.map(c => share(c.available, c.on_hand)) }, { name: "배정", data: cats.map(c => share(c.allocated, c.on_hand)) }],
-      insight: `${busiest && N(busiest.allocated) > 0 ? `${busiest.category} 재고의 ${fmtPct(N(busiest.allocated) / N(busiest.on_hand))} 가 이미 배정됨 — 가장 높음` : "배정된 재고 없음 — 전량 가용"} · 현재고 ${cats.map(c => `${c.category} ${fmtInt(N(c.on_hand))}`).join(" / ")}` },
+    inv: { categories: cats.map(c => catLabel(c.category)), series: [{ name: "가용", data: cats.map(c => share(c.available, c.on_hand)) }, { name: "배정", data: cats.map(c => share(c.allocated, c.on_hand)) }],
+      insight: `${busiest && N(busiest.allocated) > 0 ? `${catLabel(busiest.category)} 재고의 ${fmtPct(N(busiest.allocated) / N(busiest.on_hand))} 가 이미 배정됨 — 가장 높음` : "배정된 재고 없음 — 전량 가용"} · 현재고 ${cats.map(c => `${catLabel(c.category)} ${fmtInt(N(c.on_hand))}`).join(" / ")}` },
     mygroup: { labels: items.map(i => `${i.item_code} ${i.description ?? ""}`.trim()), values: items.map(i => N(i.available)), codes: items.map(i => i.item_code),
       insight: items.length ? `가용이 가장 적은 담당 품목: ${items[0].description ?? items[0].item_code} (${fmtInt(N(items[0].available))})` : "담당 품목 없음" },
     urgent: { labels: URGENT_STAGES.map(s => STAGE_LABEL[s]), values: URGENT_STAGES.map(s => N(x.urgent.stages.find(t => t.stage === s)?.n)),

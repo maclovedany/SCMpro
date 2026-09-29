@@ -1,4 +1,5 @@
 "use client";
+import { catLabel } from "@/lib/design/category";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -31,7 +32,7 @@ export function ItemSettingForm({ code, data }: { code: string; data: Data }) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <section className="space-y-3 rounded-md border p-4">
-        <div className="flex items-center gap-2"><span className="font-mono text-lg font-semibold">{code}</span><Badge variant="outline">{m.category}</Badge>{s?.is_dummy && <Badge variant="secondary">더미 설정</Badge>}
+        <div className="flex items-center gap-2"><span className="font-mono text-lg font-semibold">{code}</span><Badge variant="outline">{catLabel(m.category)}</Badge>{s?.is_dummy && <Badge variant="secondary">더미 설정</Badge>}
           {locked && <Badge className="bg-amber-500">승인 대기 중</Badge>}{s?.status === "approved" && !s.is_dummy && <Badge className="bg-green-600">승인됨</Badge>}</div>
         <p className="text-sm text-muted-foreground">{m.description} · 6M 평균 {fmtNum(m.avg_6m)} · 현재고 {fmtInt(m.on_hand)} · DoS {fmtInt(m.dos_days)}일</p>
         <div className="grid grid-cols-2 gap-3">

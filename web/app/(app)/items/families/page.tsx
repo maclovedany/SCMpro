@@ -1,3 +1,4 @@
+import { catLabel } from "@/lib/design/category";
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { fetchFamilySummary, byModel } from "@/lib/queries/families";
@@ -19,7 +20,7 @@ export default async function FamiliesPage({ searchParams }: { searchParams: Pro
   const here = (o: Record<string, string | boolean | undefined>) => drillHref("/items/families", { by: by === "model" ? "model" : undefined, category, ...o });
   const zero = all.filter(r => r.n_zero_stock > 0), below = all.filter(r => r.n_below_target > 0);
   const kpis: KpiTileProps[] = [
-    { label: `${unit} 수`, value: fmtInt(all.length), sub: category ? `카테고리 ${category}` : "전체 카테고리", href: here({}) + "#family-table", accent: "stock", icon: "Layers" },
+    { label: `${unit} 수`, value: fmtInt(all.length), sub: category ? `카테고리 ${catLabel(category)}` : "전체 카테고리 (MC 제외)", href: here({}) + "#family-table", accent: "stock", icon: "Layers" },
     { label: by === "model" ? "연결 품목 수 (기종마다 셈)" : "품목 수", value: fmtInt(all.reduce((a, r) => a + r.n_items, 0)), sub: by === "model" ? "한 품목이 여러 기종에 연결되면 중복" : "제품군이 있는 품목", href: drillHref("/items", { category }), accent: "stock", icon: "Package" },
     { label: `재고 0 품목이 있는 ${unit}`, value: fmtInt(zero.length), sub: `재고 0 품목 ${fmtInt(zero.reduce((a, r) => a + r.n_zero_stock, 0))}개`, href: here({ zero: true }) + "#family-table", accent: "risk", icon: "AlertTriangle", tone: zero.length > 0 ? "warn" : "default" },
     { label: `목표 DoS 미달 품목이 있는 ${unit}`, value: fmtInt(below.length), sub: `목표 미달 품목 ${fmtInt(below.reduce((a, r) => a + r.n_below_target, 0))}개`, href: here({ below: true }) + "#family-table", accent: "ops", icon: "Gauge", tone: below.length > 0 ? "warn" : "default" },
@@ -35,7 +36,8 @@ export default async function FamiliesPage({ searchParams }: { searchParams: Pro
           <Link scroll={false} href={drillHref("/items/families", { category })} className={chip(by === "family")}>제품군별</Link>
           <Link scroll={false} href={drillHref("/items/families", { by: "model", category })} className={chip(by === "model")}>기종별</Link></div>
         <div className="flex flex-wrap items-center gap-1"><span className="mr-1 text-xs text-muted-foreground">카테고리</span>
-          {["", ...CATEGORIES].map(c => <Link scroll={false} key={c || "all"} href={drillHref("/items/families", { by: by === "model" ? "model" : undefined, category: c || undefined })} className={chip((category ?? "") === c)}>{c || "전체"}</Link>)}</div>
+          {["", ...CATEGORIES].map(c => <Link scroll={false} key={c || "all"} href={drillHref("/items/families", { by: by === "model" ? "model" : undefined, category: c || undefined })} className={chip((category ?? "") === c)}>{c ? catLabel(c) : "전체"}</Link>)}
+          <Link href={drillHref("/items", { category: "MC" })} className={chip(false)}>MC →</Link></div>
         {(sp.zero === "true" || sp.below === "true") && <Link scroll={false} href={here({})} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs">{sp.zero === "true" ? "재고 0 품목 있음" : "목표 DoS 미달 품목 있음"} ✕</Link>}
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" data-testid="family-kpi">{kpis.map(k => <KpiTile key={k.label} {...k} />)}</div>

@@ -31,10 +31,10 @@ describe("대시보드 확장 묶음 (R-UI-16)", () => {
   });
   it("차트 데이터와 한 줄 해석", () => {
     const c = extCharts(x);
-    expect(c.inv.categories).toEqual(["MACHINE", "PART"]); expect(c.inv.series.map(s => s.name)).toEqual(["가용", "배정"]);
-    expect(c.inv.insight).toContain("MACHINE");                                 // 배정 비중이 가장 높은 카테고리
+    expect(c.inv.categories).toEqual(["MC", "SPAREPARTS"]); expect(c.inv.series.map(s => s.name)).toEqual(["가용", "배정"]);
+    expect(c.inv.insight).toContain("MC 재고의");                                 // 배정 비중이 가장 높은 카테고리
     expect(c.inv.series[1].data).toEqual([75, 10]);                              // 수량이 아니라 카테고리 안 비율(%) — 작은 카테고리도 보이게
-    expect(c.inv.insight).toContain("PART 1,000");
+    expect(c.inv.insight).toContain("SPAREPARTS 1,000");
     expect(c.urgent.labels.length).toBe(8); expect(c.urgent.values[3]).toBe(2);  // shipped
     expect(c.custalloc.categories).toEqual(["누리대학교"]); expect(c.mygroup.labels[0]).toContain("P1");
   });

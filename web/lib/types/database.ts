@@ -2243,6 +2243,32 @@ export type Database = {
           act: number | null
           product_name: string | null
           codename: string | null
+          predecessor: string | null
+          successor: string | null
+          has_alias: boolean | null
+          sort_no: number | null
+        }
+        Relationships: []
+      }
+      v_mc_item: {
+        Row: {
+          family_key: string | null
+          biz: string | null
+          item_code: string | null
+          model_base: string | null
+          codename: string | null
+          predecessor: string | null
+          successor: string | null
+          has_alias: boolean | null
+          sort_no: number | null
+          last_ym: string | null
+          act_12m: number | null
+          act_avg_6m: number | null
+          last_sales_ol: number | null
+          last_scm_ol: number | null
+          last_act: number | null
+          first_ym: string | null
+          last_act_ym: string | null
         }
         Relationships: []
       }

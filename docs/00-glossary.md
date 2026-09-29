@@ -12,7 +12,7 @@
 | **목표 DoS 일수** | 품목별로 관리하는 DoS 최소 기준 | 미설정 시 발주 확정 차단 (R-OQ) |
 | **Flexibility rule / Flex rule** | Supplier 에 제출한 OL 대비 발주 수량 변경 허용 범위. 첫 월 ±20%, 이후 2개월 ±30%, 4~6개월 후 제한 없음 | |
 | **MOQ** | 최소 발주(구매) 수량 단위. 올림 처리 | 미설정 시 1 |
-| **MC** | Machine, 기계 본체 | |
+| **MC** | Machine, 기계 본체. 카테고리의 하나이고 그 안에서 DT · GC · PRT 로 나뉜다. 화면의 카테고리 표기 = OPTION · SPAREPARTS(PART) · CONSUMABLE(SUPPLY) · MC | D-077, R-FC-16, R-UI-19 |
 | **DT** | Digital Technology — A3 복합기 | |
 | **GC** | Graphic Communication — 대형 인쇄기 | 건별 영업 확인 필요 |
 | **PRT** | Printer — A3/A4 프린터 | MOQ 적용 필수 |

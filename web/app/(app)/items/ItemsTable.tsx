@@ -1,4 +1,5 @@
 "use client";
+import { catLabel } from "@/lib/design/category";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -11,7 +12,7 @@ export function ItemsTable({ rows }: { rows: ItemMasterRow[] }) {
   const columns = useMemo<ColumnDef<ItemMasterRow, unknown>[]>(() => [
     { accessorKey: "key_code", header: "코드", cell: c => <span className="font-mono">{String(c.getValue())}</span> },
     { accessorKey: "description", header: "설명" },
-    { accessorKey: "category", header: "카테고리", cell: c => <Badge variant="outline">{String(c.getValue())}</Badge> },
+    { id: "category", header: "카테고리", accessorFn: r => catLabel(r.category), cell: c => <Badge variant="outline">{String(c.getValue())}</Badge> },
     { accessorKey: "family", header: "제품군" },
     { accessorKey: "avg_6m", meta: { align: "right" }, header: "6M 평균", cell: c => <span className="tabular-nums">{fmtNum(c.getValue() as number)}</span> },
     { accessorKey: "total_12m", meta: { align: "right" }, header: "12M 합", cell: c => <span className="tabular-nums">{fmtInt(c.getValue() as number)}</span> },

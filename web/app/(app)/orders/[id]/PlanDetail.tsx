@@ -1,4 +1,5 @@
 "use client";
+import { catLabel } from "@/lib/design/category";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -32,7 +33,7 @@ export function PlanDetail({ plan, lines, treeRows, months, filters, canEdit, to
   };
   const columns = useMemo<ColumnDef<LineRow, unknown>[]>(() => [
     { accessorKey: "key_code", header: "코드", cell: c => <Link className="font-mono underline-offset-2 hover:underline" href={`/items/${c.getValue()}`}>{String(c.getValue())}</Link> },
-    { accessorKey: "category", header: "카테고리" }, { accessorKey: "need_ym", header: "필요월" },
+    { id: "category", header: "카테고리", accessorFn: r => catLabel(r.category) }, { accessorKey: "need_ym", header: "필요월" },
     { accessorKey: "on_hand", meta: { align: "right" }, header: "현재고", cell: c => fmtInt(c.getValue() as number) },
     { accessorKey: "inbound_until_need", meta: { align: "right" }, header: "입고예정", cell: c => fmtInt(c.getValue() as number) },
     { accessorKey: "forecast_need", meta: { align: "right" }, header: "예측(필요월)", cell: c => fmtNum(c.getValue() as number, 1) },

@@ -1,4 +1,5 @@
 /** 제품군·기종 기준으로 보기 (D-076, R-UI-18): 필터(제품군 · 기종)와 묶어 보기(제품군별 · 기종별 요약) */
+import { catLabel } from "@/lib/design/category";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import { anonNamesOf, realName, type AliasMap } from "@/lib/names";
@@ -34,7 +35,7 @@ export function byModel(rows: FamilySummaryRow[]): FamilyGroup[] {
     g.n_items += n(r.n_items); g.on_hand += n(r.on_hand); g.inbound_qty += n(r.inbound_qty); g.avg_6m += n(r.avg_6m); g.total_12m += n(r.total_12m); g.n_zero_stock += n(r.n_zero_stock); g.n_below_target += n(r.n_below_target);
     if (r.category) g.cats.add(r.category); m.set(r.key, g);
   }
-  return [...m.values()].map(({ cats, ...g }) => ({ ...g, categories: [...cats].sort().join(" · "), dos_days: g.avg_6m > 0 ? Math.round(g.on_hand / g.avg_6m * 30) : null })).sort((a, b) => b.total_12m - a.total_12m || a.name.localeCompare(b.name));
+  return [...m.values()].map(({ cats, ...g }) => ({ ...g, categories: [...cats].sort().map(catLabel).join(" · "), dos_days: g.avg_6m > 0 ? Math.round(g.on_hand / g.avg_6m * 30) : null })).sort((a, b) => b.total_12m - a.total_12m || a.name.localeCompare(b.name));
 }
 /** 품목 › 제품군별 / 기종별 요약 (각 1,000행 안) */
 export async function fetchFamilySummary(sb: SB, by: "family" | "model", category?: string): Promise<FamilySummaryRow[]> {
@@ -61,5 +62,5 @@ export async function fetchPlanGroups(sb: SB, planId: string, by: "family" | "mo
     const g = m.get(r.key) ?? { key: r.key, name: r.name, categories: "", cats: new Set<string>(), n_lines: 0, qty: 0, amount: 0, n_stockout: 0, n_flex: 0 };
     g.n_lines += n(r.n_lines); g.qty += n(r.qty); g.amount += n(r.amount); g.n_stockout += n(r.n_stockout); g.n_flex += n(r.n_flex); if (r.category) g.cats.add(r.category); m.set(r.key, g);
   }
-  return [...m.values()].map(({ cats, ...g }) => ({ ...g, categories: [...cats].sort().join(" · ") })).sort((a, b) => b.amount - a.amount || b.qty - a.qty);
+  return [...m.values()].map(({ cats, ...g }) => ({ ...g, categories: [...cats].sort().map(catLabel).join(" · ") })).sort((a, b) => b.amount - a.amount || b.qty - a.qty);
 }

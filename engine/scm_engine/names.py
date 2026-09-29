@@ -34,6 +34,14 @@ def read_pairs(path: Path) -> tuple[pd.DataFrame, dict]:
     return df, {"duplicate_anon": dup, **{k: int((df.kind == k).sum()) for k in SHEETS}}
 
 
+# 기종(MC) Product 의 실제 이름은 두지 않는다 — 화면은 회사가 준 보안용 약자(app.mc_family)를 쓴다 (D-077).
+# 같은 이름이 부품·소모품·옵션의 제품군으로도 쓰이면 남긴다.
+DROP_MC = """delete from app.name_alias a where a.kind = 'family'
+  and exists (select 1 from raw.dim_model m where upper(btrim(m.model_key)) = a.anon_key)
+  and not exists (select 1 from raw.dim_item i where upper(btrim(i.family)) = a.anon_key);
+"""
+
+
 def _q(v: str) -> str:
     return "'" + v.replace("'", "''") + "'"
 
@@ -42,4 +50,4 @@ def to_sql(df: pd.DataFrame) -> str:
     """테이블 전체 교체 (재실행 안전)"""
     rows = [f"({_q(r.kind)},{_q(r.anon)},{_q(r.anon_key)},{_q(r.real_name)})" for r in df.itertuples()]
     body = "".join(f"insert into app.name_alias(kind, anon, anon_key, real_name) values\n" + ",\n".join(rows[i:i + 500]) + ";\n" for i in range(0, len(rows), 500))
-    return "begin;\ndelete from app.name_alias;\n" + body + "commit;\n"
+    return "begin;\ndelete from app.name_alias;\n" + body + DROP_MC + "commit;\n"

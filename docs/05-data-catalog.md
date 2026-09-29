@@ -7,6 +7,7 @@
 
 | 파일 | 시트/구조 | 내용 | 기간 | 정제 규칙 | 적재 테이블 |
 |---|---|---|---|---|---|
+| `MC OL vs ACT_RE.xlsx` (2026-09-29 수령, 실제 이름·실코드 — 저장소에 넣지 않는다) | Summary, 전임 후속기, FY23, FY24, FY25, FY26-to202606 | 회사 정리본: Family 이름 정리 · Family 별 Item Code · 전임기 → 후속기 · 보안용 Family 약자 | FY23 ~ 2026-06 | 로컬 변환(`engine load-mc`): Family → 회사 약자, Item Code → 익명 코드. 소계·합계 행과 연간 합계 열 제외 (D-077) | `app.mc_family` (86) · `app.mc_plan_item` (2,709행) |
 | `data/raw/MC_OL_vs_ACT.xlsx` | Summary, FY23, FY24, FY25, FY26-to202606 | 기종별 월 Sales OL / SCM OL / ACT | FY23 ~ 2026-06 | model_base 로 정규화. Bias = SUM(ol−act)/SUM(act) | `raw.fact_mc_plan_actual` (2,765행) |
 | `data/raw/TOTAL_BOM_LIST__CAP.xlsx` | `MC CAP BOM` + 기종별 15시트 (MDL222, MDL116, … MDL218), Sheet3 | DT/PRT 기종 BOM, CAP 부번, 필수옵션, 연관 소모품 | — | 15시트 통합. bom_group(STANDARD/FAX KIT/단품Option/소모품 KIT…) 보존 | `raw.bridge_bom`, `raw.bridge_mc_cap`, `raw.bridge_cap_option` |
 | `data/raw/GC-BOM_item_Manage_sheet.xlsx` | `Option MAP`, 기종별 13시트, `SCC` | GC 기종 BOM, 옵션↔기종 MAP, SCC 교체 구성 | — | `SCC` 시트만 6열 구조라 별도 테이블. Option MAP 헤더 행이 dim_model 에 8행 섞임 → `core.v_model` 로 제외. `(업데이트필요)`/`(영업종료)` 시트 처리 Q-011 | `raw.bridge_bom`, `raw.bridge_scc_config`(88), `raw.bridge_option_model`(972) |
@@ -156,6 +157,8 @@ Project Settings → Data API → **Exposed schemas**: `public, graphql_public, 
 | `app.item_class` | 품목 분류: pattern(SBC)·ABC·XYZ·CV·챔피언 기법 (v_item_master 조인) |
 | `app.forecast_tuning_proposal` ★ | LLM(설정 ai_model) 진단·제안(JSON), status pending→requested→applied/rejected |
 | `analytics.v_forecast_latest_run` / `v_forecast_latest` | 최신 완료 런 / 프로덕션 챔피언 예측 |
+| `app.mc_family` ★ · `app.mc_plan_item` ★ | 기종(MC) 제품군 마스터(약자 · 구분 DT/GC/PRT · 익명 Item Code · 기종 묶음 · 전임기 · 행 순서)와 제품군 × 월 Sales OL·SCM OL·실적 (R-FC-16, D-077) |
+| `analytics.v_mc_item` | 품목 › MC 목록: 제품군마다 한 줄 — 구분 · 전임/후속 · 최근 12개월 실적 · 최근월 OL |
 | `analytics.v_item_model` · `v_item_links` | 품목 ↔ 기종 묶음 연결(제품군 이름 · BOM · 옵션 연결), 품목별 연결 기종 배열 (R-UI-18, D-076) |
 | `analytics.v_item_master_x` · `v_order_plan_line_x` | 품목 목록 · 발주 계획 라인 + 연결 기종(`link_models`) — 제품군·기종 필터가 있을 때만 읽는다 |
 | `analytics.v_family_summary` · `v_model_item_summary` | 제품군 / 기종 × 카테고리 요약: 품목 수·현재고·입고예정·평균 출고·재고 0·목표 미달 |

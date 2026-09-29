@@ -55,7 +55,8 @@ uv --directory engine run engine seed-app && supabase/scripts/seed-app.sh   # �
 #   seed-app 은 app_seed.sql 과 app_seed_customer.sql(고객사·수요 라인·기기 재고·품목 그룹·긴급발주 더미, D-058) 두 파일을 만들고 seed-app.sh 가 순서대로 적용한다
 uv --directory engine run engine verify --target postgres                  # 행수 대조·XCN 리포트 → docs/reports/
 uv --directory engine run engine gen-types  # web/lib/types/database.ts 생성 (스키마 변경 시)
-uv --directory engine run engine load-names --key "<치환표_MAPPING_KEY.xlsx>"   # 제품군·기종 이름 쌍만 → app.name_alias (화면 표시용, D-075). 코드 복원 쌍은 올리지 않는다
+uv --directory engine run engine load-names --key "<치환표_MAPPING_KEY.xlsx>"   # 제품군·기종 이름 쌍만 → app.name_alias (화면 표시용, D-075). 코드 복원 쌍은 올리지 않는다. MC Product 의 실제 이름은 적재 뒤 지운다(D-077)
+uv --directory engine run engine load-mc --src "<회사 정리본 MC OL vs ACT>" --key "<치환표_MAPPING_KEY.xlsx>"   # 기종(MC) 마스터·제품 단위 OL 실적 → app.mc_family/mc_plan_item. Family 는 회사 약자, Item Code 는 익명 (D-077)
 # 예측 (SP2)
 uv --directory engine run engine forecast backtest --eval-fy 2025   # FY 롤링 백테스트 (~3분)
 uv --directory engine run engine forecast run --horizon 6           # 프로덕션 예측
