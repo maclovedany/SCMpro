@@ -9,7 +9,7 @@ test("대시보드 카드 6개 전부 드릴다운 링크", async ({ page }) => 
   expect(hrefs.every(h => h && h.startsWith("/"))).toBe(true);
   await page.screenshot({ path: "test-results/dashboard.png", fullPage: true });
 });
-test("영업 역할은 공통 메뉴만 (고객사 배정현황 포함 9개, D-058)", async ({ page }) => {
+test("영업 역할은 공통 메뉴만 (고객사 배정현황 · 기종 OL · 실적 포함 10개, D-058 · D-075)", async ({ page }) => {
   await login(page, "insightcha0624@gmail.com");
-  await expect(page.locator("nav[aria-label='주 메뉴'] a")).toHaveCount(9);
+  await expect(page.locator("nav[aria-label='주 메뉴'] a")).toHaveCount(10);
 });

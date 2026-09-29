@@ -1111,6 +1111,30 @@ export type Database = {
         }
         Relationships: []
       }
+      name_alias: {
+        Row: {
+          kind: string
+          anon: string
+          anon_key: string
+          real_name: string
+          updated_at: string
+        }
+        Insert: {
+          kind: string
+          anon: string
+          anon_key: string
+          real_name: string
+          updated_at?: string
+        }
+        Update: {
+          kind?: string
+          anon?: string
+          anon_key?: string
+          real_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification: {
         Row: {
           id: number
@@ -1732,6 +1756,7 @@ export type Database = {
       fn_request_approval: { Args: { p_kind: string; p_target_table: string; p_target_pk: string; p_payload: Json; p_reason: string }; Returns: string }
       fn_request_forecast_run: { Args: { p_run_type: string; p_eval_fy: number; p_horizon: number }; Returns: string }
       fn_request_refresh: { Args: Record<string, never>; Returns: undefined }
+      fn_real_name: { Args: { p_kind: string; p_anon: string }; Returns: string }
       fn_request_tuning: { Args: { p_run_id: string }; Returns: string }
       fn_request_tuning_approval: { Args: { p_proposal_id: string; p_reason: string }; Returns: string }
       fn_request_urgent: { Args: { p_item: string; p_qty: unknown; p_need_date: unknown; p_reason: string }; Returns: Json }
@@ -2147,6 +2172,22 @@ export type Database = {
           sum_actual: number | null
           wape: number | null
           bias: number | null
+        }
+        Relationships: []
+      }
+      v_mc_ol_act: {
+        Row: {
+          model_key: string | null
+          model_base: string | null
+          biz: string | null
+          iot_code: string | null
+          ym: string | null
+          fy: number | null
+          sales_ol: number | null
+          scm_ol: number | null
+          act: number | null
+          product_name: string | null
+          codename: string | null
         }
         Relationships: []
       }

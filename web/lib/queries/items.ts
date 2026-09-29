@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
+import { fetchAliasMap, realName } from "@/lib/names";
 export type ItemMasterRow = Database["analytics"]["Views"]["v_item_master"]["Row"];
 export type ItemFilters = { category?: string; q?: string; dummy?: boolean; target_dos?: "missing"; sort?: string; page?: number; abc?: string; xyz?: string; pattern?: string; champion?: string; stock?: "zero"; excess?: boolean };
 export const PAGE = 200;
@@ -30,7 +31,8 @@ export async function fetchItems(sb: SupabaseClient<Database>, f: ItemFilters): 
   const [col, dir] = (f.sort ?? "total_12m.desc").split(".");
   const { data, error, count } = await q.order(col, { ascending: dir !== "desc", nullsFirst: false }).range((page - 1) * PAGE, page * PAGE - 1);
   if (error) throw error;
-  return { rows: data ?? [], count: count ?? 0 };
+  const names = await fetchAliasMap(sb);   // 제품군은 실제 이름으로 (D-075)
+  return { rows: (data ?? []).map(r => ({ ...r, family: realName(names, "family", r.family) })), count: count ?? 0 };
 }
 export async function fetchItemDetail(sb: SupabaseClient<Database>, code: string) {
   const [master, monthly, xcn, models, setting, inbound, snapshots] = await Promise.all([
@@ -43,6 +45,9 @@ export async function fetchItemDetail(sb: SupabaseClient<Database>, code: string
     sb.schema("app").from("inventory_snapshot").select("snap_date,qty,stock_class,is_dummy").eq("item_code", code).order("snap_date", { ascending: false }).limit(24),
   ]);
   if (master.error) throw master.error;
+  const names = await fetchAliasMap(sb);   // 제품군·연결 기종은 실제 이름으로 (D-075)
+  if (master.data) master.data.family = realName(names, "family", master.data.family);
+  for (const x of models.data ?? []) x.model_base = realName(names, "codename", x.model_base);
   return { master: master.data, monthly: monthly.data ?? [], xcn: xcn.data ?? [], models: models.data ?? [], setting: setting.data, inbound: inbound.data ?? [], snapshots: snapshots.data ?? [] };
 }
 export type ItemDetail = Awaited<ReturnType<typeof fetchItemDetail>>;

@@ -1,3 +1,4 @@
+import { fetchAliasMap, realName } from "@/lib/names";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 export type ItemSettingPayload = { target_dos_days?: number; moq?: number; unit_price?: number; allocation_mode?: "auto" | "manual" };
@@ -33,11 +34,12 @@ export async function fetchHolidays(sb: SB, year: number) {
   if (error) throw error; return data;
 }
 export async function fetchEol(sb: SB) {
+  const names = await fetchAliasMap(sb);   // 기종 이름 병기 (D-075)
   const [models, eol] = await Promise.all([
     sb.schema("analytics").from("v_model").select("model_base,biz").order("model_base"),   // D-056: 화면은 analytics 만
     sb.schema("app").from("eol_eos").select("*"),
   ]);
   const map = new Map((eol.data ?? []).map(e => [e.model_base, e]));
   const seen = new Set<string>();
-  return (models.data ?? []).filter(m => m.model_base && !seen.has(m.model_base) && seen.add(m.model_base)).map(m => ({ model_base: m.model_base!, biz: m.biz, ...(map.get(m.model_base!) ?? {}) }));
+  return (models.data ?? []).filter(m => m.model_base && !seen.has(m.model_base) && seen.add(m.model_base)).map(m => ({ model_base: m.model_base!, name: realName(names, "codename", m.model_base!), biz: m.biz, ...(map.get(m.model_base!) ?? {}) }));
 }

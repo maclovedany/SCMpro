@@ -69,6 +69,14 @@ def gen_types_cmd(out: Path = ROOT / "web" / "lib" / "types" / "database.ts"):
     out.write_text("// 자동 생성: engine gen-types — 수정 금지\n" + gen_types.generate(_pg()), encoding="utf-8")
     typer.echo(f"생성: {out}")
 
+@app.command("load-names")
+def load_names_cmd(key: Path = typer.Option(..., help="치환표 파일 경로 (저장소 밖)")):
+    """표시 이름 적재 (D-075): 치환표의 제품군·기종 이름 쌍 → app.name_alias. 코드 복원 쌍은 읽지 않는다."""
+    from . import names
+    df, stat = names.read_pairs(key)
+    _pg().execute(names.to_sql(df))
+    typer.echo(f"적용: app.name_alias — 제품군 {stat['family']:,}쌍 · 기종 {stat['codename']:,}쌍 (같은 익명 이름 중복 {stat['duplicate_anon']:,}건 제외)")
+
 forecast_app = typer.Typer(help="예측 엔진 (SP2)")
 app.add_typer(forecast_app, name="forecast")
 

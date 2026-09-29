@@ -156,6 +156,8 @@ Project Settings → Data API → **Exposed schemas**: `public, graphql_public, 
 | `app.item_class` | 품목 분류: pattern(SBC)·ABC·XYZ·CV·챔피언 기법 (v_item_master 조인) |
 | `app.forecast_tuning_proposal` ★ | LLM(설정 ai_model) 진단·제안(JSON), status pending→requested→applied/rejected |
 | `analytics.v_forecast_latest_run` / `v_forecast_latest` | 최신 완료 런 / 프로덕션 챔피언 예측 |
+| `analytics.v_mc_ol_act` | 기종 OL · 실적 화면용: IOT × Product × 월 — sales_ol·scm_ol·act·fy + 표시 이름(product_name·codename). raw 단위 그대로(변형 합산 없음), 업로드 추가분 없음 (R-FC-15, D-075) |
+| `app.name_alias` ★ | 표시 이름: 익명 제품군·기종 이름 → 실제 이름 (kind=family 794 · codename 266). `engine load-names` 가 치환표의 이름 쌍만 적재 — 코드 복원 쌍 없음. 조회 함수 `app.fn_real_name(kind, anon)` (R-UI-17, D-075) |
 | `analytics.v_mc_compare` | 기종×월: sales_ol·scm_ol·act·system_fc·밴드·fy (기종 변형 합산) |
 | `analytics.v_accuracy_summary`, `v_abc_xyz_matrix` | 화면 요약 |
 | RPC | `fn_request_forecast_run`, `fn_request_tuning_approval`, `fn_apply_tuning` (fn_decide_approval 분기) |

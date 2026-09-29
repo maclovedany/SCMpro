@@ -4,10 +4,12 @@ import { fetchMcModels, fetchMcCompare, mcSeries, mcFyTable, METHOD_LABEL } from
 import { TimeSeriesChart } from "@/components/charts/TimeSeriesChart";
 import { fmtInt, fmtPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { fetchAliasMap, realName } from "@/lib/names";
 export default async function McPage({ searchParams }: { searchParams: Promise<{ model?: string }> }) {
   const { model } = await searchParams;
   const sb = await createServerSupabase();
-  const models = await fetchMcModels(sb);
+  const [models, names] = await Promise.all([fetchMcModels(sb), fetchAliasMap(sb)]);
+  const nm = (mb: string) => realName(names, "codename", mb);   // 기종 이름은 실제 이름으로, 주소의 model 값은 시스템 코드 그대로 (D-075)
   const sel = model ?? models[0]?.model_base;
   const rows = sel ? await fetchMcCompare(sb, sel) : [];
   const { months, series, forecastFrom } = mcSeries(rows as never);
@@ -16,9 +18,9 @@ export default async function McPage({ searchParams }: { searchParams: Promise<{
   return (
     <div className="space-y-4">
       <div><h1 className="text-xl font-semibold">기종 예측 비교</h1><p className="text-sm text-muted-foreground">Sales OL · SCM OL · 시스템 기준예측 · 실적 을 항상 함께 표시합니다 (R-FC-10). 백테스트 구간은 평가 FY, 그 이후는 프로덕션 예측(밴드).</p></div>
-      <div className="flex flex-wrap gap-1">{models.slice(0, 40).map(m => <Link key={m.model_base} href={`/forecast/mc?model=${m.model_base}`} className={cn("rounded-full border px-2.5 py-0.5 text-xs", m.model_base === sel ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{m.model_base} <span className="opacity-60">{m.biz}</span></Link>)}</div>
+      <div className="flex flex-wrap gap-1">{models.slice(0, 40).map(m => <Link key={m.model_base} href={`/forecast/mc?model=${m.model_base}`} className={cn("rounded-full border px-2.5 py-0.5 text-xs", m.model_base === sel ? "bg-primary text-primary-foreground" : "hover:bg-muted")}>{nm(m.model_base)} <span className="opacity-60">{m.biz}</span></Link>)}</div>
       {sel && <section className="rounded-md border p-3">
-        <h2 className="mb-1 text-sm font-medium">{sel} — 월별 (챔피언 기법: {method ? METHOD_LABEL[method] ?? method : "-"})</h2>
+        <h2 className="mb-1 text-sm font-medium">{nm(sel)} — 월별 (챔피언 기법: {method ? METHOD_LABEL[method] ?? method : "-"})</h2>
         <TimeSeriesChart months={months} series={series} forecastFrom={forecastFrom} height={340} />
       </section>}
       <section className="rounded-md border p-3">

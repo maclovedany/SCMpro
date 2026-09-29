@@ -18,6 +18,7 @@ export const MENU_GROUPS: MenuGroup[] = [
   { key: "plan", label: "계획", items: [
     { href: "/items", label: "품목", icon: "Package", roles: ALL },
     { href: "/forecast", label: "예측", icon: "TrendingUp", roles: ALL },
+    { href: "/mc-plan", label: "기종 OL · 실적", icon: "Table2", roles: ALL },                       // R-FC-15 (D-075)
     { href: "/orders", label: "발주 계획", icon: "ClipboardList", roles: ALL },
     { href: "/extra-demand", label: "추가 수요", icon: "PlusSquare", roles: ALL },
   ] },
