@@ -1,6 +1,6 @@
 # 규칙: AI Agent (R-AI)
 
-최종 갱신: 2026-09-29 · 출처: D-017, D-025, D-042(자율 모드), D-072(빈 답변·대화 삭제), D-073(모델 교체), D-074(강조 표시 제거) · 구현: web/lib/ai/{tools,chat,model,format}.ts, app/api/ai/chat, components/ai/*, migrations/20260913005000_ai.sql, 화면 /admin/ai-stats · 자율 모드: engine/scm_engine/agent.py, migrations/20260914008200_agent.sql, 화면 /agent
+최종 갱신: 2026-09-29 · 출처: D-017, D-025, D-042(자율 모드), D-072(빈 답변·대화 삭제), D-073(모델 교체), D-074(강조 표시 제거), D-080(기종 도구) · 구현: web/lib/ai/{tools,chat,model,format}.ts, app/api/ai/chat, components/ai/*, migrations/20260913005000_ai.sql, 화면 /admin/ai-stats · 자율 모드: engine/scm_engine/agent.py, migrations/20260914008200_agent.sql, 화면 /agent
 
 | ID | 규칙 |
 |---|---|
@@ -12,6 +12,7 @@
 | R-AI-06 | 관리자 통계: 질문 수(일/주/사용자별), 주제 분류(LLM 이 메시지에 태그 부여: 예측/재고/발주/배정/기타), 상위 질문 목록, 답변 실패율. 카드는 드릴다운(R-UI-01). |
 | R-AI-07 | 답변에 근거 데이터(품목·월·수치)를 함께 표시하고, 시스템에 없는 사실은 추정하지 않는다(모르면 모른다고 답변). |
 | R-AI-08 | 답변에는 굵은 글씨(`**`)·기울임 같은 강조 표시를 쓰지 않는다. 구분은 소제목·목록·표로 한다. 모델이 넣은 `**` 는 저장 전과 화면 표시 때 걷어 낸다(코드 안은 제외) — 한글 조사가 바로 붙으면 굵게 처리되지 않고 별표가 그대로 보인다 (D-074). |
+| R-AI-09 | **화면과 도구를 함께 (D-080)**: 새 화면이 새 자료를 보여 주면 같은 자료를 읽는 도구도 함께 추가한다 — 사용자는 보고 있는 화면의 값으로 묻는다. 기종(MC)은 `search_mc_families` · `get_mc_family` · `get_mc_totals` (Family = 회사 약자, 구분 DT · GC · PRT, 전임기·후속기). 계산은 화면과 같은 함수를 쓴다. `search_items` 는 품목 코드·품명·제품군 이름으로 찾는다. |
 | R-AI-10 | **자율 모드 (D-042)**: 관리자 설정 `agent_mode` = off / dryrun / notify / propose. off 면 대화형만. 켜면 10분 주기 작업(tick)에서 감지 → 판단 → 행동 → 기록 루프를 사람 개입 없이 돈다. 발주 **반영**은 어떤 모드에서도 팀장 승인 뒤에만 (`agent_order` 승인 → 추가수요 `meeting_approval` 로 반영). |
 | R-AI-11 | 감지는 결정론적 SQL `fn_agent_signals`: ① 품절 위험(최신 계획 라인 stockout_risk/기말<0) ② 재고 부족(DoS < 목표×`agent_dos_ratio`%, 입고예정 부족) ③ 입고 지연(계획일 경과 미입고) ④ 발주일 임박(다음 발주일 D-`agent_lead_days` 이내인데 계획 미승인) ⑤ 수요 급증(최근 월 출고 > 6개월 평균×(1+`agent_surge_pct`%)). 임계값은 전부 설정값. |
 | R-AI-12 | 판단은 LLM 구조화 출력(심각도 1~3, 조치 ignore/notify/propose, 수량, 필요월, 한 줄 사유). **수량은 시스템이 만든 후보(부족량→MOQ 배수, ×1.2) 중 선택만** — 후보 밖 값은 첫 후보로 치환. LLM 실패·키 없음이면 규칙 판단(신호·ABC·지연일 기준) 으로 폴백하고 `judgment.by` 에 기록. |
