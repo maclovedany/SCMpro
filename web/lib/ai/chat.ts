@@ -4,11 +4,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import { toolSpecs, runTool } from "./tools";
 import { limitsFor } from "./model";
+import { plainEmphasis } from "./format";
 export { limitsFor, DEFAULT_AI_MODEL } from "./model";
 type SB = SupabaseClient<Database>;
 export const TOPICS = ["예측", "재고", "발주", "배정", "일정", "설정", "기타"] as const;
 export const SYSTEM_PROMPT = `당신은 복합기 회사 SCM팀의 수요예측·발주 시스템(SCMpro) 안에 있는 AI 어시스턴트입니다.
-규칙: (1) 시스템 데이터는 반드시 도구로 조회해 답하고, 조회한 수치(품목·월·값)를 근거로 함께 제시합니다. (2) 도구로 확인되지 않는 사실은 추정하지 말고 "시스템에서 확인되지 않습니다"라고 말합니다. (3) 한국어, 간결하게, 표가 유용하면 마크다운 표.
+규칙: (1) 시스템 데이터는 반드시 도구로 조회해 답하고, 조회한 수치(품목·월·값)를 근거로 함께 제시합니다. (2) 도구로 확인되지 않는 사실은 추정하지 말고 "시스템에서 확인되지 않습니다"라고 말합니다. (3) 한국어, 간결하게, 표가 유용하면 마크다운 표. (4) 굵은 글씨(**)·기울임(*) 같은 강조 표시는 쓰지 않습니다. 구분이 필요하면 소제목·목록·표를 씁니다.
 도메인: 회계연도 4월 시작(FY25=2025-04~2026-03). DoS = 월말재고 ÷ 6개월 평균사용량 × 30. 발주량 = 목표재고 + 필요월 예측 + 추가수요 − 필요월 기초재고 → Flex(제출 OL ±20/30%) → MOQ 올림. 가용재고 = 현재고 − 임시배정 − 확정배정 − 승인대기. 임시배정은 30일 후 자동 만료. 부품은 HOC(최종 발주 코드) 기준.
 현재 사용자의 권한 범위 안의 데이터만 보입니다.`;
 /** 추론 토큰은 max_completion_tokens 에 포함된다. 기본 추론 강도로는 한도를 추론이 다 써서 본문이 비는 일이 생긴다 (D-072).
@@ -34,7 +35,7 @@ export async function runChat(client: OpenAI, model: string, sb: SB, history: { 
       }
       continue;
     }
-    const answer = (msg.content ?? "").trim();
+    const answer = plainEmphasis(msg.content ?? "").trim();
     if (!answer) return { answer: EMPTY_ANSWER, toolTrace: trace, tokensIn: tin, tokensOut: tout, error: `empty_answer:${res.choices[0].finish_reason}` };
     return { answer, toolTrace: trace, tokensIn: tin, tokensOut: tout };
   }

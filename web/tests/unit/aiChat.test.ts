@@ -1,6 +1,7 @@
 import { it, expect } from "vitest";
 import { parseTopic, TOPICS, SYSTEM_PROMPT, runChat, classifyTopic, summarize, limitsFor, DEFAULT_AI_MODEL } from "@/lib/ai/chat";
 import { TOOLS, toolSpecs } from "@/lib/ai/tools";
+import { plainEmphasis } from "@/lib/ai/format";
 it("parses topic robustly", () => { expect(parseTopic(" 재고 ")).toBe("재고"); expect(parseTopic("주제: 발주입니다")).toBe("발주"); expect(parseTopic("unknown")).toBe("기타"); expect(TOPICS.length).toBe(7); });
 it("tool specs are valid function schemas", () => { const s = toolSpecs(); expect(s.length).toBe(TOOLS.length); for (const t of s) { expect(t.type).toBe("function"); expect(t.function.parameters).toHaveProperty("type", "object"); } expect(SYSTEM_PROMPT).toContain("도구"); });
 // 추론 모델(gpt-5 계열)은 추론 토큰도 max_completion_tokens 에 포함된다 — 한도를 추론이 다 쓰면 본문이 빈 채 finish_reason=length 로 끝난다 (D-072)
@@ -36,4 +37,14 @@ it("newer models are called without reasoning, first-generation gpt-5 keeps low/
   const b = fakeClient([{ content: "재고", finish_reason: "stop" }]);
   expect(await classifyTopic(b.client, "gpt-5.6-luna", "재고 몇 개야")).toBe("재고"); expect(b.calls[0].reasoning_effort).toBe("none");
   expect(DEFAULT_AI_MODEL).toBe("gpt-5.6-luna");
+});
+// 한글 조사가 바로 붙은 굵은 글씨(**31.4%**는)는 마크다운 규칙상 굵게 처리되지 않아 별표가 그대로 보인다 → 강조 표시를 쓰지 않는다 (D-074)
+it("answers carry no bold markers", async () => {
+  expect(plainEmphasis("기준예측 정확도 **31.4%**는 **기준예측(Champion)의 WAPE가 31.4%**라는 의미입니다.")).toBe("기준예측 정확도 31.4%는 기준예측(Champion)의 WAPE가 31.4%라는 의미입니다.");
+  expect(plainEmphasis("- **WAPE**: 오차율\n| 구분 | 값 |\n|---|---:|\n| **SUPPLY** | 24.2% |")).toBe("- WAPE: 오차율\n| 구분 | 값 |\n|---|---:|\n| SUPPLY | 24.2% |");
+  expect(plainEmphasis("계산식 `2 ** 3 ** 2` 은 그대로\n```\na ** b ** c\n```\n**끝**")).toBe("계산식 `2 ** 3 ** 2` 은 그대로\n```\na ** b ** c\n```\n끝");
+  expect(plainEmphasis("강조 없음 * 곱셈 3 * 4")).toBe("강조 없음 * 곱셈 3 * 4");
+  expect(SYSTEM_PROMPT).toContain("굵은 글씨");
+  const { client } = fakeClient([{ content: "WAPE 는 **31.4%**입니다.", finish_reason: "stop" }]);
+  expect((await runChat(client, "gpt-5.6-luna", {} as never, [], null, null, "질문")).answer).toBe("WAPE 는 31.4%입니다.");
 });

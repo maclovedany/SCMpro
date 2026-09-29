@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { fmtDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { DEFAULT_AI_MODEL } from "@/lib/ai/model";
+import { plainEmphasis } from "@/lib/ai/format";
 type Msg = { id: number | string; role: string; content: string | null; tool_name?: string | null; created_at?: string | null; pending?: boolean; error?: string | null };
 type Conv = { id: string; title: string | null; updated_at: string | null };
 /** R-AI-02: 우측 사이드 패널 — 좌측 경계 드래그 리사이즈, 대화 목록, 메시지, 입력 */
@@ -72,7 +73,7 @@ export function AiPanel() {
           {msgs.length === 0 && <div className="rounded-md bg-muted/40 p-3 text-muted-foreground">예: &ldquo;556K59129 재고랑 예측 알려줘&rdquo;, &ldquo;이번 달 발주 계획 품절 위험은?&rdquo;, &ldquo;내 승인 대기 뭐 있어?&rdquo;<br />답변은 시스템 데이터를 도구로 조회한 근거와 함께 제공됩니다 (R-AI-05/07).</div>}
           {msgs.map(m => m.role === "tool" ? <div key={m.id} className="flex items-center gap-1 text-xs text-muted-foreground"><Wrench className="h-3 w-3" />도구 {m.tool_name}</div>
             : <div key={m.id} className={cn("rounded-lg px-3 py-2", m.role === "user" && "whitespace-pre-wrap", m.role === "user" ? "ml-8 bg-primary text-primary-foreground" : "mr-8 bg-muted", m.error && "border border-red-300 bg-red-50 text-red-700")} data-role={m.role}>
-                {m.pending ? <span className="animate-pulse">생각 중…</span> : m.error ? `오류: ${m.content || m.error}` : m.role === "assistant" ? <div className="ai-md"><ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content ?? ""}</ReactMarkdown></div> : m.content}
+                {m.pending ? <span className="animate-pulse">생각 중…</span> : m.error ? `오류: ${m.content || m.error}` : m.role === "assistant" ? <div className="ai-md"><ReactMarkdown remarkPlugins={[remarkGfm]}>{plainEmphasis(m.content ?? "")}</ReactMarkdown></div> : m.content}
               </div>)}
           <div ref={bottomRef} />
         </div>)}
