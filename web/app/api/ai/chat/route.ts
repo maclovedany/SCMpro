@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/auth/getProfile";
-import { runChat, classifyTopic, summarize } from "@/lib/ai/chat";
+import { runChat, classifyTopic, summarize, DEFAULT_AI_MODEL } from "@/lib/ai/chat";
 export const maxDuration = 120;
 export async function POST(req: Request) {
   const p = await getProfile(); if (!p) return NextResponse.json({ error: "AUTH_REQUIRED" }, { status: 401 });
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   const text = (body.message ?? "").trim(); if (!text) return NextResponse.json({ error: "메시지가 비어 있습니다" }, { status: 400 });
   const sb = await createServerSupabase();
   const { data: ms } = await sb.schema("app").from("system_settings").select("value").eq("key", "ai_model").maybeSingle();
-  const model = (typeof ms?.value === "string" ? ms.value : null) ?? "gpt-5-nano";
+  const model = (typeof ms?.value === "string" ? ms.value : null) ?? DEFAULT_AI_MODEL;
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   // 대화
   let convId = body.conversation_id ?? null; let summary: string | null = null;

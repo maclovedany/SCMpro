@@ -15,7 +15,7 @@ flowchart LR
   subgraph Web["Web — Next.js 16 (App Router) · Vercel"]
     P[화면 33 라우트<br/>서버 컴포넌트 + 클라이언트 위젯]
     SA[서버 액션 / API<br/>(권한 검사 → RPC 호출)]
-    AI[/api/ai/chat<br/>gpt-5-nano + 도구 9종/]
+    AI[/api/ai/chat<br/>gpt-5.6-luna + 도구 9종/]
     PX[proxy.ts<br/>세션 갱신·미로그인 리다이렉트]
   end
   subgraph SB["Supabase (PostgreSQL 17)"]
@@ -34,7 +34,7 @@ flowchart LR
     AGENT[agent: 감지→판단→알림·발주 제안]
     TICK[tick / notify: 배정 만료·알림·이메일]
   end
-  OAI[(OpenAI API<br/>gpt-5-nano)]
+  OAI[(OpenAI API<br/>gpt-5.6-luna)]
   SMTP[(SMTP<br/>선택)]
   FILES[[xlsx/csv 업로드]]
 
@@ -61,7 +61,7 @@ flowchart LR
 | Web | Next.js 16 App Router, TypeScript, Tailwind v4 + shadcn(base-ui), TanStack Query/Table/Virtual, ECharts, react-markdown | 화면·워크플로(확정/승인/배정/업로드), 발주량 산출 계산(`lib/order/calc.ts`), AI Agent 오케스트레이션 | `web/` → **Vercel** (D-048) |
 | Supabase | PostgreSQL 17, Auth, RLS, pg_cron | 단일 데이터 저장소 + **업무 로직의 트랜잭션 부분**(배정 상태머신, 승인 적용, 업로드 반영)은 security-definer RPC | `supabase/migrations/` |
 | Engine | Python 3.12, pandas, statsmodels, statsforecast, prophet, lightgbm, openai, psycopg | 무거운 배치: 예측 백테스트·프로덕션, 자동 런, AI 오차 분석, AI 감시, 주기 작업·이메일, 데이터 적재/검증/타입 생성 | `engine/` → **Railway Cron** (D-049) |
-| OpenAI | gpt-5-nano (설정 `ai_model`) | AI Agent 답변·주제 분류·요약, 예측 조정안 | 외부 |
+| OpenAI | gpt-5.6-luna (설정 `ai_model`) | AI Agent 답변·주제 분류·요약, 예측 조정안 | 외부 |
 | SMTP | 네이버 SMTP (환경변수, D-029) | 이메일 채널 발송. 설정 `notify_email_enabled` 로 on/off, 미설정 시 `skipped:no_smtp` (D-046) | 외부 |
 
 **책임 분리 원칙 (D-011, D-022)**
@@ -113,7 +113,7 @@ engine forecast backtest --eval-fy N
   v_item_monthly + fact_mc_plan_actual → classify(SBC·ABC-XYZ) → 정책(셀별 후보) → 기법 13종 fit/predict(joblib 병렬, LightGBM 전역 1회)
   → 챔피언 선택(WAPE 최소, 기준선 우선) → forecast_result/accuracy/item_class 저장 → summary(vs_prev, regressed)
 engine forecast run          최신 챔피언으로 미래 H개월 예측(밴드) → 화면·발주 계획 입력
-engine forecast tune         런 요약 → gpt-5-nano → tuning_proposal → /approvals 승인 → forecast_method.params 반영(챔피언 off 가드)
+engine forecast tune         런 요약 → gpt-5.6-luna → tuning_proposal → /approvals 승인 → forecast_method.params 반영(챔피언 off 가드)
 ```
 
 ### 5.3 주문·배정 (SP4) — 전부 RPC 안 트랜잭션, 품목 advisory lock

@@ -10,13 +10,14 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { fmtDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { DEFAULT_AI_MODEL } from "@/lib/ai/model";
 type Msg = { id: number | string; role: string; content: string | null; tool_name?: string | null; created_at?: string | null; pending?: boolean; error?: string | null };
 type Conv = { id: string; title: string | null; updated_at: string | null };
 /** R-AI-02: 우측 사이드 패널 — 좌측 경계 드래그 리사이즈, 대화 목록, 메시지, 입력 */
 export function AiPanel() {
   const { open, setOpen, width, setWidth, conversationId, setConversationId } = useAiPanel();
   const pathname = usePathname();
-  const [convs, setConvs] = useState<Conv[]>([]); const [msgs, setMsgs] = useState<Msg[]>([]); const [input, setInput] = useState(""); const [busy, setBusy] = useState(false); const [showList, setShowList] = useState(false);
+  const [convs, setConvs] = useState<Conv[]>([]); const [msgs, setMsgs] = useState<Msg[]>([]); const [input, setInput] = useState(""); const [busy, setBusy] = useState(false); const [showList, setShowList] = useState(false); const [model, setModel] = useState(DEFAULT_AI_MODEL);
   const bottomRef = useRef<HTMLDivElement>(null); const dragging = useRef(false);
   const sb = createClient();
   // 패널은 내 대화만 다룬다 — 관리자의 전체 조회는 관리자 통계 화면 (R-AI-03/06)
@@ -34,6 +35,8 @@ export function AiPanel() {
     await loadConvs(); toast.success("대화 삭제됨");
   };
   useEffect(() => { if (open) { loadConvs(); loadMsgs(conversationId); } }, [open, conversationId, loadConvs, loadMsgs]);
+  // 상단 모델 표기 = 설정값 ai_model (R-AI-01)
+  useEffect(() => { if (!open) return; sb.schema("app").from("system_settings").select("value").eq("key", "ai_model").maybeSingle().then(({ data }) => { if (typeof data?.value === "string") setModel(data.value); }); }, [open, sb]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ block: "end" }); }, [msgs]);
   useEffect(() => {
     const move = (e: MouseEvent) => { if (dragging.current) setWidth(window.innerWidth - e.clientX); };
@@ -57,7 +60,7 @@ export function AiPanel() {
     <aside className="fixed right-0 top-0 z-40 flex h-screen flex-col border-l bg-background shadow-xl" style={{ width }} data-testid="ai-panel" aria-label="AI Agent 패널">
       <div className="absolute left-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-primary/40" data-testid="ai-resize-handle" onMouseDown={() => { dragging.current = true; document.body.style.userSelect = "none"; }} title="드래그하여 너비 조절" />
       <div className="flex items-center gap-2 border-b px-3 py-2">
-        <span className="text-sm font-semibold">AI Agent <span className="font-normal text-muted-foreground">gpt-5-nano</span></span>
+        <span className="text-sm font-semibold">AI Agent <span className="font-normal text-muted-foreground" data-testid="ai-model">{model}</span></span>
         <Button size="sm" variant="ghost" onClick={() => setShowList(!showList)} aria-label="대화 목록">{showList ? "채팅" : `대화 (${convs.length})`}</Button>
         <Button size="sm" variant="ghost" onClick={() => { setConversationId(null); setMsgs([]); setShowList(false); }} aria-label="새 대화"><Plus className="h-4 w-4" /></Button>
         <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setOpen(false)} aria-label="닫기"><X className="h-4 w-4" /></Button>

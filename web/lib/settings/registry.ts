@@ -8,7 +8,7 @@ export type SettingSpec =
   | { kind: "text"; label: string; help: string };
 export const DEPTS: { value: string; label: string }[] = [{ value: "marketing", label: "마케팅부" }, { value: "sales", label: "영업부" }, { value: "service", label: "서비스부" }, { value: "biz_enable", label: "사업강화부" }];
 export const SETTINGS: Record<string, SettingSpec> = {
-  ai_model: { kind: "select", label: "AI 모델", options: [{ value: "gpt-5-nano", label: "GPT-5 nano (기본, 빠름·저렴)" }, { value: "gpt-5-mini", label: "GPT-5 mini" }, { value: "gpt-5", label: "GPT-5" }], help: "AI Agent 와 예측 오차 분석에 쓰는 모델" },
+  ai_model: { kind: "select", label: "AI 모델", options: [{ value: "gpt-5.6-luna", label: "GPT-5.6 Luna (기본)" }, { value: "gpt-5-nano", label: "GPT-5 nano (빠름·저렴)" }, { value: "gpt-5-mini", label: "GPT-5 mini" }, { value: "gpt-5", label: "GPT-5" }], help: "AI Agent 와 예측 오차 분석에 쓰는 모델" },
   fiscal_year_start_month: { kind: "select", label: "회계연도 시작월", options: Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `${i + 1}월` })), help: "연간 집계·전년동월·FY 기준. 4월이면 FY25 = 2025년 4월 ~ 2026년 3월" },
   ol_lead_months: { kind: "int", label: "공급처 OL 제출 선행 기간", unit: "개월", min: 0, max: 12, help: "Flex 범위의 기준이 되는 제출 OL 이 몇 개월 전에 제출되는지" },
   flex_ranges: { kind: "flex-table", label: "Flex 허용 범위", help: "제출 OL 대비 발주량 변경 허용 폭. 리드타임 이후 첫 번째 달부터 순서대로. 표에 없는 달은 제한 없음" },

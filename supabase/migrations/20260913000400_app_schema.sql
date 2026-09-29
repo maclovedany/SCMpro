@@ -149,5 +149,5 @@ insert into app.system_settings(key, value, description) values
  ('projection_past_months', '12', '재고전개 과거 열 수 (R-UI-04)'),
  ('projection_future_months', '6', '재고전개 미래 열 수 (R-UI-04)'),
  ('fiscal_year_start_month', '4', '회계연도 시작월. FY25 = 2025-04 ~ 2026-03 (D-015, R-FC-08)'),
- ('ai_model', '"gpt-5-nano"', 'AI 모델 (D-017, R-AI-01)')
+ ('ai_model', '"gpt-5.6-luna"', 'AI 모델 (D-017 · D-073, R-AI-01)')
 on conflict (key) do nothing;

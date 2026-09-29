@@ -98,7 +98,7 @@ def fc_pending(n_jobs: int = 3):
 
 @forecast_app.command("tune")
 def fc_tune(run_id: str = None, model: str = None):
-    """gpt-5-nano 로 최신(또는 지정) 백테스트 런의 오차를 분석해 조정안 저장 (R-FC-42)."""
+    """LLM(설정 ai_model)으로 최신(또는 지정) 백테스트 런의 오차를 분석해 조정안 저장 (R-FC-42)."""
     from dotenv import load_dotenv; load_dotenv(ENGINE_DIR / ".env")
     from .forecast import ai_tuning
     db = _pg()

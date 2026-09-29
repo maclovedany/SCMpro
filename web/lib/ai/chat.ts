@@ -3,23 +3,24 @@ import OpenAI from "openai";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import { toolSpecs, runTool } from "./tools";
+import { limitsFor } from "./model";
+export { limitsFor, DEFAULT_AI_MODEL } from "./model";
 type SB = SupabaseClient<Database>;
 export const TOPICS = ["예측", "재고", "발주", "배정", "일정", "설정", "기타"] as const;
 export const SYSTEM_PROMPT = `당신은 복합기 회사 SCM팀의 수요예측·발주 시스템(SCMpro) 안에 있는 AI 어시스턴트입니다.
 규칙: (1) 시스템 데이터는 반드시 도구로 조회해 답하고, 조회한 수치(품목·월·값)를 근거로 함께 제시합니다. (2) 도구로 확인되지 않는 사실은 추정하지 말고 "시스템에서 확인되지 않습니다"라고 말합니다. (3) 한국어, 간결하게, 표가 유용하면 마크다운 표.
 도메인: 회계연도 4월 시작(FY25=2025-04~2026-03). DoS = 월말재고 ÷ 6개월 평균사용량 × 30. 발주량 = 목표재고 + 필요월 예측 + 추가수요 − 필요월 기초재고 → Flex(제출 OL ±20/30%) → MOQ 올림. 가용재고 = 현재고 − 임시배정 − 확정배정 − 승인대기. 임시배정은 30일 후 자동 만료. 부품은 HOC(최종 발주 코드) 기준.
 현재 사용자의 권한 범위 안의 데이터만 보입니다.`;
-/** gpt-5 계열은 추론 토큰이 max_completion_tokens 에 포함된다. 기본 추론 강도로는 한도를 추론이 다 써서 본문이 비는 일이 생긴다 (D-072).
- *  대화는 low(도구 호출 유지), 주제 분류·요약은 minimal(추론 0) 로 고정하고 본문 몫을 남긴다. */
-const CHAT_LIMITS = { reasoning_effort: "low", max_completion_tokens: 8000 } as const;
-const AUX_EFFORT = "minimal" as const;
+/** 추론 토큰은 max_completion_tokens 에 포함된다. 기본 추론 강도로는 한도를 추론이 다 써서 본문이 비는 일이 생긴다 (D-072).
+ *  추론 강도는 모델별로 고정(limitsFor, D-073)하고 본문 몫을 남긴다. */
+const CHAT_MAX_TOKENS = 8000;
 const EMPTY_ANSWER = "답변을 만들지 못했습니다. 질문을 더 짧게 나눠서 다시 물어봐 주세요.";
 export type ChatResult = { answer: string; toolTrace: { name: string; args: Record<string, unknown> }[]; tokensIn: number; tokensOut: number; error?: string };
 export async function runChat(client: OpenAI, model: string, sb: SB, history: { role: "user" | "assistant"; content: string }[], summary: string | null, pageContext: string | null, userMsg: string): Promise<ChatResult> {
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [{ role: "system", content: SYSTEM_PROMPT + (summary ? `\n\n[이전 대화 요약]\n${summary}` : "") + (pageContext ? `\n\n[사용자가 보고 있는 화면] ${pageContext}` : "") }, ...history, { role: "user", content: userMsg }];
   const trace: ChatResult["toolTrace"] = []; let tin = 0, tout = 0;
   for (let round = 0; round < 6; round++) {
-    const res = await client.chat.completions.create({ model, messages, tools: toolSpecs(), tool_choice: round < 5 ? "auto" : "none", ...CHAT_LIMITS });
+    const res = await client.chat.completions.create({ model, messages, tools: toolSpecs(), tool_choice: round < 5 ? "auto" : "none", reasoning_effort: limitsFor(model).chat, max_completion_tokens: CHAT_MAX_TOKENS });
     tin += res.usage?.prompt_tokens ?? 0; tout += res.usage?.completion_tokens ?? 0;
     const msg = res.choices[0].message;
     if (msg.tool_calls?.length) {
@@ -41,12 +42,12 @@ export async function runChat(client: OpenAI, model: string, sb: SB, history: { 
 }
 export async function classifyTopic(client: OpenAI, model: string, question: string): Promise<string> {
   try {
-    const r = await client.chat.completions.create({ model, messages: [{ role: "system", content: `질문의 주제를 다음 중 하나로만 답하세요: ${TOPICS.join(", ")}. 단어 하나만.` }, { role: "user", content: question.slice(0, 500) }], reasoning_effort: AUX_EFFORT, max_completion_tokens: 50 });
+    const r = await client.chat.completions.create({ model, messages: [{ role: "system", content: `질문의 주제를 다음 중 하나로만 답하세요: ${TOPICS.join(", ")}. 단어 하나만.` }, { role: "user", content: question.slice(0, 500) }], reasoning_effort: limitsFor(model).aux, max_completion_tokens: 50 });
     const t = (r.choices[0].message.content ?? "").trim(); return (TOPICS as readonly string[]).find(x => t.includes(x)) ?? "기타";
   } catch { return "기타"; }
 }
 export async function summarize(client: OpenAI, model: string, prev: string | null, msgs: { role: string; content: string | null }[]): Promise<string> {
-  const r = await client.chat.completions.create({ model, messages: [{ role: "system", content: "다음 대화를 이후 맥락 유지를 위해 8줄 이내 한국어로 요약하세요. 품목 코드·수치·사용자 결정은 유지." }, { role: "user", content: (prev ? `[기존 요약]\n${prev}\n\n` : "") + msgs.map(m => `${m.role}: ${m.content ?? ""}`).join("\n").slice(0, 12000) }], reasoning_effort: AUX_EFFORT, max_completion_tokens: 800 });
+  const r = await client.chat.completions.create({ model, messages: [{ role: "system", content: "다음 대화를 이후 맥락 유지를 위해 8줄 이내 한국어로 요약하세요. 품목 코드·수치·사용자 결정은 유지." }, { role: "user", content: (prev ? `[기존 요약]\n${prev}\n\n` : "") + msgs.map(m => `${m.role}: ${m.content ?? ""}`).join("\n").slice(0, 12000) }], reasoning_effort: limitsFor(model).aux, max_completion_tokens: 800 });
   return r.choices[0].message.content ?? prev ?? "";
 }
 export function parseTopic(text: string): string { const t = text.trim(); return (TOPICS as readonly string[]).find(x => t.includes(x)) ?? "기타"; }

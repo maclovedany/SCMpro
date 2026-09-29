@@ -154,7 +154,7 @@ Project Settings → Data API → **Exposed schemas**: `public, graphql_public, 
 | `app.forecast_result` | 런×레벨(item/model)×품목×월×기법 예측값·밴드·is_champion·actual |
 | `app.forecast_accuracy` | 레벨(item/model/total/category/biz/abcxyz/pattern)×기법 Bias/WAPE/MAPE |
 | `app.item_class` | 품목 분류: pattern(SBC)·ABC·XYZ·CV·챔피언 기법 (v_item_master 조인) |
-| `app.forecast_tuning_proposal` ★ | gpt-5-nano 진단·제안(JSON), status pending→requested→applied/rejected |
+| `app.forecast_tuning_proposal` ★ | LLM(설정 ai_model) 진단·제안(JSON), status pending→requested→applied/rejected |
 | `analytics.v_forecast_latest_run` / `v_forecast_latest` | 최신 완료 런 / 프로덕션 챔피언 예측 |
 | `analytics.v_mc_compare` | 기종×월: sales_ol·scm_ol·act·system_fc·밴드·fy (기종 변형 합산) |
 | `analytics.v_accuracy_summary`, `v_abc_xyz_matrix` | 화면 요약 |

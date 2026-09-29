@@ -58,7 +58,7 @@ uv --directory engine run engine gen-types  # web/lib/types/database.ts 생성 (
 # 예측 (SP2)
 uv --directory engine run engine forecast backtest --eval-fy 2025   # FY 롤링 백테스트 (~3분)
 uv --directory engine run engine forecast run --horizon 6           # 프로덕션 예측
-uv --directory engine run engine forecast tune                      # gpt-5-nano 오차 분석 → 제안 (승인은 /approvals)
+uv --directory engine run engine forecast tune                      # LLM(설정 ai_model) 오차 분석 → 제안 (승인은 /approvals)
 uv --directory engine run engine forecast pending                   # 웹에서 요청한 런·AI 분석 요청 처리 (tick 이 10분마다 자동 호출, D-052)
 uv --directory engine run engine tick                               # fn_tick 의 유일한 정기 호출자(pg_cron scm-tick 은 D-057 로 해제, pg_cron 은 scm-refresh 만): 배정 만료·알림·제출 알림·이메일 발송 + 월 1회 자동 런(auto_run_* 설정, D-041) + AI 감시(agent_mode 설정, D-042)
 uv --directory engine run engine agent --mode dryrun --no-llm   # AI 감시 1회 수동 실행 (규칙 판단만)
@@ -73,7 +73,7 @@ cd engine && uv run pytest
 ```
 - Supabase 대시보드: Data API → Exposed schemas 에 `app, analytics, core` 필요.
 - 상태: **SP1~SP6 + 확장 A~D 완료** (2026-09-14, docs/reports/final-verification.md): 디자인 언어, OL 시계열·자동 런·발주 피드백 루프, 자율 모드 AI 감시(기본 off), 운영 문서(09/10)·보존 정책·알림 스위치. **배포 완료(2026-09-14)**: Web = Vercel `https://sc-mpro.vercel.app`(Root `web`, Framework Preset 반드시 Next.js, D-048) · Engine = Railway Cron(Root `engine`, 10분, D-049) · DB = Supabase Pro/Micro 8GB(디스크 장애 후 이전, D-045). 남은 것은 실데이터 수령(장착률·EOL·재고·MOQ·단가·공급처·물류 로그 Q-020)과 사내 이관(도메인·계정 정책·ERP 연동). 서브프로젝트 목록: docs/01-business-process.md §7.
-- LLM: OpenAI `gpt-5-nano` (D-017, R-AI). `OPENAI_API_KEY` 는 engine/.env, web/.env.local 에.
+- LLM: OpenAI `gpt-5.6-luna` (설정 `ai_model`, D-017 · D-073, R-AI). `OPENAI_API_KEY` 는 engine/.env, web/.env.local 에.
 
 ## E2E 반복 실행 전 정리 (DB 상태를 바꾸는 테스트)
 `tests/e2e/global-setup.ts` 가 매 실행 전 E2E 주문·배정 취소 + 더미 입고(556K59129 seed) 재개방을 자동 수행한다(engine/.env DB URL + psql 필요, D-036). 배지 숫자 때문에 스펙은 직렬(`--workers=1`)로 돌리는 것이 안전. 전체 초기화가 필요하면 아래 SQL:

@@ -1,10 +1,10 @@
 # 규칙: AI Agent (R-AI)
 
-최종 갱신: 2026-09-29 · 출처: D-017, D-025, D-042(자율 모드), D-072(빈 답변·대화 삭제) · 구현: web/lib/ai/{tools,chat}.ts, app/api/ai/chat, components/ai/*, migrations/20260913005000_ai.sql, 화면 /admin/ai-stats · 자율 모드: engine/scm_engine/agent.py, migrations/20260914008200_agent.sql, 화면 /agent
+최종 갱신: 2026-09-29 · 출처: D-017, D-025, D-042(자율 모드), D-072(빈 답변·대화 삭제), D-073(모델 교체) · 구현: web/lib/ai/{tools,chat}.ts, app/api/ai/chat, components/ai/*, migrations/20260913005000_ai.sql, 화면 /admin/ai-stats · 자율 모드: engine/scm_engine/agent.py, migrations/20260914008200_agent.sql, 화면 /agent
 
 | ID | 규칙 |
 |---|---|
-| R-AI-01 | LLM = OpenAI Chat Completions, 모델은 설정값 `ai_model` (기본 `gpt-5-nano`). API 키는 서버 환경변수 `OPENAI_API_KEY` 만, 클라이언트 노출 금지. 추론 토큰이 출력 한도에 포함되므로 대화는 추론 강도 low · 한도 8,000, 주제 분류·요약은 minimal 로 호출한다. 본문이 빈 응답은 답변으로 저장하지 않고 오류로 기록한다 (D-072). |
+| R-AI-01 | LLM = OpenAI Chat Completions, 모델은 설정값 `ai_model` (기본 `gpt-5.6-luna`, D-073). API 키는 서버 환경변수 `OPENAI_API_KEY` 만, 클라이언트 노출 금지. 추론 토큰이 출력 한도에 포함되므로 추론 강도를 모델별로 고정한다(한도 8,000): gpt-5.1 이후 모델은 대화·주제 분류·요약 모두 none(Chat Completions 에서 도구와 추론을 함께 쓸 수 없음), 1세대 gpt-5(gpt-5 · mini · nano)는 대화 low · 분류·요약 minimal. 본문이 빈 응답은 답변으로 저장하지 않고 오류로 기록한다 (D-072). |
 | R-AI-02 | 모든 화면 상단(Topbar)에 **AI Agent** 버튼. 클릭 시 **화면 우측 사이드 패널**로 열리는 ChatGPT 형 채팅(대화 목록 + 메시지 스트림 + 입력). 패널 너비는 **좌측 경계를 마우스 드래그**해 자유롭게 조절(최소 320px ~ 최대 화면의 70%), 너비·열림 상태·현재 대화는 브라우저에 기억(localStorage) — 기억된 대화가 로그인한 사용자의 것이 아니면 새 대화로 시작한다 (D-072). 본문 화면은 패널 너비만큼 줄어들며 계속 사용 가능. 현재 화면 컨텍스트(경로·품목코드 등)를 첫 메시지에 첨부. |
 | R-AI-03 | 대화는 사용자별로 `app.ai_conversation`(id, user, title, created/updated) · `app.ai_message`(conversation, role, content, tool_calls, tokens, created) 에 저장. 사용자는 자기 대화만, 관리자는 전체 조회(관리자 통계 화면). 패널의 대화 목록은 본인 대화만 보이고 이어 쓰기도 본인 대화만 가능. 사용자는 대화 목록에서 자기 대화를 삭제할 수 있으며 메시지도 함께 삭제되어 관리자 통계에서 빠진다 (D-072). |
 | R-AI-04 | 맥락 유지: 요청에 같은 대화의 최근 20턴 + 그 이전은 요약(summary 컬럼, 갱신 시 재요약)을 포함. |

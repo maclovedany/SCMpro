@@ -6,7 +6,7 @@ begin
   if v_role is null or v_role not in ('item_manager','scm_lead','admin') then raise exception 'FORBIDDEN'; end if;
   if not exists (select 1 from app.forecast_run where id = p_run_id and run_type = 'backtest' and status = 'done') then raise exception 'RUN_NOT_DONE'; end if;
   if exists (select 1 from app.forecast_tuning_proposal where run_id = p_run_id and status = 'queued') then raise exception 'ALREADY_QUEUED'; end if;
-  v_model := coalesce((select value #>> '{}' from app.system_settings where key = 'ai_model'), 'gpt-5-nano');
+  v_model := coalesce((select value #>> '{}' from app.system_settings where key = 'ai_model'), 'gpt-5.6-luna');
   insert into app.forecast_tuning_proposal(run_id, model, status) values (p_run_id, v_model, 'queued') returning id into v_id;
   return v_id;
 end $$;

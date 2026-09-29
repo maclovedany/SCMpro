@@ -55,7 +55,7 @@ flowchart LR
   subgraph Engine[Engine — Python · Railway Cron 10분]
     E1[예측 백테스트·프로덕션] ; E2[자동 런 · AI 오차 분석] ; E3[AI 감시 감지→판단→제안] ; E4[알림·이메일 발송]
   end
-  LLM[(OpenAI gpt-5-nano)]
+  LLM[(OpenAI gpt-5.6-luna)]
   Users --> Web ; Web <--> DB ; Engine <--> DB ; W2 <--> LLM ; E2 <--> LLM ; E3 <--> LLM
   E4 --> SMTP[이메일]
 ```

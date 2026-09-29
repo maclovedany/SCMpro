@@ -91,7 +91,7 @@ def run(db, now: datetime | None = None, *, mode_override: str | None = None, us
     decisions: dict[str, dict] = {}
     if use_llm and os.environ.get("OPENAI_API_KEY"):
         try:
-            model = settings.get("ai_model") if isinstance(settings.get("ai_model"), str) else "gpt-5-nano"
+            model = settings.get("ai_model") if isinstance(settings.get("ai_model"), str) else "gpt-5.6-luna"
             decisions = llm_judge(items, model, client)
         except Exception as e:
             log.warning("agent llm failed, rule fallback: %s", e)

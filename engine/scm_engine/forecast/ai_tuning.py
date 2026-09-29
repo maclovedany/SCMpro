@@ -1,4 +1,4 @@
-"""AI 정교화 (R-FC-42, D-016): 백테스트 런 요약 → gpt-5-nano → 진단·조정 제안(JSON) → app.forecast_tuning_proposal.
+"""AI 정교화 (R-FC-42, D-016): 백테스트 런 요약 → LLM(설정 ai_model) → 진단·조정 제안(JSON) → app.forecast_tuning_proposal.
 자동 적용 금지 — 웹에서 승인(kind=forecast_tuning) 후 fn_apply_tuning 이 params 에 병합."""
 from __future__ import annotations
 import json, os, uuid
@@ -63,7 +63,7 @@ def order_feedback(db: PostgresDB, months: int = 12) -> dict | None:
         return None
     return {"scorecards": sc, "override_patterns": pat}
 
-def call_llm(summary: dict, model: str = "gpt-5-nano", client=None) -> dict:
+def call_llm(summary: dict, model: str = "gpt-5.6-luna", client=None) -> dict:
     from openai import OpenAI
     client = client or OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
     user = "백테스트 요약(JSON):\n" + json.dumps(summary, ensure_ascii=False, default=str)[:60000]
@@ -78,7 +78,7 @@ def call_llm(summary: dict, model: str = "gpt-5-nano", client=None) -> dict:
 def tune(db: PostgresDB, run_id: str, model: str | None = None, client=None, proposal_id: str | None = None) -> str:
     """proposal_id 가 있으면(웹에서 "AI 분석 요청" 으로 만든 queued 행) 그 행을 채우고, 없으면 새 행 (D-052)"""
     settings = dict(db.read_df("select key, value from app.system_settings").itertuples(index=False))
-    model = model or (settings.get("ai_model") if isinstance(settings.get("ai_model"), str) else None) or "gpt-5-nano"
+    model = model or (settings.get("ai_model") if isinstance(settings.get("ai_model"), str) else None) or "gpt-5.6-luna"
     summary = build_summary(db, run_id)
     prompt = json.dumps(summary, ensure_ascii=False, default=str)
     response = call_llm(summary, model=model, client=client)

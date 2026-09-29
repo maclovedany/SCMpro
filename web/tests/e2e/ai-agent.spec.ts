@@ -11,7 +11,7 @@ test("AI Agent 패널: 열기·리사이즈·질문(도구 호출)·후속 질�
   const w1 = (await panel.boundingBox())!.width; expect(w1).toBeGreaterThan(w0 + 100);
   await page.reload(); await expect(page.getByTestId("ai-panel")).toBeVisible();
   expect(Math.abs((await page.getByTestId("ai-panel").boundingBox())!.width - w1)).toBeLessThan(5);
-  // 질문 (실제 gpt-5-nano + 도구)
+  // 질문 (실제 모델 + 도구)
   await page.fill("textarea[name=ai-input]", "556K59129 품목의 현재고와 DoS, 챔피언 예측 기법을 알려줘");
   await page.keyboard.press("Enter");
   const msgs = page.getByTestId("ai-messages");
