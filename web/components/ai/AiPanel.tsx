@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { X, Plus, Send, Wrench } from "lucide-react";
+import { X, Plus, Send, Wrench, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { useAiPanel } from "./AiPanelProvider";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -18,8 +19,20 @@ export function AiPanel() {
   const [convs, setConvs] = useState<Conv[]>([]); const [msgs, setMsgs] = useState<Msg[]>([]); const [input, setInput] = useState(""); const [busy, setBusy] = useState(false); const [showList, setShowList] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null); const dragging = useRef(false);
   const sb = createClient();
-  const loadConvs = useCallback(async () => { const { data } = await sb.schema("app").from("ai_conversation").select("id,title,updated_at").order("updated_at", { ascending: false }).limit(30); setConvs((data ?? []) as Conv[]); }, [sb]);
-  const loadMsgs = useCallback(async (id: string | null) => { if (!id) { setMsgs([]); return; } const { data } = await sb.schema("app").from("ai_message").select("id,role,content,tool_name,created_at,error").eq("conversation_id", id).order("id"); setMsgs((data ?? []) as Msg[]); }, [sb]);
+  // 패널은 내 대화만 다룬다 — 관리자의 전체 조회는 관리자 통계 화면 (R-AI-03/06)
+  const myId = useCallback(async () => (await sb.auth.getSession()).data.session?.user.id ?? null, [sb]);
+  const loadConvs = useCallback(async () => { const uid = await myId(); if (!uid) { setConvs([]); return; } const { data } = await sb.schema("app").from("ai_conversation").select("id,title,updated_at").eq("user_id", uid).order("updated_at", { ascending: false }).limit(30); setConvs((data ?? []) as Conv[]); }, [sb, myId]);
+  const loadMsgs = useCallback(async (id: string | null) => { if (!id) { setMsgs([]); return; }
+    // 브라우저에 남은 대화 id 가 내 것이 아니면(계정 전환·삭제된 대화) 새 대화로 시작 (D-072)
+    const uid = await myId(); const { data: own } = await sb.schema("app").from("ai_conversation").select("id").eq("id", id).eq("user_id", uid ?? "").maybeSingle(); if (!own) { setConversationId(null); setMsgs([]); return; }
+    const { data } = await sb.schema("app").from("ai_message").select("id,role,content,tool_name,created_at,error").eq("conversation_id", id).order("id"); setMsgs((data ?? []) as Msg[]); }, [sb, myId, setConversationId]);
+  const removeConv = async (c: Conv) => {
+    if (!confirm(`「${c.title ?? "(제목 없음)"}」 대화를 삭제하시겠습니까? 삭제한 대화는 복구할 수 없습니다.`)) return;
+    const { error } = await sb.schema("app").from("ai_conversation").delete().eq("id", c.id);
+    if (error) { toast.error(`삭제 실패: ${error.message}`); return; }
+    if (c.id === conversationId) { setConversationId(null); setMsgs([]); }
+    await loadConvs(); toast.success("대화 삭제됨");
+  };
   useEffect(() => { if (open) { loadConvs(); loadMsgs(conversationId); } }, [open, conversationId, loadConvs, loadMsgs]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ block: "end" }); }, [msgs]);
   useEffect(() => {
@@ -50,13 +63,13 @@ export function AiPanel() {
         <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setOpen(false)} aria-label="닫기"><X className="h-4 w-4" /></Button>
       </div>
       {showList ? (
-        <ul className="flex-1 overflow-auto p-2 text-sm">{convs.map(c => <li key={c.id}><button type="button" className={cn("w-full rounded px-2 py-1.5 text-left hover:bg-muted", c.id === conversationId && "bg-muted font-medium")} onClick={() => { setConversationId(c.id); setShowList(false); }}>{c.title ?? "(제목 없음)"}<div className="text-xs text-muted-foreground">{fmtDateTime(c.updated_at)}</div></button></li>)}{convs.length === 0 && <li className="p-3 text-muted-foreground">대화 없음</li>}</ul>
+        <ul className="flex-1 overflow-auto p-2 text-sm">{convs.map(c => <li key={c.id} className={cn("flex items-center gap-1 rounded hover:bg-muted", c.id === conversationId && "bg-muted font-medium")} data-testid="ai-conv-row"><button type="button" className="min-w-0 flex-1 px-2 py-1.5 text-left" onClick={() => { setConversationId(c.id); setShowList(false); }}><div className="truncate">{c.title ?? "(제목 없음)"}</div><div className="text-xs font-normal text-muted-foreground">{fmtDateTime(c.updated_at)}</div></button><Button size="sm" variant="ghost" className="shrink-0 text-muted-foreground hover:text-red-600" onClick={() => removeConv(c)} aria-label="대화 삭제" title="대화 삭제"><Trash2 className="h-4 w-4" /></Button></li>)}{convs.length === 0 && <li className="p-3 text-muted-foreground">대화 없음</li>}</ul>
       ) : (
         <div className="flex-1 space-y-3 overflow-auto p-3 text-sm" data-testid="ai-messages">
           {msgs.length === 0 && <div className="rounded-md bg-muted/40 p-3 text-muted-foreground">예: &ldquo;556K59129 재고랑 예측 알려줘&rdquo;, &ldquo;이번 달 발주 계획 품절 위험은?&rdquo;, &ldquo;내 승인 대기 뭐 있어?&rdquo;<br />답변은 시스템 데이터를 도구로 조회한 근거와 함께 제공됩니다 (R-AI-05/07).</div>}
           {msgs.map(m => m.role === "tool" ? <div key={m.id} className="flex items-center gap-1 text-xs text-muted-foreground"><Wrench className="h-3 w-3" />도구 {m.tool_name}</div>
             : <div key={m.id} className={cn("rounded-lg px-3 py-2", m.role === "user" && "whitespace-pre-wrap", m.role === "user" ? "ml-8 bg-primary text-primary-foreground" : "mr-8 bg-muted", m.error && "border border-red-300 bg-red-50 text-red-700")} data-role={m.role}>
-                {m.pending ? <span className="animate-pulse">생각 중…</span> : m.error ? `오류: ${m.error}` : m.role === "assistant" ? <div className="ai-md"><ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content ?? ""}</ReactMarkdown></div> : m.content}
+                {m.pending ? <span className="animate-pulse">생각 중…</span> : m.error ? `오류: ${m.content || m.error}` : m.role === "assistant" ? <div className="ai-md"><ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content ?? ""}</ReactMarkdown></div> : m.content}
               </div>)}
           <div ref={bottomRef} />
         </div>)}

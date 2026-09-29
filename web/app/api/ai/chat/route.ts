@@ -15,11 +15,12 @@ export async function POST(req: Request) {
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   // 대화
   let convId = body.conversation_id ?? null; let summary: string | null = null;
-  if (convId) { const { data } = await sb.schema("app").from("ai_conversation").select("id,summary").eq("id", convId).maybeSingle(); if (!data) convId = null; else summary = data.summary; }
+  // 내 대화만 이어 쓴다 — 관리자는 남의 대화가 조회되지만(R-AI-03) 거기에 메시지를 쓸 수는 없어 질문·답변이 저장되지 않는다 (D-072)
+  if (convId) { const { data } = await sb.schema("app").from("ai_conversation").select("id,summary").eq("id", convId).eq("user_id", p.user_id).maybeSingle(); if (!data) convId = null; else summary = data.summary; }
   if (!convId) { const { data, error } = await sb.schema("app").from("ai_conversation").insert({ user_id: p.user_id, title: text.slice(0, 60), page_context: body.page_context ?? null }).select("id").single(); if (error) return NextResponse.json({ error: error.message }, { status: 500 }); convId = data.id; }
   const { data: hist } = await sb.schema("app").from("ai_message").select("id,role,content").eq("conversation_id", convId).in("role", ["user", "assistant"]).order("id", { ascending: false }).limit(20);
   const history = (hist ?? []).reverse().map(m => ({ role: m.role as "user" | "assistant", content: m.content ?? "" }));
-  await sb.schema("app").from("ai_message").insert({ conversation_id: convId, role: "user", content: text });
+  { const { error } = await sb.schema("app").from("ai_message").insert({ conversation_id: convId, role: "user", content: text }); if (error) return NextResponse.json({ conversation_id: convId, error: `질문 저장 실패: ${error.message}` }, { status: 500 }); }
   const t0 = Date.now();
   let result; try { result = await runChat(client, model, sb, history, summary, body.page_context ?? null, text); }
   catch (e) { const err = e instanceof Error ? e.message : String(e); await sb.schema("app").from("ai_message").insert({ conversation_id: convId, role: "assistant", content: null, error: err.slice(0, 500), latency_ms: Date.now() - t0 }); return NextResponse.json({ conversation_id: convId, error: `AI 호출 실패: ${err}` }, { status: 502 }); }
