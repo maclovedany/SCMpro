@@ -6,6 +6,12 @@ import json, logging, math, os
 from datetime import datetime, timedelta, timezone
 
 log = logging.getLogger(__name__)
+KST = timezone(timedelta(hours=9))
+
+def kst_ym(now: datetime) -> str:
+    """이번 달 — 한국 시간 기준 (D-082). 서버(Railway)는 UTC 라 그대로 쓰면 월초 오전 9시 전에는 이전 달이 된다"""
+    return now.astimezone(KST).strftime("%Y-%m")
+
 SIGNAL_LABEL = {"stockout": "품절 위험", "low_dos": "재고 부족(DoS)", "inbound_delay": "입고 지연", "lead_imminent": "발주일 임박", "demand_surge": "수요 급증"}
 SCHEMA = {"name": "agent_judgment", "schema": {"type": "object", "additionalProperties": False, "properties": {"decisions": {"type": "array", "items": {"type": "object", "additionalProperties": False,
     "properties": {"key": {"type": "string"}, "severity": {"type": "integer"}, "action": {"type": "string", "enum": ["ignore", "notify", "propose"]},
@@ -59,8 +65,8 @@ def run(db, now: datetime | None = None, *, mode_override: str | None = None, us
     mode = mode_override or settings.get("agent_mode", "off")
     if mode == "off":
         return {"mode": "off", "signals": 0}
-    now = now or datetime.now(tz=timezone.utc)
-    now_ym = now.strftime("%Y-%m")
+    now = (now or datetime.now(tz=KST)).astimezone(KST)
+    now_ym = kst_ym(now)
     sig = db.read_df("select app.fn_agent_signals(%s::numeric, %s::int, %s::numeric) as s", (float(settings.get("agent_dos_ratio", 50)), int(settings.get("agent_lead_days", 7)), float(settings.get("agent_surge_pct", 50)))).iloc[0, 0] or []
     keys = set()
     for s in sig:

@@ -57,3 +57,8 @@ def test_propose_mode_notifies_and_creates_approval_with_candidate_qty():
     appr = [p for q, p in db.execs if "insert into app.approval" in q][0]
     payload = json.loads(appr[1]); assert payload["item_code"] == "A1" and payload["qty"] == 15.0 and payload["need_ym"] == "2026-10"   # 12 → MOQ 5 배수 15
     assert any("status = 'proposed'" in q for q, _ in db.execs)
+
+def test_month_follows_korea_time():
+    # UTC 9월 30일 23:50 = 한국 10월 1일 08:50 → 이번 달은 10월 (D-082)
+    assert agent.kst_ym(datetime(2026, 9, 30, 23, 50, tzinfo=timezone.utc)) == "2026-10"
+    assert agent.kst_ym(datetime(2026, 9, 30, 14, 59, tzinfo=timezone.utc)) == "2026-09"

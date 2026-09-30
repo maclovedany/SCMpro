@@ -1,4 +1,5 @@
 "use client";
+import { daysBackKst } from "@/lib/date";
 import { ChartCard } from "@/components/cards/ChartCard";
 import { Donut, Lines } from "@/components/charts/MiniCharts";
 import { SERIES_LIGHT } from "@/lib/design/palette";
@@ -7,7 +8,7 @@ import { SO_STATUS, type SalesOrderRow } from "@/lib/queries/allocation";
 export function SalesOrderCharts({ orders, now }: { orders: SalesOrderRow[]; now: number }) {
   const cnt: Record<string, number> = {}; for (const o of orders) cnt[o.status ?? ""] = (cnt[o.status ?? ""] ?? 0) + 1;
   const status = Object.entries(cnt).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ name: SO_STATUS[k] ?? k, value: v }));
-  const days = Array.from({ length: 30 }, (_, i) => new Date(now - (29 - i) * 86400e3).toISOString().slice(0, 10));
+  const days = daysBackKst(30, new Date(now));
   const daily = days.map(d => orders.filter(o => (o.requested_at ?? "").slice(0, 10) === d).length);
   const active = orders.filter(o => ["review_requested", "partial", "waiting"].includes(o.status ?? "")).length;
   return (<>

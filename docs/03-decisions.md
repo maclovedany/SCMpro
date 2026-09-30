@@ -464,3 +464,15 @@ append-only. 뒤집을 때는 새 번호로 쓰고 `supersedes D-nnn` 표기. �
 - 검증: 도구 실행 7개 역할 전부 통과(호출당 0.04~0.3초), 도구 선택 50/50, 화면에서 역할별 계정으로 질문 14개 확인. 팀장의 "이 발주 계획 승인해줘" → 승인하지 않고 /approvals 안내 + 계획 수치, 영업부의 설정 변경 요청·AI 감시 경보 질문 → 권한 없음 안내.
 - 알려진 점: DB 함수의 날짜(`current_date`)는 UTC 기준이라 입고 지연 건수는 오전 9시에 바뀐다(기존 동작). 대시보드와 도구가 같은 값을 쓴다.
 - 규칙 반영: R-AI-05 · R-AI-09 개정, R-AI-16 · R-AI-17 신설.
+
+## D-082 (2026-09-30) 업무 날짜 기준을 한국 시간으로 통일 — DB 기본 시간대 Asia/Seoul
+- 배경: D-081 에서 "DB 함수의 날짜는 UTC 기준"을 알려진 점으로 남겼다. DB·웹 서버(Vercel)·엔진(Railway) 이 모두 UTC 라 한국 오전 9시 전에는 "오늘"이 하루 전, 월초에는 "이번 달"이 이전 달로 계산됐다. 사용자 지시: 한국 시간 기준으로 변경.
+- 결정:
+  1. **DB**: 기본 시간대를 `Asia/Seoul` 로 바꾼다(`alter database … set timezone`, migrations/20260930011700_timezone_kst.sql). 함수·뷰를 하나씩 고치지 않는다 — `current_date` · `date_trunc` · `to_char(now())` · `timestamptz::date` 를 쓰는 함수 14개(fn_dashboard_v2 · fn_dashboard_ext · fn_agent_signals · fn_allocation_overview · fn_auto_allocate · fn_force_allocate · fn_receive_inbound · fn_add_inbound_event · fn_link_urgent_inbound · fn_submission_status · fn_submission_reminder_tick · fn_ai_stats · fn_override_patterns · fn_recent_scorecards)와 뷰 5개(v_inbound_delay · v_customer_allocation · v_force_alloc_pool · v_urgent_progress · v_part_linkage), 주문번호의 연월(`SO-YYMM-`)이 한 번에 같은 기준이 되고 앞으로 만드는 것도 따라온다.
+  2. **웹**: 날짜 계산을 `web/lib/date.ts`(todayKst · thisYmKst · nextYmKst · yearKst · daysBackKst)로 모은다. 서버·브라우저의 시계를 그대로 쓰던 곳(일정 · 배정 · 추가수요 · 발주 계획의 기본 월 · 공휴일 연도 · 수주 일별 차트 · 입고 처리일 · AI 도구)을 바꿨다. 시각 표기(`fmtDateTime`)도 한국 시간으로 고정.
+  3. **엔진**: AI 감시의 이번 달(`agent.kst_ym`)을 한국 시간으로. 자동 런은 이미 한국 시간(D-041).
+- 영향: 저장된 시각(timestamptz)은 절대 시각이라 값이 바뀌지 않는다 — API 응답의 표기가 `+00:00` → `+09:00` 으로 바뀔 뿐이다. 시간대 없는 timestamp 열은 없다. pg_cron 일정(`cron.timezone`)은 별개 설정이라 그대로.
+- 적용: 이미 열려 있는 연결은 이전 시간대를 유지하므로 적용 직후 PostgREST · 풀러의 유휴 연결을 끊어 새로 맺게 했다(운영 절차는 10-operations §4).
+- 검증: 새 연결의 시간대 Asia/Seoul, UTC 9-30 23:50 → 날짜 10-01 · 월 2026-10, API 의 시각 표기 +09:00, fn_dashboard_v2 등 날짜 함수 정상 응답.
+- D-081 의 "알려진 점(DB 함수 날짜는 UTC 기준)"은 이 결정으로 해소.
+- 규칙 반영: R-SCH-34 신설.

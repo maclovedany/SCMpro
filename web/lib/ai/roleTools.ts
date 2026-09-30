@@ -1,5 +1,6 @@
 /** AI Agent 도구 — 역할별 업무 질문용 20종 (R-AI-09, D-081). 전부 조회 전용이고 사용자 세션으로 읽는다(R-AI-05).
  *  도구마다 roles 가 있어 그 역할의 대화에만 넘긴다 — 역할과 무관한 도구가 섞이면 모델이 엉뚱한 도구를 고른다. */
+import { todayKst, nextYmKst } from "@/lib/date";
 import { ALL_ROLES, SCM_ROLES, obj, str, num, topN, type ToolDef, type ToolCtx, type SB } from "./toolTypes";
 import { searchHelp, searchMenus, menusFor, helpTerms } from "./help";
 import { likeValue } from "./mcTools";
@@ -15,10 +16,9 @@ import type { DashboardV2 } from "@/lib/queries/dashboard";
 import type { DashboardExt } from "@/lib/queries/dashboardExt";
 
 const n0 = (v: unknown) => Number(v ?? 0);
-/** 오늘 날짜는 한국 시간 기준 — 서버(UTC)의 날짜를 쓰면 오전 9시 전에는 하루 전으로 나온다 */
-export const todayKst = (d = new Date()) => new Date(d.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+export { todayKst };
 const today = () => todayKst();
-const nextYm = (d = new Date()) => { const y = d.getFullYear(), m = d.getMonth() + 2; return `${y + Math.floor((m - 1) / 12)}-${String(((m - 1) % 12) + 1).padStart(2, "0")}`; };
+const nextYm = () => nextYmKst();
 /** 수요자료를 내는 부서 열쇠 (R-SCH): 역할에서 정한다 */
 export const deptOf = (role: Role): string | null => (["sales", "marketing", "service", "biz_enable"].includes(role) ? role : null);
 const DEPT_KO: Record<string, string> = { marketing: "마케팅부", sales: "영업부", service: "서비스부", biz_enable: "사업강화부" };

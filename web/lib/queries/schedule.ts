@@ -1,3 +1,4 @@
+import { nextYmKst, thisYmKst } from "@/lib/date";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 type SB = SupabaseClient<Database>;
@@ -17,8 +18,9 @@ export async function fetchInboundGap(sb: SB) {
   ]);
   return { summary: summary.data ?? [], rows: rows.data ?? [] };
 }
-export function nextYm(d = new Date()) { const y = d.getFullYear(), m = d.getMonth() + 2; return `${y + Math.floor((m - 1) / 12)}-${String(((m - 1) % 12) + 1).padStart(2, "0")}`; }
-export function thisYm(d = new Date()) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; }
+/** 다음 달 · 이번 달 — 한국 시간 기준 (D-082) */
+export const nextYm = (d = new Date()) => nextYmKst(d);
+export const thisYm = (d = new Date()) => thisYmKst(d);
 
 /** 일정 화면 차트 데이터 (D-036, 순수 함수): 공급처별 발주 회차(월), 제출 현황, 입고 차이(공급처×월), 지연/정시/조기 분포 */
 export function scheduleCharts(cal: Pick<CalRow, "supplier_name" | "ym" | "order_date">[], sub: { deadline: string; overdue: boolean; depts: { dept: string; submitted: boolean }[] | null }, gap: { summary: { supplier_code: string | null; ym: string | null; avg_diff: number | null }[]; rows: { diff_days: number | null }[] }) {

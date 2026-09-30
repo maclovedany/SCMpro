@@ -1,3 +1,4 @@
+import { todayKst } from "@/lib/date";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/auth/getProfile";
 import { fetchCalendar, fetchSubmissionStatus, fetchInboundGap, scheduleCharts, nextYm, thisYm } from "@/lib/queries/schedule";
@@ -14,7 +15,7 @@ export default async function SchedulePage() {
   const from = thisYm(); const target = nextYm();
   const [cal, sub, gap, customers, lines] = await Promise.all([fetchCalendar(sb, from, 3), fetchSubmissionStatus(sb, target), fetchInboundGap(sb), fetchCustomers(sb), fetchDemandLines(sb, target)]);
   const names = await fetchItemNames(sb, gap.rows.slice(0, 50).map(r => r.item_code));
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKst();
   const next = cal.filter(c => c.order_date! >= today).sort((a, b) => a.order_date!.localeCompare(b.order_date!))[0];
   const thisMonth = cal.filter(c => c.ym === from);
   const missing = (sub.depts ?? []).filter(d => !d.submitted);

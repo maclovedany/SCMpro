@@ -1,3 +1,4 @@
+import { yearKst } from "@/lib/date";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -7,7 +8,7 @@ import { fetchHolidays } from "@/lib/queries/admin";
 import { HolidayTable } from "./HolidayTable";
 export default async function HolidaysPage({ searchParams }: { searchParams: Promise<{ year?: string }> }) {
   const p = await getProfile(); if (!p || !canWriteMaster(p.role)) redirect("/dashboard");
-  const { year: y } = await searchParams; const year = Number(y) || new Date().getFullYear();
+  const { year: y } = await searchParams; const year = Number(y) || yearKst();
   const rows = await fetchHolidays(await createServerSupabase(), year);
   return (
     <div className="space-y-4">

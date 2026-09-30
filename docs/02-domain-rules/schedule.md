@@ -1,6 +1,6 @@
 # 규칙: 발주 시점 · 일정 · 알림 (R-SCH)
 
-최종 갱신: 2026-09-17 · 출처: stage1.md §3 §8, D-007, D-024 · 구현: migrations/20260913004000_schedule.sql (fn_business_day·fn_order_calendar·fn_submission_*·fn_tick·pg_cron), engine tick/notify, 화면 /schedule, /admin/suppliers
+최종 갱신: 2026-09-30 · 출처: stage1.md §3 §8, D-007, D-024 · 구현: migrations/20260913004000_schedule.sql (fn_business_day·fn_order_calendar·fn_submission_*·fn_tick·pg_cron), engine tick/notify, 화면 /schedule, /admin/suppliers
 
 ## 발주일
 
@@ -35,4 +35,5 @@
 | R-SCH-31 | **알림 on/off (D-046)**: 시스템 설정 `notify_enabled`(전체 — false 면 시스템 알림 insert 자체를 트리거가 차단), `notify_email_enabled`(false 면 이메일 복제·발송 안 함, 대기분은 skipped:disabled 로 마감), `notify_reminders_enabled`(false 면 만료 예고·승인 독촉·미제출 독촉을 tick 이 건너뜀). 배정 만료 처리 등 업무 동작은 설정과 무관하게 계속된다. |
 | R-SCH-32 | **수요자료 상세 라인 (D-058)**: 부서는 수요자료 제출 시 **고객사 × 품목(기기) × 필요월 × 수량**을 `app.demand_line` 에 기재한다(`fn_save_demand_lines`: 본인 부서만, SCM 역할은 대리 입력). 같은 부서·월·고객사·품목은 갱신. 기존 "제출" 플래그(`demand_submission`)는 그대로 — 라인 입력과 제출은 별개 동작이고, 제출 독촉(R-SCH-21)도 변함없다. 업로드 대상 `demand_line` 으로 일괄 반입 가능. |
 | R-SCH-33 | **긴급발주 진행 단계 (D-058)**: 긴급발주(R-OQ-44)는 요청 → 승인 → 발주(PO 연결) → 출하 → 출항 → 입항 → 통관 → 입고 단계로 추적한다. PO 진행 이벤트는 `app.inbound_event`(단계·일자·메모, PO 당 단계별 1건)에 기록하고(`fn_add_inbound_event`, 업로드 대상 `inbound_event`), 현재 단계 = 가장 늦은 이벤트(입고 완료는 `inbound.status = received` 우선). 계획 입고일이 지났는데 미입고면 **지연**. 뷰 `analytics.v_urgent_progress`, 대시보드 "긴급발주 진행" 묶음. 물류 구간 실데이터는 Q-020. |
+| R-SCH-34 | **업무 날짜 = 한국 시간 (D-082)**: 오늘 · 이번 달 · 마감일 · 만료일 · 입고 지연 판정은 모두 한국 시간 기준. DB 는 기본 시간대 `Asia/Seoul`, 웹은 `lib/date.ts`, 엔진은 KST 로 계산한다. 서버 시계(UTC)를 그대로 쓰는 `new Date().toISOString().slice(0, 10)` · `getMonth()` · `datetime.now(timezone.utc)` 로 날짜를 만들지 않는다. 시각은 절대 시각(timestamptz)으로 저장하고 표시할 때 한국 시간으로 바꾼다. |
 

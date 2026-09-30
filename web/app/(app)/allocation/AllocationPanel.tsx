@@ -1,4 +1,5 @@
 "use client";
+import { todayKst } from "@/lib/date";
 import { ItemCode } from "@/components/ItemCode";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -18,7 +19,7 @@ export function AllocationPanel({ queue, inbound, pending, names = {} }: { queue
   const router = useRouter(); const [pendingT, start] = useTransition();
   const [alloc, setAlloc] = useState<Q | null>(null); const [qty, setQty] = useState(""); const [reason, setReason] = useState("");
   const doAlloc = () => alloc && start(async () => { const r = await manualAllocate(alloc.id!, Number(qty), reason); if (r.ok) { const d = r.data as { result: string }; toast.success(d.result === "firm" ? "확정배정 완료" : "승인대기 확보 — 팀장 승인 요청"); setAlloc(null); setQty(""); setReason(""); router.refresh(); } else toast.error(r.error); });
-  const receive = (i: I) => start(async () => { const r = await receiveInbound(i.id, new Date().toISOString().slice(0, 10)); if (r.ok) { const d = r.data as { mode: string; auto_allocated_orders: number }; toast.success(`입고 완료 · ${d.mode === "auto" ? `자동배정 ${d.auto_allocated_orders}건` : "수동 배정 대기"}`); router.refresh(); } else toast.error(r.error); });
+  const receive = (i: I) => start(async () => { const r = await receiveInbound(i.id, todayKst()); if (r.ok) { const d = r.data as { mode: string; auto_allocated_orders: number }; toast.success(`입고 완료 · ${d.mode === "auto" ? `자동배정 ${d.auto_allocated_orders}건` : "수동 배정 대기"}`); router.refresh(); } else toast.error(r.error); });
   const tick = () => start(async () => { const r = await runTick(); if (r.ok) { const d = r.data as { expired: number; reminders: number; approval_repeats: number }; toast.success(`만료 ${d.expired} · 예고 알림 ${d.reminders} · 승인 반복 알림 ${d.approval_repeats}`); router.refresh(); } else toast.error(r.error); });
   return (
     <div className="space-y-5">

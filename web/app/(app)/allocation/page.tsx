@@ -1,3 +1,4 @@
+import { todayKst } from "@/lib/date";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -13,7 +14,7 @@ import { AllocationCharts } from "./AllocationCharts";
 export default async function AllocationPage() {
   const p = await getProfile(); if (!p || !(canWriteMaster(p.role) || canApprove(p.role))) redirect("/dashboard");
   const sb = await createServerSupabase();
-  await headers(); const today = new Date().toISOString().slice(0, 10);
+  await headers(); const today = todayKst();
   const [queue, inbound, pending, ov] = await Promise.all([fetchQueue(sb), fetchOpenInbound(sb), fetchPendingPriority(sb), fetchAllocationOverview(sb)]);
   const c = allocationCharts(ov, today);
   const items = new Set(queue.map(q => q.item_code)); const allocatable = queue.filter(q => (q.available ?? 0) > 0).length;

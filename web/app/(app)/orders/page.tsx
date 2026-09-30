@@ -1,3 +1,4 @@
+import { thisYmKst } from "@/lib/date";
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { fetchPlans, fetchPlanOverview, planCharts, planHistory } from "@/lib/queries/orders";
@@ -19,7 +20,7 @@ export default async function OrdersPage() {
   const latest = plans[0]; const s = (latest?.summary ?? {}) as Record<string, number>;
   const prevApproved = plans.find(x => x.status === "approved" && x.plan_ym! < (latest?.plan_ym ?? ""));
   const ov = latest ? await fetchPlanOverview(sb, latest.id!) : null; const c = ov ? planCharts(ov) : null; const hist = planHistory(plans);
-  const now = new Date(); const defaultYm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const defaultYm = thisYmKst();
   const base = latest ? `/orders/${latest.id}` : "/orders";
   const amt = Number(latest?.amount ?? 0), prevAmt = prevApproved ? Number(prevApproved.amount) : null; const d = prevAmt ? (amt - prevAmt) / prevAmt : null;
   const kpis: KpiTileProps[] = latest ? [

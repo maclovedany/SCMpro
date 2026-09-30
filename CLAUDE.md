@@ -44,6 +44,7 @@
 - `raw` 스키마는 원본 그대로, 수정 금지. 앱/화면은 `analytics` 뷰만 읽는다.
 - 부품 출고는 반드시 `core.v_shipment_by_hoc`(XCN 합산) 기준. `raw.fact_shipment` 직접 조회 금지.
 - `fact_shipment` 는 0인 달을 저장하지 않는다(희소). 평균 계산 시 `core.v_ym_calendar` 와 LEFT JOIN.
+- 업무 날짜는 한국 시간 (D-082, R-SCH-34): DB 기본 시간대 `Asia/Seoul`, 웹은 `web/lib/date.ts`, 엔진은 KST. 서버 시계(UTC)로 오늘·이번 달을 만들지 않는다.
 
 ## 실행 (SP1 기준)
 ```bash

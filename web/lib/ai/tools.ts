@@ -1,5 +1,6 @@
 /** AI Agent 도구 (R-AI-05 · R-AI-09): 사용자 세션 supabase 클라이언트로만 조회 → RLS 그대로. 전부 조회 전용.
  *  도구마다 roles 가 있어 질문한 사용자의 역할에 맞는 도구만 모델에 넘긴다 (D-081). 역할별 업무 도구는 roleTools.ts */
+import { thisYmKst, nextYmKst } from "@/lib/date";
 import { catLabel } from "@/lib/design/category";
 import { fetchAliasMap, realName, type AliasMap } from "@/lib/names";
 import { inList } from "@/lib/queries/families";
@@ -45,7 +46,7 @@ const BASE_TOOLS: Omit<ToolDef, "roles">[] = [
   { name: "get_forecast_accuracy", label: "예측 정확도", description: "최신 백테스트 정확도: 시스템 기준예측 vs Sales OL vs SCM OL (WAPE·Bias), 카테고리별", parameters: { type: "object", properties: {} },
     run: async (sb) => (await sb.schema("analytics").from("v_accuracy_summary").select("level,key,method,wape,bias,n").in("level", ["total", "category", "biz"])).data },
   { name: "get_schedule", label: "발주 일정", description: "향후 발주 캘린더(공급처별 발주일·입고예정)와 다음 달 수요자료 제출 현황", parameters: { type: "object", properties: {} },
-    run: async (sb) => { const now = new Date(); const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`; const m = now.getMonth() + 2; const next = `${now.getFullYear() + Math.floor((m - 1) / 12)}-${String(((m - 1) % 12) + 1).padStart(2, "0")}`; const [c, s] = await Promise.all([sb.schema("app").rpc("fn_order_calendar", { p_from: ym, p_months: 2 }), sb.schema("app").rpc("fn_submission_status", { p_ym: next })]); return { calendar: c.data, submission: s.data }; } },
+    run: async (sb) => { const ym = thisYmKst(), next = nextYmKst(); const [c, s] = await Promise.all([sb.schema("app").rpc("fn_order_calendar", { p_from: ym, p_months: 2 }), sb.schema("app").rpc("fn_submission_status", { p_ym: next })]); return { calendar: c.data, submission: s.data }; } },
 ];
 export const TOOLS: ToolDef[] = [...BASE_TOOLS.map(t => ({ ...t, roles: ALL_ROLES })), ...ROLE_TOOLS];
 /** 이 역할의 대화에 넘길 도구 */
