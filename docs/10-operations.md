@@ -1,6 +1,6 @@
 # 운영·유지보수 방안
 
-최종 갱신: 2026-09-14 · 출처: 커리큘럼 [10], D-043/045/048/049 · 상태: **Web·Engine 배포 완료**, 사내 이관 항목만 남음
+최종 갱신: 2026-09-21 · 출처: 커리큘럼 [10], D-043/045/048/049 · 상태: **Web·Engine 배포 완료**, 사내 이관 항목만 남음
 
 ## 1. 구성 요소와 실행 위치
 | 구성 요소 | 현재 (2026-09-14) | 비고 |
@@ -13,7 +13,7 @@
 ### 1-1. Railway 에 엔진 올리기 (D-049)
 1. Railway → New Project → **Deploy from GitHub repo** → `maclovedany/SCMpro` 선택.
 2. 서비스 Settings → **Root Directory** = `engine` (Dockerfile·railway.json 자동 인식). Build 는 첫 회 3~5분(prophet·lightgbm).
-3. **Variables** 에 `engine/.env` 의 값 그대로: `SUPABASE_DB_URL`, `OPENAI_API_KEY`, `SMTP_HOST/PORT/USER/PASS/FROM`. (`SQLITE_PATH` 불필요)
+3. **Variables** 에 `engine/.env` 의 값 그대로: `SUPABASE_DB_URL`, `OPENAI_API_KEY`, `SMTP_HOST/PORT/USER/PASS/FROM`. (`SQLITE_PATH` 불필요) 이미지에는 `.env` 가 들어가지 않으므로 엔진은 환경 변수를 우선 읽는다(D-085). 로그에 `SUPABASE_DB_URL 이 비어 있습니다` 가 찍히면 Variables 누락.
 4. Settings → **Cron Schedule** 이 `*/10 * * * *` 인지 확인(railway.json 이 넣음). Deploy 후 첫 실행 로그에 `tick={...} auto_run=... agent=... email=...` 가 찍히면 정상.
 5. 이 Mac 의 launchd 는 중복 실행이므로 끈다: `launchctl unload ~/Library/LaunchAgents/com.scmpro.tick.plist`.
 6. 자동 런이 도는 달(설정 켠 경우)은 tick 이 3~5분 걸리므로 서비스 메모리 2GB 이상. 실패 시 Railway 로그 + `app.forecast_run.error`.
@@ -46,3 +46,14 @@
 
 ## 6. 인수인계 체크리스트
 - 계정 6개 역할·비밀번호 정책, SMTP/OpenAI 키 교체, 운영 서버 timer 등록, Supabase 요금제·백업 확인, ERP 연동 담당(09-integration-plan) 지정, 사용자 가이드(08) 교육.
+
+## ERP 추출 파일 반입 (D-059~064)
+회사가 매일 추출하는 현재고·Open PO 파일은 **실코드**다. 저장소와 DB 는 익명 코드 체계이므로 아래 순서로만 반입한다.
+1. 파일 폴더와 치환표(`치환표_MAPPING_KEY.xlsx`)를 **저장소 밖**에 둔다. 치환표는 복원 키다 — 커밋·업로드·메신저 전송 금지.
+2. 엔진 런이 없는지 확인한다(`select count(*) from app.forecast_run where status in ('requested','running')` = 0).
+3. `uv --directory engine run engine import-erp --src <폴더> --key <치환표>` → `data/export/erp_import.sql`(gitignore, 공급처·파트너 실명 포함), 미매칭 목록 CSV, `docs/reports/erp-import-<기준일>.md`(건수만).
+4. 리포트의 매칭률이 직전과 크게 다르지 않은지 본 뒤 `supabase/scripts/import-erp.sh`.
+- 재고는 기준일 단위로 교체, 입고예정은 이전 반입분 전체를 교체한다(매일 추출되는 전체 잔량). 웹 업로드·수동 입력분은 건드리지 않는다.
+- 같은 폴더에 마스킹본이 있으면 마스킹본을 읽는다. 가용 = 이름이 `-N` 으로 끝나는 창고(ARES·ARNS 제외), 입고 예정일 = Need By Date (D-065).
+- 반입 뒤에는 `engine seed-app` / `seed-app.sh` 를 돌리지 않는다 — 더미 재고·입고가 되살아난다. 되돌릴 때만 쓴다(반입 전 백업은 `data/export/backup-*`).
+

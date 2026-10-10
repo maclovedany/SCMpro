@@ -16,7 +16,7 @@ def _sqlite() -> SQLiteDB:
 def _pg() -> PostgresDB:
     s = Settings.load()
     if not s.db_url:
-        raise typer.BadParameter("engine/.env 의 SUPABASE_DB_URL 이 비어 있습니다")
+        raise typer.BadParameter("SUPABASE_DB_URL 이 비어 있습니다 — 로컬은 engine/.env, Railway 는 서비스 Variables 에 설정")
     return PostgresDB(s.db_url)
 
 @app.command("export-raw")
@@ -68,6 +68,59 @@ def gen_types_cmd(out: Path = ROOT / "web" / "lib" / "types" / "database.ts"):
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("// 자동 생성: engine gen-types — 수정 금지\n" + gen_types.generate(_pg()), encoding="utf-8")
     typer.echo(f"생성: {out}")
+
+@app.command("import-erp")
+def import_erp_cmd(src: Path = typer.Option(..., help="ERP 추출 파일 폴더 (저장소 밖)"), key: Path = typer.Option(..., help="치환표_MAPPING_KEY.xlsx (저장소·DB 에 올리지 않는다)"),
+                   snap_date: str = None, out: Path = ROOT / "data" / "export" / "erp_import.sql",
+                   report_dir: Path = ROOT / "docs" / "reports"):
+    """ERP 실코드 파일(현재고·Open PO·파트너·Line Type) → 익명코드 SQL (D-059~063). 적용은 supabase/scripts/import-erp.sh."""
+    from . import erp_import as e
+    onhand_f, sub_f, po_f = e.pick(src, "Onhand"), e.pick(src, "Subinventory"), e.pick(src, "Open_PO")
+    partner_f, lt_f = e.pick(src, "파트너"), e.pick(src, "Line_Type")
+    mk, wh, ctx = e.MappingKey.load(key), e.Warehouses.load(onhand_f, sub_f), e.load_context(_pg())
+    onhand = e.read_onhand(onhand_f)
+    po, po_date = e.read_open_po(po_f)
+    snap = snap_date or (po_date.isoformat() if po_date else date.today().isoformat())
+    inv, inv_un, inv_stat = e.build_inventory(onhand, mk, wh, ctx)
+    ms, ms_stat = e.build_model_stock(onhand, mk, wh)
+    inbound, suppliers, item_sup, po_un, po_stat = e.build_inbound(po, mk, ctx)
+    customers, line_types, cats = e.read_partners(partner_f), e.read_line_types(lt_f), e.read_category_map(po_f)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(e.build_sql(snap, inv, ms, inbound, suppliers, item_sup, customers, line_types, cats, ctx.protected,
+                               {"inventory_snapshot": "Daily_Onhand", "inbound": "Open_PO", "supplier": "Open_PO", "customer": "partner list"}), encoding="utf-8")
+    inv_un.to_csv(out.with_name("erp_unmatched_onhand.csv"), index=False, encoding="utf-8-sig")     # 실코드 — gitignore 된 폴더에만
+    po_un.to_csv(out.with_name("erp_unmatched_po.csv"), index=False, encoding="utf-8-sig")
+    cls = inv.groupby("stock_class")["qty"].agg(["count", "sum"]).reset_index()
+    cat = sorted({k.split(":")[1] for k in inv_stat if ":" in k})
+    match = [(c, inv_stat[f"matched:{c}"], inv_stat[f"unmatched:{c}"]) for c in cat]
+    pmatch = [(c, po_stat[f"matched:{c}"], po_stat[f"unmatched:{c}"]) for c in sorted({k.split(":")[1] for k in po_stat if k.startswith(("matched", "unmatched"))})]
+    report_dir.mkdir(parents=True, exist_ok=True)
+    rp = report_dir / f"erp-import-{snap.replace('-', '')}.md"
+    rp.write_text(
+        f"# ERP 실데이터 반입 리포트 (기준일 {snap}, 생성 {date.today()})\n\n가용 기준: 끝이 -N 인 창고, ARES·ARNS 제외 (D-065) · 더미 유지 품목(시연·E2E): {len(ctx.protected)}개\n\n"
+        f"## 현재고 — 재고 행 매칭 (행 수)\n| ERP 카테고리 | 매칭 | 미매칭 |\n|---|---:|---:|\n" + "".join(f"| {c} | {a:,} | {b:,} |\n" for c, a, b in match)
+        + f"\n적재 {len(inv):,}행 (그중 0 채움 {inv_stat['zero_filled']:,}품목), 더미 유지로 건너뛴 행 {inv_stat['skipped_protected_rows']:,}\n\n"
+        f"## 재고구분별 적재 (R-INV-11)\n| 재고구분 | 품목 수 | 수량 |\n|---|---:|---:|\n" + "".join(f"| {r.stock_class} | {int(r['count']):,} | {r['sum']:,.0f} |\n" for _, r in cls.iterrows())
+        + f"\n## 기종 단위 기기 재고 (R-INV-12)\n기기 품목 {ms_stat['machine_items']:,}개 중 {ms_stat['machine_items_mapped']:,}개가 {ms_stat['models']:,}개 기종에 연결, 기종 미연결 {ms_stat['unmapped_items']:,}개\n\n"
+        f"## 입고예정 — Open PO 유효 {len(po):,}행\n| ERP 카테고리 | 매칭 | 미매칭 |\n|---|---:|---:|\n" + "".join(f"| {c} | {a:,} | {b:,} |\n" for c, a, b in pmatch)
+        + f"\n적재 {len(inbound):,}행 · 예정일 = Need By Date (D-065), 날짜 없는 행 {po_stat['no_date']:,} · 공급처 {len(suppliers)}곳 · 주 공급처 지정 품목 {len(item_sup):,}개\n\n"
+        f"## 참조 마스터\n고객(파트너) {len(customers):,}곳 · Line Type {len(line_types):,}종(출고 집계 {int(line_types['counts_as_shipment'].sum()):,}) · ERP 카테고리 {len(cats):,}종\n", encoding="utf-8")
+    typer.echo(f"생성: {out}\n리포트: {rp}\n미매칭 목록: {out.with_name('erp_unmatched_onhand.csv')}")
+
+@app.command("load-lifecycle")
+def load_lifecycle_cmd(raw_dir: Path = ROOT / "data" / "raw", out: Path = ROOT / "data" / "export" / "item_lifecycle.sql", apply: bool = True):
+    """품목 수명주기·관리구분 적재 (D-071): 소모품 관리구분·GC-BOM EOL·옵션 KBN → app.item_lifecycle, app.eol_eos."""
+    from . import lifecycle
+    db = _pg()
+    lc = lifecycle.build(raw_dir)
+    known = set(db.read_df("select item_code from raw.dim_item")["item_code"])
+    sql, dropped = lifecycle.to_sql(lc, known)
+    out.parent.mkdir(parents=True, exist_ok=True); out.write_text(sql, encoding="utf-8")
+    if apply:
+        db.execute(sql)
+        db.execute("select app.fn_refresh_matviews()")
+    typer.echo(f"{'적용' if apply else '생성'}: {out} — 품목 {len(lc.items) - dropped:,}건(마스터 밖 {dropped:,} 제외) · 기종 EOL {len(lc.models)}건")
+    typer.echo(lc.items.groupby(["lifecycle", "in_forecast_scope"]).size().to_string())
 
 @app.command("load-names")
 def load_names_cmd(key: Path = typer.Option(..., help="치환표 파일 경로 (저장소 밖)")):
